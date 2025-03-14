@@ -10,11 +10,28 @@ Monitor listings on Blocket and get notified when new items are posted.
 - Email notifications (feature-flagged, disabled by default)
 - Docker and Kubernetes ready deployment
 
-## Notification Integrations
+## Configuration
 
-### Discord Integration
+### Required Environment Variables
 
-Discord notifications are enabled by default and can be configured by setting the following environment variables:
+- `BLOCKET_AD_QUERY`: The query to search for Blocket ads. This is required for the bot to function.
+
+### Optional Environment Variables
+
+#### General Settings
+
+- `PORT`: The port on which the health check server will run (default: 8080)
+
+#### Blocket Query Settings
+
+- `BLOCKET_AD_LIMIT`: The maximum number of ads to fetch (default: 60)
+- `BLOCKET_AD_SORT`: The sorting order of the ads (default: 'rel')
+- `BLOCKET_AD_LISTING_TYPE`: The type of listing (default: 's')
+- `BLOCKET_AD_STATUS`: The status of the ads to fetch (default: 'active')
+- `BLOCKET_AD_GL`: The geolocation filter (default: 3)
+- `BLOCKET_AD_INCLUDE`: Additional parameters to include in the query (default: 'extend_with_shipping')
+
+#### Notification Settings
 
 - `NOTIFICATION_DISCORD_ENABLED`: Enable Discord notifications (default: `false`)
 - `NOTIFICATION_DISCORD_WEBHOOK_URL`: Discord webhook URL
@@ -22,11 +39,6 @@ Discord notifications are enabled by default and can be configured by setting th
 - `NOTIFICATION_DISCORD_AVATAR_URL`: Optional avatar URL for the bot
 - `NOTIFICATION_DISCORD_MAX_RETRIES`: Number of retries for failed webhooks (default: 3)
 - `NOTIFICATION_DISCORD_RETRY_DELAY`: Base delay between retries in ms (default: 1000)
-
-### Email Integration (Feature-Flagged)
-
-Email notifications are disabled by default and can be enabled by setting the following environment variables:
-
 - `NOTIFICATION_EMAIL_ENABLED`: Enable email notifications (default: `false`)
 - `NOTIFICATION_EMAIL_FROM`: Sender email address
 - `NOTIFICATION_EMAIL_TO`: Recipient email address
@@ -36,67 +48,69 @@ Email notifications are disabled by default and can be enabled by setting the fo
 - `NOTIFICATION_EMAIL_SMTP_USER`: SMTP username
 - `NOTIFICATION_EMAIL_SMTP_PASS`: SMTP password
 - `NOTIFICATION_EMAIL_USE_TLS`: Use TLS for SMTP connection (default: `true`)
-
-### General Notification Settings
-
 - `NOTIFICATION_BATCH_SIZE`: Maximum number of notifications to send in one batch (default: 10)
 - `NOTIFICATION_ENABLE_BATCHING`: Enable/disable notification batching (default: `true`)
+
+#### Cron Job Settings
+
+- `BLOCKET_CRON_TIME`: The cron schedule for running the Blocket job (default: '_/5_ \* \* \*')
+- `BLOCKET_TIMEZONE`: The timezone for the cron job (default: 'Europe/Stockholm')
+- `BLOCKET_RUN_ON_INIT`: Whether to run the job immediately on startup (default: `true`)
+
+#### Monitoring Settings
+
+- `OPT_PRICE_CHANGES`: Enable price change monitoring (default: `false`)
+- `OPT_PRICE_MIN`: Minimum price for monitoring (default: `null`)
+- `OPT_PRICE_MAX`: Maximum price for monitoring (default: `null`)
+- `OPT_PRICE_CURRENCY`: Currency for price monitoring (default: 'SEK')
 
 ## Deployment
 
 ### Docker
 
-The simplest way to deploy the bot is using Docker Compose:
+To build and run the Docker container:
 
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/blocket-bot.git
-cd blocket-bot
+# Build the Docker image
+docker build -t blocket-bot .
 
-# Edit the docker-compose.yml file to set your webhook URL and other settings
+# Run the Docker container
+# Make sure to set the required environment variables
+# Replace <your-query> with your actual Blocket query
+# Optionally, set other environment variables as needed
 
-# Run with Docker Compose
-docker-compose up -d
-```
-
-### Kubernetes
-
-To deploy to Kubernetes:
-
-```bash
-# Apply the Kubernetes configuration
-kubectl apply -f kubernetes/deployment.yaml
-
-# Create the secret for sensitive information
-# Replace values with your actual secrets
-kubectl create secret generic blocket-bot-secrets \
-  --from-literal=NOTIFICATION_DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/your-webhook-url \
-  --from-literal=NOTIFICATION_EMAIL_SMTP_USER=user \
-  --from-literal=NOTIFICATION_EMAIL_SMTP_PASS=password
+docker run -d \
+  -e BLOCKET_AD_QUERY=<your-query> \
+  -e NOTIFICATION_DISCORD_ENABLED=true \
+  -e NOTIFICATION_DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/your-webhook-url \
+  -p 8080:8080 \
+  blocket-bot
 ```
 
 ## Running Locally
 
 To run the bot locally:
 
-1. Install dependencies:
+### Install dependencies
 
-   ```
-   npm install
-   ```
+```bash
+npm install
+```
 
-2. Create a `.env` file with your configuration:
+### Create a `.env` file with your configuration
 
-   ```
-   NOTIFICATION_DISCORD_ENABLED=true
-   NOTIFICATION_DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/your-webhook-url
-   # Add other settings as needed
-   ```
+```env
+BLOCKET_AD_QUERY=<your-query>
+NOTIFICATION_DISCORD_ENABLED=true
+NOTIFICATION_DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/your-webhook-url
+# Add other settings as needed
+```
 
-3. Start the application:
-   ```
-   npm start
-   ```
+### Start the application
+
+```bash
+npm start
+```
 
 ## License
 
