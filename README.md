@@ -7,7 +7,7 @@ Monitor listings on Blocket and get notified when new items are posted.
 - Automated monitoring of Blocket listings
 - Customizable search queries and filters
 - Notifications via Discord webhook
-- Email notifications (feature-flagged, disabled by default)
+- Email notifications (feature-flagged, disabled by default, upcoming feature)
 - Docker and Kubernetes ready deployment
 
 ## Configuration
