@@ -6,6 +6,11 @@ dotenv.config();
 import { CronJob } from 'cron';
 import { blocketJob } from '@/integrations/cron/blocket-job';
 
+if (!process.env.BLOCKET_AD_QUERY) {
+  console.error('Environment variable BLOCKET_AD_QUERY is not set. Exiting...');
+  process.exit(1);
+}
+
 /**
  * Create a simple HTTP server for health checks
  * This allows Docker and Kubernetes to determine if the container is healthy
