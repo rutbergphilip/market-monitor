@@ -8,7 +8,7 @@ export const BLOCKET_JOB_CONFIG = Object.freeze({
 
 export const BLOCKET_QUERY = Object.freeze({
   query: process.env.BLOCKET_AD_QUERY ?? 'dell optiplex 3070 micro',
-  limit: parseInt(process.env.BLOCKET_AD_LIMIT ?? '100') || 100,
+  limit: parseInt(process.env.BLOCKET_AD_LIMIT ?? '60') || 60,
   sort: process.env.BLOCKET_AD_SORT ?? 'rel',
   listingType: process.env.BLOCKET_AD_LISTING_TYPE ?? 's',
   status: process.env.BLOCKET_AD_STATUS ?? 'active',
