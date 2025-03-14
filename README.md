@@ -97,11 +97,11 @@ To run the bot locally:
 npm install
 ```
 
-### Create a `.env` file with your configuration
+### Create### `.env`###ile with your configuration
 
 ```env
-BLOCKET_AD_QUERY=<your-query>
-NOTIFICATION_DISCORD_ENABLED=true
+BLCKET_AD_envQUERY=your-queenvry>
+NOIFICATION_DISCORD_ENABLED=true
 NOTIFICATION_DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/your-webhook-url
 # Add other settings as needed
 ```
@@ -114,4 +114,4 @@ npm start
 
 ## License
 
-MIT
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
