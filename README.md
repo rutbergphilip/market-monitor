@@ -75,9 +75,8 @@ To build and run the Docker container:
 docker build -t blocket-bot .
 
 # Run the Docker container
-# Make sure to set the required environment variables
 # Replace <your-query> with your actual Blocket query
-# Optionally, set other environment variables as needed
+# Optionally set other environment variables as needed
 
 docker run -d \
   -e BLOCKET_AD_QUERY=<your-query> \
@@ -97,11 +96,11 @@ To run the bot locally:
 npm install
 ```
 
-### Create### `.env`###ile with your configuration
+### Create an .env file with your configuration
 
 ```env
-BLCKET_AD_envQUERY=your-queenvry>
-NOIFICATION_DISCORD_ENABLED=true
+BLOCKET_AD_QUERY=<your-query>
+NOTIFICATION_DISCORD_ENABLED=true
 NOTIFICATION_DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/your-webhook-url
 # Add other settings as needed
 ```
