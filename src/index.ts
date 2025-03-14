@@ -1,4 +1,3 @@
-import 'tsconfig-paths/register';
 import * as dotenv from 'dotenv';
 import http from 'http';
 dotenv.config();
