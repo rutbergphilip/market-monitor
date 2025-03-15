@@ -8,8 +8,10 @@ dotenv.config();
 import { blocketJob } from '@/integrations/cron/blocket-job';
 import { healthCheckHandler, testDiscordHandler } from './routes';
 
-if (!process.env.BLOCKET_AD_QUERY) {
-  console.error('Environment variable BLOCKET_AD_QUERY is not set. Exiting...');
+if (!process.env.BLOCKET_AD_QUERIES) {
+  console.error(
+    'Environment variable BLOCKET_AD_QUERIES is not set. Exiting...',
+  );
   process.exit(1);
 }
 
