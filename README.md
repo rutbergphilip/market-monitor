@@ -1,116 +1,141 @@
-# Blocket Bot
+# 🚀 Blocket Bot
 
-Monitor listings on Blocket and get notified when new items are posted.
+Monitor Blocket listings effortlessly and get instant notifications for new ads—right in Discord or your inbox!
 
-## Features
+## 🌟 Features
 
-- Automated monitoring of Blocket listings
-- Customizable search queries and filters
-- Notifications via Discord webhook
-- Email notifications (feature-flagged, disabled by default, upcoming feature)
-- Docker and Kubernetes ready deployment
+- **Automated Listing Monitoring**: Track new Blocket ads with custom queries.
+- **Flexible Search Filters**: Customize ad searches precisely to your needs.
+- **Instant Notifications**:
+  - Discord webhook notifications ✅
+  - Email notifications 📧 (Upcoming, disabled by default)
+  - Telegram notifications (Upcoming)
+- **Price Monitoring**: Optional alerts for price changes.
+- **Docker & Kubernetes Ready**: Easy deployment with containerization support.
 
-## Configuration
+## ⚙️ Getting Started
 
-### Required Environment Variables
+### 🚧 Installation
 
-- `BLOCKET_AD_QUERIES`: A comma-separated list of queries to search for Blocket ads. This is required for the bot to function.
+Clone the repository and install dependencies:
 
-### Optional Environment Variables
-
-#### General Settings
-
-- `PORT`: The port on which the health check server will run (default: 8080)
-
-#### Blocket Query Settings
-
-- `BLOCKET_AD_LIMIT`: The maximum number of ads to fetch (default: 60)
-- `BLOCKET_AD_SORT`: The sorting order of the ads (default: 'rel')
-- `BLOCKET_AD_LISTING_TYPE`: The type of listing (default: 's')
-- `BLOCKET_AD_STATUS`: The status of the ads to fetch (default: 'active')
-- `BLOCKET_AD_GL`: The geolocation filter (default: 3)
-- `BLOCKET_AD_INCLUDE`: Additional parameters to include in the query (default: 'extend_with_shipping')
-
-#### Notification Settings
-
-- `NOTIFICATION_DISCORD_ENABLED`: Enable Discord notifications (default: `false`)
-- `NOTIFICATION_DISCORD_WEBHOOK_URL`: Discord webhook URL
-- `NOTIFICATION_DISCORD_USERNAME`: Bot username in Discord (default: "Blocket Bot")
-- `NOTIFICATION_DISCORD_AVATAR_URL`: Optional avatar URL for the bot
-- `NOTIFICATION_DISCORD_MAX_RETRIES`: Number of retries for failed webhooks (default: 3)
-- `NOTIFICATION_DISCORD_RETRY_DELAY`: Base delay between retries in ms (default: 1000)
-- `NOTIFICATION_EMAIL_ENABLED`: Enable email notifications (default: `false`)
-- `NOTIFICATION_EMAIL_FROM`: Sender email address
-- `NOTIFICATION_EMAIL_TO`: Recipient email address
-- `NOTIFICATION_EMAIL_SUBJECT`: Email subject (default: "New Blocket Listings")
-- `NOTIFICATION_EMAIL_SMTP_HOST`: SMTP server hostname
-- `NOTIFICATION_EMAIL_SMTP_PORT`: SMTP server port (default: 587)
-- `NOTIFICATION_EMAIL_SMTP_USER`: SMTP username
-- `NOTIFICATION_EMAIL_SMTP_PASS`: SMTP password
-- `NOTIFICATION_EMAIL_USE_TLS`: Use TLS for SMTP connection (default: `true`)
-- `NOTIFICATION_BATCH_SIZE`: Maximum number of notifications to send in one batch (default: 10)
-- `NOTIFICATION_ENABLE_BATCHING`: Enable/disable notification batching (default: `true`)
-
-#### Cron Job Settings
-
-- `BLOCKET_CRON_TIME`: The cron schedule for running the Blocket job (default: '_/5 _ \* \* \*')
-- `BLOCKET_TIMEZONE`: The timezone for the cron job (default: 'Europe/Stockholm')
-- `BLOCKET_RUN_ON_INIT`: Whether to run the job immediately on startup (default: `true`)
-
-#### Monitoring Settings
-
-- `OPT_PRICE_CHANGES`: Enable price change monitoring (default: `false`)
-- `OPT_PRICE_MIN`: Minimum price for monitoring (default: `null`)
-- `OPT_PRICE_MAX`: Maximum price for monitoring (default: `null`)
-- `OPT_PRICE_CURRENCY`: Currency for price monitoring (default: 'SEK')
-
-## Deployment
-
-### Docker
-
-To build and run the Docker container:
-
-```bash
-# Build the Docker image
-docker build -t blocket-bot .
-
-# Run the Docker container
-# Replace <your-queries> with your actual Blocket queries
-# Optionally set other environment variables as needed
-
-docker run -d \
-  -e BLOCKET_AD_QUERIES=<your-queries> \
-  -e NOTIFICATION_DISCORD_ENABLED=true \
-  -e NOTIFICATION_DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/your-webhook-url \
-  -p 8080:8080 \
-  blocket-bot
-```
-
-## Running Locally
-
-To run the bot locally:
-
-### Install dependencies
-
-```bash
+```sh
+git clone https://github.com/your-username/blocket-bot.git
+cd blocket-bot
 npm install
 ```
 
-### Create an .env file with your configuration
+### 🔑 Configuration
+
+Create a `.env` file in the project root and add your configuration:
 
 ```env
-BLOCKET_AD_QUERIES=<your-queries>
+BLOCKET_AD_QUERIES=<your-query-1>,<your-query-2>
 NOTIFICATION_DISCORD_ENABLED=true
 NOTIFICATION_DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/your-webhook-url
-# Add other settings as needed
 ```
 
-### Start the application
+See the full list of configuration options below.
 
-```bash
+### 🛠️ Configuration Options
+
+#### Required
+
+- `BLOCKET_AD_QUERIES`: Comma-separated Blocket search queries.
+
+#### Optional
+
+##### General
+
+- `PORT` (default: 8080): Health check server port.
+
+##### Blocket Query
+
+| Variable                  | Default              | Description                 |
+| ------------------------- | -------------------- | --------------------------- |
+| `BLOCKET_AD_LIMIT`        | 60                   | Max ads fetched per query   |
+| `BLOCKET_AD_SORT`         | rel                  | Sort order                  |
+| `BLOCKET_AD_LISTING_TYPE` | s                    | Type of listing             |
+| `BLOCKET_AD_STATUS`       | active               | Status filter               |
+| `BLOCKET_AD_GL`           | 3                    | Geolocation filter          |
+| `BLOCKET_AD_INCLUDE`      | extend_with_shipping | Additional query parameters |
+
+##### Notifications
+
+###### Discord
+
+| Variable                           | Default     | Description                  |
+| ---------------------------------- | ----------- | ---------------------------- |
+| `NOTIFICATION_DISCORD_ENABLED`     | false       | Enable Discord notifications |
+| `NOTIFICATION_DISCORD_WEBHOOK_URL` |             | Discord webhook URL          |
+| `NOTIFICATION_DISCORD_USERNAME`    | Blocket Bot | Discord bot username         |
+| `NOTIFICATION_DISCORD_AVATAR_URL`  |             | Optional bot avatar URL      |
+| `NOTIFICATION_DISCORD_MAX_RETRIES` | 3           | Retry attempts for webhook   |
+| `NOTIFICATION_DISCORD_RETRY_DELAY` | 1000ms      | Retry delay (ms)             |
+
+###### Email (Upcoming)
+
+| Variable                       | Default              | Description                |
+| ------------------------------ | -------------------- | -------------------------- |
+| `NOTIFICATION_EMAIL_ENABLED`   | false                | Enable email notifications |
+| `NOTIFICATION_EMAIL_FROM`      |                      | Sender email               |
+| `NOTIFICATION_EMAIL_TO`        |                      | Recipient email            |
+| `NOTIFICATION_EMAIL_SUBJECT`   | New Blocket Listings | Email subject              |
+| `NOTIFICATION_EMAIL_SMTP_HOST` |                      | SMTP server                |
+| `NOTIFICATION_EMAIL_SMTP_PORT` | 587                  | SMTP port                  |
+| `NOTIFICATION_EMAIL_SMTP_USER` |                      | SMTP username              |
+| `NOTIFICATION_EMAIL_SMTP_PASS` |                      | SMTP password              |
+| `NOTIFICATION_EMAIL_USE_TLS`   | true                 | Use TLS for SMTP           |
+
+##### Batching
+
+- `NOTIFICATION_ENABLE_BATCHING`: Enable batching (default: true)
+- `NOTIFICATION_BATCH_SIZE`: Max notifications per batch (default: 10)
+
+##### Cron Job
+
+- `BLOCKET_CRON_TIME`: Cron schedule (default: _/5 _ \* \* \*)
+- `BLOCKET_TIMEZONE`: Job timezone (default: Europe/Stockholm)
+- `BLOCKET_RUN_ON_INIT`: Run immediately on startup (default: true)
+
+##### Monitoring
+
+- `OPT_PRICE_CHANGES`: Enable price change alerts (default: false)
+- `OPT_PRICE_MIN`: Min price (default: null)
+- `OPT_PRICE_MAX`: Max price (default: null)
+- `OPT_PRICE_CURRENCY`: Currency (default: SEK)
+
+## 🐳 Docker Deployment
+
+Build Docker image:
+
+```sh
+docker build -t blocket-bot .
+```
+
+Run Docker container:
+
+```sh
+docker run -d \
+ -e BLOCKET_AD_QUERIES=<your-queries> \
+ -e NOTIFICATION_DISCORD_ENABLED=true \
+ -e NOTIFICATION_DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/your-webhook-url \
+ -p 8080:8080 \
+ blocket-bot
+```
+
+## 💻 Running Locally
+
+Start the bot with:
+
+```sh
 npm start
 ```
 
-## License
+## 📜 License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License.
+
+## ⭐ Star me!
+
+If you like Blocket Bot, give it a ⭐!
