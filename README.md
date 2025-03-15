@@ -24,7 +24,7 @@ Monitor Blocket listings effortlessly and get instant notifications for new adsâ
 Clone the repository and install dependencies:
 
 ```sh
-git clone https://github.com/your-username/blocket-bot.git
+git clone https://github.com/rutbergphilip/blocket-bot
 cd blocket-bot
 npm install
 ```
