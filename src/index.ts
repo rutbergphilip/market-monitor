@@ -1,9 +1,13 @@
+import 'tsconfig-paths/register';
 import * as dotenv from 'dotenv';
 import http from 'http';
 dotenv.config();
 
 import { CronJob } from 'cron';
 import { blocketJob } from '@/integrations/cron/blocket-job';
+import { sendDiscordNotification } from '@/services/notification';
+import { createServer } from 'http';
+import { healthCheckHandler, testDiscordHandler } from './routes';
 
 if (!process.env.BLOCKET_AD_QUERY) {
   console.error('Environment variable BLOCKET_AD_QUERY is not set. Exiting...');
@@ -11,16 +15,17 @@ if (!process.env.BLOCKET_AD_QUERY) {
 }
 
 /**
- * Create a simple HTTP server for health checks
- * This allows Docker and Kubernetes to determine if the container is healthy
+ * Create a simple HTTP server for health checks and testing
+ * - Health check endpoint: /health
+ * - Test Discord notification endpoint: /test-discord
+ *   - Method: POST
+ *   - Body: JSON with ads to send
  */
-const server = http.createServer((req, res) => {
+const server = createServer((req, res) => {
   if (req.url === '/health') {
-    // Simple health check endpoint
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(
-      JSON.stringify({ status: 'healthy', timestamp: new Date().toISOString() })
-    );
+    healthCheckHandler(req, res);
+  } else if (req.url === '/test-discord' && req.method === 'POST') {
+    testDiscordHandler(req, res);
   } else {
     res.writeHead(404);
     res.end();
