@@ -77,7 +77,7 @@ See the full list of configuration options below.
 | `NOTIFICATION_DISCORD_MAX_RETRIES` | 3           | Retry attempts for webhook   |
 | `NOTIFICATION_DISCORD_RETRY_DELAY` | 1000ms      | Retry delay (ms)             |
 
-###### Email (Upcoming)
+<!-- ###### Email (Upcoming)
 
 | Variable                       | Default              | Description                |
 | ------------------------------ | -------------------- | -------------------------- |
@@ -89,7 +89,7 @@ See the full list of configuration options below.
 | `NOTIFICATION_EMAIL_SMTP_PORT` | 587                  | SMTP port                  |
 | `NOTIFICATION_EMAIL_SMTP_USER` |                      | SMTP username              |
 | `NOTIFICATION_EMAIL_SMTP_PASS` |                      | SMTP password              |
-| `NOTIFICATION_EMAIL_USE_TLS`   | true                 | Use TLS for SMTP           |
+| `NOTIFICATION_EMAIL_USE_TLS`   | true                 | Use TLS for SMTP           | -->
 
 ##### Batching
 
