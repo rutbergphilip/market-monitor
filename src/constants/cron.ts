@@ -16,6 +16,10 @@ export const BLOCKET_QUERY = Object.freeze({
   include: process.env.BLOCKET_AD_INCLUDE ?? 'extend_with_shipping',
 }) as BlocketQueryConfig;
 
+export const BLOCKET_QUERIES = (process.env.BLOCKET_AD_QUERIES || '')
+  .split(',')
+  .map((query) => query.trim());
+
 export const BLOCKET_MONITORING_CONFIG = Object.freeze({
   // default values should always be null
   pricing: {

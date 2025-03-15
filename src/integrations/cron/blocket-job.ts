@@ -1,40 +1,41 @@
-import client from 'blocket.js';
-import { cache } from '@/cache/blocket';
-import { BLOCKET_QUERY } from '@/constants/cron';
+import client, { type BlocketAd } from 'blocket.js';
+
+import { BLOCKET_QUERY, BLOCKET_QUERIES } from '@/constants/cron';
 import { notifyAboutAds } from '@/services/notification';
-import type { BlocketAd } from '@/types/blocket';
+import { cache } from '@/cache/blocket';
 
 let isFirstRun = true;
 
 /**
  * Fetches Blocket data
- * @function blocketJob
- * @returns {Promise<void>}
+ * @function fetchAdsForQuery
+ * @param {string} query - The query for fetching ads
+ * @returns {Promise<BlocketAd[]>}
  */
+async function fetchAdsForQuery(query: string): Promise<BlocketAd[]> {
+  const queryConfig = { ...BLOCKET_QUERY, query };
+  return client.find(queryConfig);
+}
+
 export async function blocketJob(): Promise<void> {
   try {
-    const data = await client.find(BLOCKET_QUERY);
+    const allAds = await Promise.all(BLOCKET_QUERIES.map(fetchAdsForQuery));
+    const data = allAds.flat();
     if (!data || !Array.isArray(data)) return;
 
     if (isFirstRun) return execFirstRun(data as BlocketAd[]);
 
-    // Check for new ads and notify
     const newAds = identifyNewAds(data as BlocketAd[]);
 
     if (newAds.length > 0) {
-      // Use the new notification service
       await notifyAboutAds(newAds);
-
-      // Update cache with new ads
       for (const ad of newAds) {
         cache.set(ad.ad_id, ad);
       }
     }
 
     console.log(
-      `Job completed: ${new Date().toISOString()}, found ${
-        newAds.length
-      } new ads`
+      `Job completed: ${new Date().toISOString()}, found ${newAds.length} new ads`,
     );
   } catch (error) {
     console.error('Error in blocket job:', error);
@@ -55,7 +56,7 @@ function execFirstRun(ads: BlocketAd[]): void {
   console.log(
     `First run completed: ${new Date().toISOString()}, cached ${
       ads.length
-    } existing ads`
+    } existing ads`,
   );
 }
 
