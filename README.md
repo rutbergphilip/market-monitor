@@ -8,10 +8,14 @@ Monitor Blocket listings effortlessly and get instant notifications for new ads�
 - **Flexible Search Filters**: Customize ad searches precisely to your needs.
 - **Instant Notifications**:
   - Discord webhook notifications ✅
-  - Email notifications 📧 (Upcoming, disabled by default)
-  - Telegram notifications (Upcoming)
-- **Price Monitoring**: Optional alerts for price changes.
 - **Docker & Kubernetes Ready**: Easy deployment with containerization support.
+
+## 🔜 Upcoming Features
+
+- **Telegram Notifications**: Get notified via Telegram.
+- **Email Notifications**: Send email alerts for new listings.
+- **Price Monitoring**: Track price changes and get notified.
+- **Batch Notifications**: Group notifications for better organization.
 
 ## ⚙️ Getting Started
 
