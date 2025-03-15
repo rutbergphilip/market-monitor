@@ -1,6 +1,7 @@
-import { NOTIFICATION_CONFIG } from '@/constants/notifications';
-import { BlocketAd } from '@/types/blocket';
+import type { BlocketAd } from 'blocket.js';
 import { ofetch } from 'ofetch';
+
+import { NOTIFICATION_CONFIG } from '@/constants/notifications';
 
 /**
  * Formats a Blocket ad for notification
@@ -27,7 +28,7 @@ function formatAdInfo(ad: BlocketAd) {
 async function withRetry<T>(
   fn: () => Promise<T>,
   maxRetries: number,
-  retryDelay: number
+  retryDelay: number,
 ): Promise<T> {
   let lastError: Error | undefined;
 
@@ -37,7 +38,7 @@ async function withRetry<T>(
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
       console.warn(
-        `Attempt ${attempt + 1}/${maxRetries} failed: ${lastError.message}`
+        `Attempt ${attempt + 1}/${maxRetries} failed: ${lastError.message}`,
       );
 
       if (attempt < maxRetries - 1) {
@@ -78,7 +79,7 @@ export async function sendDiscordNotification(ads: BlocketAd[]): Promise<void> {
           username,
           avatarUrl,
           maxRetries,
-          retryDelay
+          retryDelay,
         );
 
         // Wait a bit between batches
@@ -95,7 +96,7 @@ export async function sendDiscordNotification(ads: BlocketAd[]): Promise<void> {
           username,
           avatarUrl,
           maxRetries,
-          retryDelay
+          retryDelay,
         );
 
         // Wait a bit between requests to avoid rate limits
@@ -118,7 +119,7 @@ async function sendDiscordBatch(
   username: string,
   avatarUrl: string,
   maxRetries: number,
-  retryDelay: number
+  retryDelay: number,
 ): Promise<void> {
   if (ads.length === 0) return;
 
@@ -159,7 +160,7 @@ async function sendDiscordBatch(
       });
     },
     maxRetries,
-    retryDelay
+    retryDelay,
   );
 }
 
@@ -172,7 +173,7 @@ async function sendDiscordSingle(
   username: string,
   avatarUrl: string,
   maxRetries: number,
-  retryDelay: number
+  retryDelay: number,
 ): Promise<void> {
   const adInfo = formatAdInfo(ad);
 
@@ -209,7 +210,7 @@ async function sendDiscordSingle(
       });
     },
     maxRetries,
-    retryDelay
+    retryDelay,
   );
 }
 

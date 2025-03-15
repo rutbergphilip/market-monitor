@@ -1,4 +1,4 @@
-import type { BlocketAd } from '@/types/blocket';
+import type { BlocketAd } from 'blocket.js';
 
 /**
  * Cache for Blocket ads
