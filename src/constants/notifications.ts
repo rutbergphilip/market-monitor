@@ -11,7 +11,9 @@ export const NOTIFICATION_CONFIG = freeze({
     enabled: process.env.NOTIFICATION_DISCORD_ENABLED === 'true',
     webhookUrl: process.env.NOTIFICATION_DISCORD_WEBHOOK_URL || '',
     username: process.env.NOTIFICATION_DISCORD_USERNAME || '',
-    avatarUrl: process.env.NOTIFICATION_DISCORD_AVATAR_URL || '',
+    avatarUrl:
+      process.env.NOTIFICATION_DISCORD_AVATAR_URL ||
+      'https://media.licdn.com/dms/image/v2/C4D0BAQFRais3CkgqRw/company-logo_200_200/company-logo_200_200/0/1661494474152/blocket_se_logo?e=2147483647&v=beta&t=f6-lmVB7bEh-xK7tFOV5wa3AKgmLaTI5UeN1lc9PF_o',
     // Maximum number of retries for failed webhook calls
     maxRetries: parseInt(process.env.NOTIFICATION_DISCORD_MAX_RETRIES || '3'),
     // Delay between retries in ms
