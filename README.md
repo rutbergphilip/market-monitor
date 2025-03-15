@@ -14,7 +14,7 @@ Monitor listings on Blocket and get notified when new items are posted.
 
 ### Required Environment Variables
 
-- `BLOCKET_AD_QUERY`: The query to search for Blocket ads. This is required for the bot to function.
+- `BLOCKET_AD_QUERIES`: A comma-separated list of queries to search for Blocket ads. This is required for the bot to function.
 
 ### Optional Environment Variables
 
@@ -53,7 +53,7 @@ Monitor listings on Blocket and get notified when new items are posted.
 
 #### Cron Job Settings
 
-- `BLOCKET_CRON_TIME`: The cron schedule for running the Blocket job (default: '_/5_ \* \* \*')
+- `BLOCKET_CRON_TIME`: The cron schedule for running the Blocket job (default: '_/5 _ \* \* \*')
 - `BLOCKET_TIMEZONE`: The timezone for the cron job (default: 'Europe/Stockholm')
 - `BLOCKET_RUN_ON_INIT`: Whether to run the job immediately on startup (default: `true`)
 
@@ -75,11 +75,11 @@ To build and run the Docker container:
 docker build -t blocket-bot .
 
 # Run the Docker container
-# Replace <your-query> with your actual Blocket query
+# Replace <your-queries> with your actual Blocket queries
 # Optionally set other environment variables as needed
 
 docker run -d \
-  -e BLOCKET_AD_QUERY=<your-query> \
+  -e BLOCKET_AD_QUERIES=<your-queries> \
   -e NOTIFICATION_DISCORD_ENABLED=true \
   -e NOTIFICATION_DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/your-webhook-url \
   -p 8080:8080 \
@@ -99,7 +99,7 @@ npm install
 ### Create an .env file with your configuration
 
 ```env
-BLOCKET_AD_QUERY=<your-query>
+BLOCKET_AD_QUERIES=<your-queries>
 NOTIFICATION_DISCORD_ENABLED=true
 NOTIFICATION_DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/your-webhook-url
 # Add other settings as needed
