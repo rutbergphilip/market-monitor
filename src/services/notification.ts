@@ -56,7 +56,7 @@ async function withRetry<T>(
  * Sends a notification to Discord via webhook with retry capability
  * @param ads List of Blocket ads to notify about
  */
-async function sendDiscordNotification(ads: BlocketAd[]): Promise<void> {
+export async function sendDiscordNotification(ads: BlocketAd[]): Promise<void> {
   const { webhookUrl, enabled, username, avatarUrl, maxRetries, retryDelay } =
     NOTIFICATION_CONFIG.discord;
 
@@ -71,6 +71,7 @@ async function sendDiscordNotification(ads: BlocketAd[]): Promise<void> {
       // Process ads in batches
       for (let i = 0; i < ads.length; i += batchSize) {
         const batch = ads.slice(i, i + batchSize);
+
         await sendDiscordBatch(
           batch,
           webhookUrl,
@@ -121,7 +122,9 @@ async function sendDiscordBatch(
 ): Promise<void> {
   if (ads.length === 0) return;
 
-  // Create embeds for all ads in the batch
+  const defaultUsername = username || 'Blocket Bot';
+  const defaultAvatarUrl = avatarUrl || ads[0]?.images?.[0]?.url || undefined;
+
   const embeds = ads.map((ad) => {
     const adInfo = formatAdInfo(ad);
     return {
@@ -148,10 +151,10 @@ async function sendDiscordBatch(
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username,
-          avatar_url: avatarUrl || undefined,
+          username: defaultUsername,
+          avatar_url: defaultAvatarUrl,
           content: `Found ${ads.length} new listings!`,
-          embeds: embeds.slice(0, 10), // Discord has a limit of 10 embeds per message
+          embeds: embeds.slice(0, 10),
         }),
       });
     },
@@ -173,14 +176,17 @@ async function sendDiscordSingle(
 ): Promise<void> {
   const adInfo = formatAdInfo(ad);
 
+  const defaultUsername = username || 'Blocket Bot';
+  const defaultAvatarUrl = avatarUrl || ad.images?.[0]?.url || undefined;
+
   await withRetry(
     async () => {
       await ofetch(webhookUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username,
-          avatar_url: avatarUrl || undefined,
+          username: defaultUsername,
+          avatar_url: defaultAvatarUrl,
           embeds: [
             {
               title: adInfo.title,
