@@ -1,9 +1,12 @@
 name: Deploy
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
+    inputs:
+      release-tag:
+        description: 'Docker image tag (e.g., v1.0.0)'
+        required: true
+        type: string
 
 jobs:
   build:
@@ -27,4 +30,4 @@ jobs:
         with:
           platforms: linux/arm64
           push: true
-          tags: rutbergphilip/main:blocket-bot
+          tags: rutbergphilip/blocket-bot:${{ inputs.release-tag }}
