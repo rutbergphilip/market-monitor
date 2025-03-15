@@ -1,12 +1,11 @@
 import 'tsconfig-paths/register';
+import { CronJob } from 'cron';
+import { createServer } from 'http';
+
 import * as dotenv from 'dotenv';
-import http from 'http';
 dotenv.config();
 
-import { CronJob } from 'cron';
 import { blocketJob } from '@/integrations/cron/blocket-job';
-import { sendDiscordNotification } from '@/services/notification';
-import { createServer } from 'http';
 import { healthCheckHandler, testDiscordHandler } from './routes';
 
 if (!process.env.BLOCKET_AD_QUERY) {
@@ -15,7 +14,7 @@ if (!process.env.BLOCKET_AD_QUERY) {
 }
 
 /**
- * Create a simple HTTP server for health checks and testing
+ * A simple HTTP server for health checks and testing
  * - Health check endpoint: /health
  * - Test Discord notification endpoint: /test-discord
  *   - Method: POST
@@ -32,13 +31,11 @@ const server = createServer((req, res) => {
   }
 });
 
-// Use environment variable for port or default to 8080
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 8080;
 server.listen(PORT, () => {
   console.log(`Health check server running on port ${PORT}`);
 });
 
-// Set up blocket job with cron schedule from environment variables
 const job = CronJob.from({
   cronTime: process.env.BLOCKET_CRON_TIME || '*/5 * * * *',
   onTick: blocketJob,
@@ -49,7 +46,6 @@ const job = CronJob.from({
 
 job.start();
 
-// Handle graceful shutdown
 process.on('SIGTERM', () => {
   console.log('SIGTERM signal received, shutting down...');
   job.stop();
