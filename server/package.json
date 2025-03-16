@@ -6,7 +6,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "ts-node src/index.ts",
     "build": "tsc && tsc-alias",
-    "dev": "nodemon src/index.ts"
+    "dev": "nodemon src/index.ts",
+    "preinstall": "npx only-allow pnpm"
   },
   "_moduleAliases": {
     "@": "src"
