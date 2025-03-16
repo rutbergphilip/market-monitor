@@ -1,7 +1,8 @@
-import type { BlocketAd } from 'blocket.js';
 import { ofetch } from 'ofetch';
 
 import { NOTIFICATION_CONFIG } from '@/constants/notifications';
+
+import type { BlocketAd } from 'blocket.js';
 
 /**
  * Formats a Blocket ad for notification
