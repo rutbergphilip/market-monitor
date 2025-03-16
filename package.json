@@ -1,0 +1,13 @@
+{
+  "name": "blocket-bot",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "server",
+    "ui"
+  ],
+  "scripts": {
+    "dev": "pnpm -r run dev"
+  },
+  "packageManager": "pnpm@9.6.0+sha1.65cd48c20dd329b7f455088b6dd17d4d5b6d02e3"
+}
