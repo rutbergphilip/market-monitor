@@ -7,7 +7,11 @@
     "ui"
   ],
   "scripts": {
-    "dev": "pnpm -r run dev"
+    "dev": "pnpm -r run dev",
+    "preinstall": "npx only-allow pnpm"
   },
-  "packageManager": "pnpm@9.6.0+sha1.65cd48c20dd329b7f455088b6dd17d4d5b6d02e3"
+  "packageManager": "pnpm@9.6.0+sha1.65cd48c20dd329b7f455088b6dd17d4d5b6d02e3",
+  "devDependencies": {
+    "only-allow": "^1.2.1"
+  }
 }
