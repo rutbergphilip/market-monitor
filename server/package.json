@@ -12,10 +12,12 @@
     "@": "src"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Philip Rutberg",
+  "license": "MIT",
   "description": "",
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/express": "^5.0.1",
     "@types/pg": "^8.11.11",
     "@typescript-eslint/eslint-plugin": "^8.26.1",
     "@typescript-eslint/parser": "^8.26.1",
@@ -30,9 +32,11 @@
     "typescript": "^5.7.3"
   },
   "dependencies": {
+    "better-sqlite3": "^11.9.1",
     "blocket.js": "^1.2.2",
     "cron": "^4.0.0",
     "dotenv": "^16.4.7",
+    "express": "^4.21.2",
     "module-alias": "^2.2.3",
     "ofetch": "^1.4.1",
     "pg": "^8.14.0",
