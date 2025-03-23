@@ -1,34 +1,26 @@
-# Base image
-FROM node:23-bullseye-slim AS base
-WORKDIR /app
+FROM node:20-slim
 
-# Copy all files
-COPY . .
+# Install supervisor
+RUN apt-get update && apt-get install -y supervisor && rm -rf /var/lib/apt/lists/*
 
-# Build stage: install dependencies and build all projects
-FROM base AS build
-RUN npm ci
-RUN npm run --workspaces build
+# Create log directory for supervisor
+RUN mkdir -p /var/log/supervisor
 
-# ---------
+# Copy the application code and supervisor config
+COPY ui /app/ui
+COPY server /app/server
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Production image
-FROM node:23-alpine AS production
-WORKDIR /app
+# Build UI
+WORKDIR /app/ui
+RUN npm install && npm run build
 
-# Copy built server files
-COPY --from=build /app/server/dist ./server/dist
-COPY --from=build /app/server/package.json ./server/package.json
+# Build Server
+WORKDIR /app/server
+RUN npm install && npm run build
 
-# Copy hoisted node_modules from the root
-COPY --from=build /app/node_modules ./node_modules
-
-# Copy built UI files
-COPY --from=build /app/ui/.output/public ./ui/public
-
-# Expose server port
+# Expose port
 EXPOSE 3000
 
-# Start the server
-CMD ["node", "server/dist/index.js"]
-
+# Start supervisor to run both processes
+CMD ["/usr/bin/supervisord", "-n"]
