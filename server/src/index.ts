@@ -6,6 +6,8 @@ dotenv.config();
 
 import routes from './routes';
 
+import { initializeDb } from './db';
+
 if (!process.env.BLOCKET_AD_QUERIES) {
   console.error(
     'Environment variable BLOCKET_AD_QUERIES is not set. Exiting...',
@@ -36,6 +38,8 @@ app.use((req, res) => {
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 8080;
 const server = app.listen(PORT, () => {
   console.log(`Express server running on port ${PORT}`);
+
+  initializeDb();
 });
 
 process.on('SIGTERM', () => {
