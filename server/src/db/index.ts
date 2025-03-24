@@ -12,8 +12,11 @@ export function initializeDb() {
   db.exec(`
     CREATE TABLE IF NOT EXISTS workers (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      value TEXT NOT NULL
+      uuid TEXT NOT NULL UNIQUE,
+      cron_schedule TEXT NOT NULL,
+      query TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
 
@@ -25,9 +28,10 @@ export function initializeDb() {
 
   if (count === 0) {
     const insert = db.prepare(
-      `INSERT INTO workers (uuid, cron_schedule, query) VALUES (?, ?, ?)`,
+      `INSERT INTO workers (uuid, cron_schedule, query, created_at, updated_at)
+       VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
     );
-    insert.run(uuid(), 'defaultCronSchedule', 'defaultQuery');
+    insert.run(uuid(), '*/5 * * * *', 'Macbook Pro 14');
     console.log('Default configuration seeded.');
   }
 }
