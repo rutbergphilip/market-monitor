@@ -1,6 +1,6 @@
 # 🚀 Blocket Bot
 
-Monitor Blocket listings effortlessly and get instant notifications for new ads—right in Discord or your inbox!
+Monitor Blocket listings effortlessly and get instant notifications for new ads, right in Discord or your inbox!
 
 ## 🌟 Features
 
