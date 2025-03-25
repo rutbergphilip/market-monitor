@@ -10,7 +10,7 @@ const db = new Database(dbPath);
 
 export function initializeDb() {
   db.exec(`
-    CREATE TABLE IF NOT EXISTS workers (
+    CREATE TABLE IF NOT EXISTS jobs (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       uuid TEXT NOT NULL UNIQUE,
       cron_schedule TEXT NOT NULL,
@@ -20,15 +20,13 @@ export function initializeDb() {
     )
   `);
 
-  const { count } = db
-    .prepare('SELECT COUNT(*) AS count FROM workers')
-    .get() as {
+  const { count } = db.prepare('SELECT COUNT(*) AS count FROM jobs').get() as {
     count?: number;
   };
 
   if (count === 0) {
     const insert = db.prepare(
-      `INSERT INTO workers (uuid, cron_schedule, query, created_at, updated_at)
+      `INSERT INTO jobs (uuid, cron_schedule, query, created_at, updated_at)
        VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
     );
     insert.run(uuid(), '*/5 * * * *', 'Macbook Pro 14');
