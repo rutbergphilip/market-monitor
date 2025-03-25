@@ -1,6 +1,7 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 import { v4 as uuid } from 'uuid';
+import logger from '@/integrations/logger';
 
 // Job entity type definition
 export interface Job {
@@ -47,7 +48,11 @@ export function create(input: CreateJobInput): Job {
     `);
 
     const info = stmt.run(jobUuid, input.cron_schedule, input.query, now, now);
-    console.log('Job created with rowid', info.lastInsertRowid);
+    logger.info({
+      message: 'Job created',
+      jobId: info.lastInsertRowid,
+      query: input.query,
+    });
 
     return {
       id: Number(info.lastInsertRowid),
@@ -58,7 +63,11 @@ export function create(input: CreateJobInput): Job {
       updated_at: now,
     };
   } catch (error) {
-    console.log('Error creating job', error);
+    logger.error({
+      error: error as Error,
+      message: 'Error creating job',
+      input,
+    });
     throw error;
   }
 }
@@ -82,10 +91,20 @@ export function list(limit?: number, offset?: number): Job[] {
     }
 
     const jobs = db.prepare(query).all() as Job[];
-    console.log('Retrieved jobs count', jobs.length);
+    logger.debug({
+      message: 'Retrieved jobs',
+      count: jobs.length,
+      limit,
+      offset,
+    });
     return jobs;
   } catch (error) {
-    console.log('Error getting all jobs', error);
+    logger.error({
+      error: error as Error,
+      message: 'Error listing jobs',
+      limit,
+      offset,
+    });
     throw error;
   }
 }
@@ -100,10 +119,18 @@ export function getById(id: number): Job | null {
     const job = db.prepare('SELECT * FROM jobs WHERE id = ?').get(id) as
       | Job
       | undefined;
-    console.log('Job by ID query result', job);
+    logger.debug({
+      message: 'Job retrieved by ID',
+      jobId: id,
+      found: !!job,
+    });
     return job || null;
   } catch (error) {
-    console.log('Error getting job by ID', error);
+    logger.error({
+      error: error as Error,
+      message: 'Error getting job by ID',
+      jobId: id,
+    });
     throw error;
   }
 }
@@ -118,10 +145,18 @@ export function getByUUID(uuid: string): Job | null {
     const job = db.prepare('SELECT * FROM jobs WHERE uuid = ?').get(uuid) as
       | Job
       | undefined;
-    console.log('Job by UUID query result', job);
+    logger.debug({
+      message: 'Job retrieved by UUID',
+      uuid,
+      found: !!job,
+    });
     return job || null;
   } catch (error) {
-    console.log('Error getting job by UUID', error);
+    logger.error({
+      error: error as Error,
+      message: 'Error getting job by UUID',
+      uuid,
+    });
     throw error;
   }
 }
@@ -137,7 +172,10 @@ export function update(uuid: string, input: UpdateJobInput): Job | null {
     const job = getByUUID(uuid);
 
     if (!job) {
-      console.log('Job not found for update', uuid);
+      logger.warn({
+        message: 'Job not found for update',
+        uuid,
+      });
       return null;
     }
 
@@ -155,7 +193,11 @@ export function update(uuid: string, input: UpdateJobInput): Job | null {
     }
 
     if (updates.length === 0) {
-      console.log('No updates provided', input);
+      logger.warn({
+        message: 'No updates provided',
+        uuid,
+        input,
+      });
       return job;
     }
 
@@ -171,7 +213,11 @@ export function update(uuid: string, input: UpdateJobInput): Job | null {
     `);
 
     const info = stmt.run(...values);
-    console.log('Job update result', info.changes);
+    logger.info({
+      message: 'Job updated',
+      uuid,
+      changes: info.changes,
+    });
 
     if (info.changes === 0) {
       return job;
@@ -179,7 +225,12 @@ export function update(uuid: string, input: UpdateJobInput): Job | null {
 
     return getByUUID(uuid);
   } catch (error) {
-    console.log('Error updating job', error);
+    logger.error({
+      error: error as Error,
+      message: 'Error updating job',
+      uuid,
+      input,
+    });
     throw error;
   }
 }
@@ -193,11 +244,19 @@ export function remove(uuid: string): boolean {
   try {
     const stmt = db.prepare('DELETE FROM jobs WHERE uuid = ?');
     const info = stmt.run(uuid);
-    console.log('Delete job result', info.changes);
+    logger.info({
+      message: 'Job deleted',
+      uuid,
+      success: info.changes > 0,
+    });
 
     return info.changes > 0;
   } catch (error) {
-    console.log('Error deleting job', error);
+    logger.error({
+      error: error as Error,
+      message: 'Error deleting job',
+      uuid,
+    });
     throw error;
   }
 }
@@ -211,10 +270,16 @@ export function count(): number {
     const result = db.prepare('SELECT COUNT(*) as count FROM jobs').get() as {
       count: number;
     };
-    console.log('Total job count', result.count);
+    logger.debug({
+      message: 'Jobs counted',
+      total: result.count,
+    });
     return result.count;
   } catch (error) {
-    console.log('Error counting jobs', error);
+    logger.error({
+      error: error as Error,
+      message: 'Error counting jobs',
+    });
     throw error;
   }
 }
@@ -234,11 +299,19 @@ export function search(searchQuery: string): Job[] {
 
     const searchPattern = `%${searchQuery}%`;
     const jobs = stmt.all(searchPattern, searchPattern) as Job[];
-    console.log('Search jobs results count', jobs.length);
+    logger.debug({
+      message: 'Jobs search completed',
+      query: searchQuery,
+      results: jobs.length,
+    });
 
     return jobs;
   } catch (error) {
-    console.log('Error searching jobs', error);
+    logger.error({
+      error: error as Error,
+      message: 'Error searching jobs',
+      query: searchQuery,
+    });
     throw error;
   }
 }

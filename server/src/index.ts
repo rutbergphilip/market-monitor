@@ -5,13 +5,11 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 import routes from './routes';
-
+import logger from './integrations/logger';
 import { initializeDb } from './db';
 
 if (!process.env.BLOCKET_AD_QUERIES) {
-  console.error(
-    'Environment variable BLOCKET_AD_QUERIES is not set. Exiting...',
-  );
+  logger.error('Environment variable BLOCKET_AD_QUERIES is not set. Exiting...');
   process.exit(1);
 }
 
@@ -37,15 +35,15 @@ app.use((req, res) => {
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 8080;
 const server = app.listen(PORT, () => {
-  console.log(`Express server running on port ${PORT}`);
+  logger.info(`Express server running on port ${PORT}`);
 
   initializeDb();
 });
 
 process.on('SIGTERM', () => {
-  console.log('SIGTERM signal received, shutting down...');
+  logger.info('SIGTERM signal received, shutting down...');
   server.close(() => {
-    console.log('Express server closed');
+    logger.info('Express server closed');
     process.exit(0);
   });
 });

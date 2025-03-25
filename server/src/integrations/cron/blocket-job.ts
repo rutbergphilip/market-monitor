@@ -3,6 +3,7 @@ import client, { type BlocketAd } from 'blocket.js';
 import { BLOCKET_QUERY, BLOCKET_QUERIES } from '@/constants/cron';
 import { notifyAboutAds } from '@/services/notification';
 import { cache } from '@/cache/blocket';
+import logger from '@/integrations/logger';
 
 let isFirstRun = true;
 
@@ -34,11 +35,16 @@ export async function blocketJob(): Promise<void> {
       }
     }
 
-    console.log(
-      `Job completed: ${new Date().toISOString()}, found ${newAds.length} new ads`,
-    );
+    logger.info({
+      message: `Job completed: found ${newAds.length} new ads`,
+      timestamp: new Date().toISOString(),
+    });
   } catch (error) {
-    console.error('Error in blocket job:', error);
+    logger.error({
+      error: error as Error,
+      message: 'Error in blocket job',
+      timestamp: new Date().toISOString(),
+    });
   }
 }
 
@@ -53,11 +59,10 @@ function execFirstRun(ads: BlocketAd[]): void {
     cache.set(ad.ad_id, ad);
   }
   isFirstRun = false;
-  console.log(
-    `First run completed: ${new Date().toISOString()}, cached ${
-      ads.length
-    } existing ads`,
-  );
+  logger.info({
+    message: `First run completed: cached ${ads.length} existing ads`,
+    timestamp: new Date().toISOString(),
+  });
 }
 
 /**

@@ -1,6 +1,7 @@
 import { ofetch } from 'ofetch';
 
 import { NOTIFICATION_CONFIG } from '@/constants/notifications';
+import logger from '@/integrations/logger';
 
 import type { BlocketAd } from 'blocket.js';
 
@@ -38,9 +39,12 @@ async function withRetry<T>(
       return await fn();
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
-      console.warn(
-        `Attempt ${attempt + 1}/${maxRetries} failed: ${lastError.message}`,
-      );
+      logger.warn({
+        message: `Retry attempt ${attempt + 1}/${maxRetries} failed`,
+        error: lastError,
+        attempt: attempt + 1,
+        maxRetries,
+      });
 
       if (attempt < maxRetries - 1) {
         // Exponential backoff with jitter
@@ -63,6 +67,7 @@ export async function sendDiscordNotification(ads: BlocketAd[]): Promise<void> {
     NOTIFICATION_CONFIG.discord;
 
   if (!enabled || !webhookUrl) {
+    logger.debug('Discord notifications disabled or missing webhook URL');
     return;
   }
 
@@ -73,6 +78,13 @@ export async function sendDiscordNotification(ads: BlocketAd[]): Promise<void> {
       // Process ads in batches
       for (let i = 0; i < ads.length; i += batchSize) {
         const batch = ads.slice(i, i + batchSize);
+
+        logger.info({
+          message: 'Sending Discord notification batch',
+          batchSize: batch.length,
+          batchNumber: Math.floor(i / batchSize) + 1,
+          totalBatches: Math.ceil(ads.length / batchSize),
+        });
 
         await sendDiscordBatch(
           batch,
@@ -90,6 +102,11 @@ export async function sendDiscordNotification(ads: BlocketAd[]): Promise<void> {
       }
     } else {
       // Process ads individually
+      logger.info({
+        message: 'Sending individual Discord notifications',
+        count: ads.length,
+      });
+
       for (const ad of ads) {
         await sendDiscordSingle(
           ad,
@@ -107,7 +124,11 @@ export async function sendDiscordNotification(ads: BlocketAd[]): Promise<void> {
       }
     }
   } catch (error) {
-    console.error('Error sending Discord notification:', error);
+    logger.error({
+      error: error as Error,
+      message: 'Error sending Discord notification',
+      adsCount: ads.length,
+    });
   }
 }
 
@@ -159,6 +180,10 @@ async function sendDiscordBatch(
           embeds: embeds.slice(0, 10),
         }),
       });
+      logger.debug({
+        message: 'Batch Discord notification sent successfully',
+        count: ads.length,
+      });
     },
     maxRetries,
     retryDelay,
@@ -209,6 +234,10 @@ async function sendDiscordSingle(
           ],
         }),
       });
+      logger.debug({
+        message: 'Single Discord notification sent successfully',
+        ad: adInfo.title,
+      });
     },
     maxRetries,
     retryDelay,
@@ -228,8 +257,11 @@ async function sendEmailNotification(ads: BlocketAd[]): Promise<void> {
   }
 
   // Email implementation would go here when feature flag is enabled
-  // This would use the environment variables from NOTIFICATION_CONFIG.email
-  console.log('Email notification would be sent for', ads.length, 'ads');
+  logger.info({
+    message: 'Email notification would be sent',
+    count: ads.length,
+    enabled: false,
+  });
 }
 
 /**
@@ -238,8 +270,14 @@ async function sendEmailNotification(ads: BlocketAd[]): Promise<void> {
  */
 export async function notifyAboutAds(ads: BlocketAd[]): Promise<void> {
   if (!ads || !ads.length) {
+    logger.debug('No ads to notify about');
     return;
   }
+
+  logger.info({
+    message: 'Sending notifications for new ads',
+    count: ads.length,
+  });
 
   // Send notifications in parallel
   await Promise.all([sendDiscordNotification(ads), sendEmailNotification(ads)]);

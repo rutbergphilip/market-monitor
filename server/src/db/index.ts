@@ -1,6 +1,7 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 import { v4 as uuid } from 'uuid';
+import logger from '@/integrations/logger';
 
 const envDbPath = process.env.DB_PATH || 'db.sqlite';
 const dbPath = path.isAbsolute(envDbPath)
@@ -9,6 +10,8 @@ const dbPath = path.isAbsolute(envDbPath)
 const db = new Database(dbPath);
 
 export function initializeDb() {
+  logger.info({ message: 'Initializing database', dbPath });
+
   db.exec(`
     CREATE TABLE IF NOT EXISTS jobs (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -30,6 +33,6 @@ export function initializeDb() {
        VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
     );
     insert.run(uuid(), '*/5 * * * *', 'Macbook Pro 14');
-    console.log('Default configuration seeded.');
+    logger.info('Default configuration seeded');
   }
 }
