@@ -1,6 +1,5 @@
 import Database from 'better-sqlite3';
 import path from 'path';
-import { v4 as uuid } from 'uuid';
 import logger from '@/integrations/logger';
 
 // Job entity type definition
@@ -39,7 +38,7 @@ const db = new Database(dbPath);
  */
 export function create(input: CreateJobInput): Job {
   try {
-    const jobUuid = uuid();
+    const jobUuid = crypto.randomUUID();
     const now = new Date().toISOString();
 
     const stmt = db.prepare(`

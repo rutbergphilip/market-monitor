@@ -1,6 +1,5 @@
 import Database from 'better-sqlite3';
 import path from 'path';
-import { v4 as uuid } from 'uuid';
 import logger from '@/integrations/logger';
 
 const envDbPath = process.env.DB_PATH || 'db.sqlite';
@@ -32,7 +31,7 @@ export function initializeDb() {
       `INSERT INTO jobs (uuid, cron_schedule, query, created_at, updated_at)
        VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
     );
-    insert.run(uuid(), '*/5 * * * *', 'Macbook Pro 14');
+    insert.run(crypto.randomUUID(), '*/5 * * * *', 'Macbook Pro 14');
     logger.info('Default configuration seeded');
   }
 }
