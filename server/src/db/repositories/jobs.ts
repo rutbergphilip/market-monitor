@@ -2,7 +2,6 @@ import Database from 'better-sqlite3';
 import path from 'path';
 import logger from '@/integrations/logger';
 
-// Job entity type definition
 export interface Job {
   id?: number;
   uuid: string;
@@ -12,19 +11,16 @@ export interface Job {
   updated_at?: string;
 }
 
-// Input for creating a new job
 export interface CreateJobInput {
   cron_schedule: string;
   query: string;
 }
 
-// Input for updating an existing job
 export interface UpdateJobInput {
   cron_schedule?: string;
   query?: string;
 }
 
-// Get database connection
 const envDbPath = process.env.DB_PATH || 'db.sqlite';
 const dbPath = path.isAbsolute(envDbPath)
   ? envDbPath
