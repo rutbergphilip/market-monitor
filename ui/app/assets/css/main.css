@@ -1,13 +1,2 @@
 @import 'tailwindcss';
 @import '@nuxt/ui';
-
-:root {
-  --ui-radius: var(--radius-sm);
-  --ui-container: 90rem;
-  --ui-bg: var(--ui-color-neutral-50);
-  --ui-text: var(--ui-color-neutral-900);
-}
-.dark {
-  --ui-bg: var(--ui-color-neutral-950);
-  --ui-border: var(--ui-color-neutral-900);
-}

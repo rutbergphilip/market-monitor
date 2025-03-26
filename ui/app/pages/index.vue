@@ -1,5 +1,3 @@
 <template>
-  <div>
-    <p>Updated Test</p>
-  </div>
+  <div>Blocket Bot UI</div>
 </template>
