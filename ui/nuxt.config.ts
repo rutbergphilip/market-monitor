@@ -11,6 +11,7 @@ export default defineNuxtConfig({
     '@nuxt/icon',
     '@nuxt/scripts',
     '@nuxt/ui',
+    'nuxt-auth-utils',
   ],
 
   css: ['~/assets/css/main.css'],
