@@ -4,7 +4,10 @@ export type Watcher = {
   id: string;
   status: 'active' | 'paused';
   query: string;
-  numberOfRuns: number;
-  lastRun: string;
+  number_of_runs: number;
+  last_run: string;
   notifications: NotificationTarget[];
+  schedule: string;
+  created_at?: string;
+  updated_at?: string;
 };
