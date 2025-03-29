@@ -196,7 +196,7 @@ const columns: TableColumn<Watcher>[] = [
         {
           label: 'Copy ID',
           onSelect() {
-            navigator.clipboard.writeText(row.original.id);
+            navigator.clipboard.writeText(row.original.id!);
 
             toast.add({
               title: 'ID copied to clipboard!',
