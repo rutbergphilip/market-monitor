@@ -8,11 +8,6 @@ import routes from './routes';
 import logger from './integrations/logger';
 import { initializeDb } from './db';
 
-if (!process.env.BLOCKET_AD_QUERIES) {
-  logger.error('Environment variable BLOCKET_AD_QUERIES is not set. Exiting...');
-  process.exit(1);
-}
-
 /**
  * Express server for health checks and testing
  * - Health check endpoint: /health

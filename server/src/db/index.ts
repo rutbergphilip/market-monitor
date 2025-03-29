@@ -12,26 +12,16 @@ export function initializeDb() {
   logger.info({ message: 'Initializing database', dbPath });
 
   db.exec(`
-    CREATE TABLE IF NOT EXISTS jobs (
+    CREATE TABLE IF NOT EXISTS watchers (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      uuid TEXT NOT NULL UNIQUE,
-      cron_schedule TEXT NOT NULL,
+      schedule TEXT NOT NULL,
       query TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'active',
+      last_run TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      number_of_runs INTEGER DEFAULT 0,
+      notifications TEXT DEFAULT '[]',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
-
-  const { count } = db.prepare('SELECT COUNT(*) AS count FROM jobs').get() as {
-    count?: number;
-  };
-
-  if (count === 0) {
-    const insert = db.prepare(
-      `INSERT INTO jobs (uuid, cron_schedule, query, created_at, updated_at)
-       VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
-    );
-    insert.run(crypto.randomUUID(), '*/5 * * * *', 'Macbook Pro 14');
-    logger.info('Default configuration seeded');
-  }
 }
