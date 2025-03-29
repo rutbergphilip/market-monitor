@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import cronstrue from 'cronstrue';
 import { h, resolveComponent } from 'vue';
 import { upperFirst } from 'scule';
 
@@ -12,51 +13,17 @@ const UCheckbox = resolveComponent('UCheckbox');
 const UBadge = resolveComponent('UBadge');
 const UDropdownMenu = resolveComponent('UDropdownMenu');
 const UIcon = resolveComponent('UIcon');
+const UTooltip = resolveComponent('UTooltip');
 
 const toast = useToast();
 
-const data = ref<Watcher[]>([
-  {
-    id: '4600',
-    lastRun: '2024-03-11T15:30:00',
-    status: 'active',
-    numberOfRuns: 5,
-    query: 'Macbook Pro 16"',
-    notifications: ['DISCORD'],
+const { data } = await useFetch<Watcher[]>('/api/watchers', {
+  method: 'GET',
+  headers: {
+    'Content-Type': 'application/json',
   },
-  {
-    id: '4599',
-    lastRun: '2024-03-11T10:10:00',
-    status: 'active',
-    numberOfRuns: 3,
-    query: 'iPhone 14 Pro',
-    notifications: ['DISCORD', 'EMAIL'],
-  },
-  {
-    id: '4598',
-    lastRun: '2024-03-11T08:50:00',
-    status: 'paused',
-    numberOfRuns: 2,
-    query: 'Samsung Galaxy S23',
-    notifications: ['DISCORD', 'SLACK'],
-  },
-  {
-    id: '4597',
-    lastRun: '2024-03-10T19:45:00',
-    status: 'active',
-    numberOfRuns: 4,
-    query: 'Dell Optiplex 3070 Micro',
-    notifications: ['EMAIL', 'SLACK'],
-  },
-  {
-    id: '4596',
-    lastRun: '2024-03-10T15:55:00',
-    status: 'paused',
-    numberOfRuns: 1,
-    query: 'Ikea bokhylla',
-    notifications: ['DISCORD', 'EMAIL', 'SLACK'],
-  },
-]);
+  baseURL: useRuntimeConfig().public.apiBaseUrl,
+});
 
 const columns: TableColumn<Watcher>[] = [
   {
@@ -120,10 +87,33 @@ const columns: TableColumn<Watcher>[] = [
     },
   },
   {
-    accessorKey: 'lastRun',
+    accessorKey: 'schedule',
+    header: 'Schedule',
+    cell: ({ row }) => {
+      const schedule = row.getValue('schedule') as string;
+
+      // TODO: Fix
+      return h(
+        UTooltip,
+        {
+          content: cronstrue.toString(schedule),
+          placement: 'bottom',
+        },
+        h(
+          'p',
+          {
+            class: 'lowercase',
+          },
+          schedule
+        )
+      );
+    },
+  },
+  {
+    accessorKey: 'last_run',
     header: 'Last Run',
     cell: ({ row }) => {
-      return new Date(row.getValue('lastRun')).toLocaleString('en-US', {
+      return new Date(row.getValue('last_run')).toLocaleString('en-US', {
         day: 'numeric',
         month: 'short',
         hour: '2-digit',
@@ -133,10 +123,10 @@ const columns: TableColumn<Watcher>[] = [
     },
   },
   {
-    accessorKey: 'numberOfRuns',
+    accessorKey: 'number_of_runs',
     header: () => h('div', { class: 'text-right' }, 'Runs'),
     cell: ({ row }) => {
-      const numberOfRuns = Number.parseFloat(row.getValue('numberOfRuns'));
+      const numberOfRuns = Number.parseFloat(row.getValue('number_of_runs'));
 
       return h(
         'div',
@@ -269,7 +259,7 @@ const table = useTemplateRef('table');
 
     <UTable
       ref="table"
-      :data="data"
+      :data="data ?? []"
       :columns="columns"
       sticky
       class="h-96"
