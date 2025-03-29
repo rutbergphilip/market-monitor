@@ -25,6 +25,34 @@ const { data } = await useFetch<Watcher[]>('/api/watchers', {
   baseURL: useRuntimeConfig().public.apiBaseUrl,
 });
 
+const items = ref<Watcher[]>(data.value || []);
+
+const refreshing = ref(false);
+async function refresh() {
+  try {
+    refreshing.value = true;
+
+    const { data: newData } = await useFetch<Watcher[]>('/api/watchers', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      baseURL: useRuntimeConfig().public.apiBaseUrl,
+    });
+
+    items.value = newData.value || [];
+  } catch (error) {
+    toast.add({
+      title: 'Failed to refresh watchers',
+      color: 'error',
+      icon: 'i-lucide-circle-x',
+    });
+    console.error('Failed to refresh watchers:', error);
+  } finally {
+    refreshing.value = false;
+  }
+}
+
 const columns: TableColumn<Watcher>[] = [
   {
     id: 'select',
@@ -92,12 +120,12 @@ const columns: TableColumn<Watcher>[] = [
     cell: ({ row }) => {
       const schedule = row.getValue('schedule') as string;
 
-      // TODO: Fix
       return h(
         UTooltip,
         {
-          content: cronstrue.toString(schedule),
+          text: cronstrue.toString(schedule),
           placement: 'bottom',
+          delayDuration: 250,
         },
         h(
           'p',
@@ -137,7 +165,7 @@ const columns: TableColumn<Watcher>[] = [
   },
   {
     accessorKey: 'notifications',
-    header: () => h('div', { class: 'text-right' }, 'Active Notifications'),
+    header: () => h('div', { class: 'text-right' }, 'Enabled Notifications'),
     cell: ({ row }) => {
       const notifications = row.getValue(
         'notifications'
@@ -215,6 +243,25 @@ const columns: TableColumn<Watcher>[] = [
       );
     },
   },
+  {
+    accessorKey: 'header',
+    header: () =>
+      h(
+        UTooltip,
+        {
+          text: 'Refresh',
+          placement: 'bottom',
+          delayDuration: 250,
+          loading: refreshing.value,
+          onClick: () => refresh(),
+        },
+        h(UButton, {
+          leadingIcon: 'i-lucide-refresh-cw',
+          variant: 'ghost',
+          ui: { leadingIcon: 'scale-150' },
+        })
+      ),
+  },
 ];
 
 const table = useTemplateRef('table');
@@ -259,7 +306,7 @@ const table = useTemplateRef('table');
 
     <UTable
       ref="table"
-      :data="data ?? []"
+      :data="items ?? []"
       :columns="columns"
       sticky
       class="h-96"
