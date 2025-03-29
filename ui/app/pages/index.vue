@@ -1,3 +1,22 @@
+<script setup lang="ts">
+import CreateWatcherModal from '~/components/modals/CreateWatcherModal.vue';
+
+const overlay = useOverlay();
+
+const modal = overlay.create(CreateWatcherModal, {
+  props: {
+    onCancel: () => modal.close(),
+    onSuccess: () => {
+      modal.close();
+    },
+  },
+});
+
+async function openCreateWatcherModal() {
+  await modal.open();
+}
+</script>
+
 <template>
   <div class="flex flex-col gap-4">
     <div class="flex justify-between items-center">
@@ -6,7 +25,12 @@
         <p class="text-lg">Manage your watchers.</p>
       </div>
 
-      <UButton class="self-end" leading-icon="material-symbols:add-2" size="lg">
+      <UButton
+        class="self-end"
+        leading-icon="material-symbols:add-2"
+        size="lg"
+        @click="openCreateWatcherModal"
+      >
         Create New Watcher
       </UButton>
     </div>
