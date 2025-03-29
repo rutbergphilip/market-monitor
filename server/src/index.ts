@@ -1,6 +1,7 @@
 import 'tsconfig-paths/register';
 
 import express from 'express';
+import cors from 'cors';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
@@ -19,6 +20,9 @@ const app = express();
 
 // Middleware to parse JSON bodies
 app.use(express.json());
+
+// Cors
+app.use(cors());
 
 // Register all routes
 app.use(routes);
