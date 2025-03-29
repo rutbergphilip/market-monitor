@@ -7,7 +7,7 @@
       </div>
 
       <UButton class="self-end" leading-icon="material-symbols:add-2" size="lg">
-        Add Watcher
+        Create New Watcher
       </UButton>
     </div>
 
