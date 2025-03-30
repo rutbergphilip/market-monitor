@@ -6,7 +6,7 @@ import { upperFirst } from 'scule';
 import { NOTIFICATION_ICON_MAP } from '~/constants';
 
 import type { TableColumn } from '@nuxt/ui';
-import type { Watcher, NotificationTarget } from '~/types';
+import type { Watcher, NotificationKind } from '~/types';
 
 const UButton = resolveComponent('UButton');
 const UCheckbox = resolveComponent('UCheckbox');
@@ -15,32 +15,18 @@ const UDropdownMenu = resolveComponent('UDropdownMenu');
 const UIcon = resolveComponent('UIcon');
 const UTooltip = resolveComponent('UTooltip');
 
+const watcherStore = useWatcherStore();
 const toast = useToast();
 
-const { data } = await useFetch<Watcher[]>('/api/watchers', {
-  method: 'GET',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  baseURL: useRuntimeConfig().public.apiBaseUrl,
-});
-
-const items = ref<Watcher[]>(data.value || []);
+await watcherStore.refresh();
+const { watchers } = storeToRefs(watcherStore);
 
 const refreshing = ref(false);
 async function refresh() {
   try {
     refreshing.value = true;
 
-    const { data: newData } = await useFetch<Watcher[]>('/api/watchers', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      baseURL: useRuntimeConfig().public.apiBaseUrl,
-    });
-
-    items.value = newData.value || [];
+    await watcherStore.refresh();
   } catch (error) {
     toast.add({
       title: 'Failed to refresh watchers',
@@ -167,9 +153,7 @@ const columns: TableColumn<Watcher>[] = [
     accessorKey: 'notifications',
     header: () => h('div', { class: 'text-right' }, 'Enabled Notifications'),
     cell: ({ row }) => {
-      const notifications = row.getValue(
-        'notifications'
-      ) as NotificationTarget[];
+      const notifications = row.getValue('notifications') as NotificationKind[];
 
       return h(
         'div',
@@ -306,8 +290,9 @@ const table = useTemplateRef('table');
 
     <UTable
       ref="table"
-      :data="items ?? []"
+      :data="watchers ?? []"
       :columns="columns"
+      :loading="refreshing"
       sticky
       class="h-96"
       aria-label="Watcher table"

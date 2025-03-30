@@ -12,8 +12,12 @@ import {
 import type { FormError, FormSubmitEvent } from '@nuxt/ui';
 import type { NotificationKind, Notification, Watcher } from '~/types';
 
-defineEmits(['cancel', 'success']);
+const emit = defineEmits(['cancel', 'success']);
+const props = defineProps({
+  watcher: { type: Object as PropType<Watcher>, required: false },
+});
 
+const watcherStore = useWatcherStore();
 const toast = useToast();
 
 const metadataOpen = ref(false);
@@ -48,13 +52,74 @@ const validate = (state: Partial<Watcher>): FormError[] => {
   return errors;
 };
 
+onMounted(() => {
+  if (props.watcher) {
+    state.query = props.watcher.query;
+    state.schedule = props.watcher.schedule;
+    state.notifications = [...props.watcher.notifications];
+  }
+});
+
+async function save(event: FormSubmitEvent<Schema>) {
+  if (props.watcher) {
+    await update(event);
+  } else {
+    await create(event);
+  }
+}
+
 async function create(event: FormSubmitEvent<Schema>) {
-  console.log('Creating watcher...', event);
-  toast.add({
-    title: 'Success',
-    description: 'The form has been submitted.',
-    color: 'success',
-  });
+  const { query, schedule } = event.data;
+  const watcher: Watcher = {
+    query,
+    schedule,
+    notifications: state.notifications ?? [],
+  };
+
+  try {
+    await watcherStore.create(watcher);
+    await watcherStore.refresh();
+    toast.add({
+      title: 'Success',
+      description: 'The watcher has been created.',
+      color: 'success',
+    });
+  } catch (error) {
+    console.error('Failed to create watcher:', error);
+    toast.add({
+      title: 'Error',
+      description: 'Failed to create the watcher.',
+      color: 'error',
+    });
+  }
+  emit('success');
+}
+
+async function update(event: FormSubmitEvent<Schema>) {
+  const { query, schedule } = event.data;
+  const watcher: Watcher = {
+    query,
+    schedule,
+    notifications: state.notifications ?? [],
+  };
+
+  try {
+    await watcherStore.update(watcher);
+    await watcherStore.refresh();
+    toast.add({
+      title: 'Success',
+      description: 'The watcher has been updated.',
+      color: 'success',
+    });
+  } catch (error) {
+    console.error('Failed to update watcher:', error);
+    toast.add({
+      title: 'Error',
+      description: 'Failed to update the watcher.',
+      color: 'error',
+    });
+  }
+  emit('success');
 }
 
 function selectPreset(preset: { cron: string; label: string }) {
@@ -146,7 +211,7 @@ function getNotificationValue(notification: Notification): string {
         :validate="validate"
         :state="state"
         class="space-y-4 w-full"
-        @submit="create"
+        @submit="save"
       >
         <UFormField label="Watcher query" name="query">
           <UInput

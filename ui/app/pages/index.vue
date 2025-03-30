@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import CreateWatcherModal from '~/components/modals/CreateWatcherModal.vue';
+import WatcherModal from '~/components/modals/WatcherModal.vue';
 
 const overlay = useOverlay();
 
-const modal = overlay.create(CreateWatcherModal, {
+const modal = overlay.create(WatcherModal, {
   props: {
     onCancel: () => modal.close(),
     onSuccess: () => {
@@ -12,7 +12,7 @@ const modal = overlay.create(CreateWatcherModal, {
   },
 });
 
-async function openCreateWatcherModal() {
+async function openWatcherModal() {
   await modal.open();
 }
 </script>
@@ -29,7 +29,7 @@ async function openCreateWatcherModal() {
         class="self-end"
         leading-icon="material-symbols:add-2"
         size="lg"
-        @click="openCreateWatcherModal"
+        @click="openWatcherModal"
       >
         Create New Watcher
       </UButton>
