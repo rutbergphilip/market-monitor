@@ -81,5 +81,39 @@ export const useWatcherStore = defineStore('watcher', () => {
     return watchers.value.find((w) => w.id === id);
   };
 
-  return { getAll, refresh, getById, create, update, remove, watchers };
+  const stop = async (id: string) => {
+    await useFetch(`/api/watchers/${id}/stop`, {
+      method: 'POST',
+      baseURL: useRuntimeConfig().public.apiBaseUrl,
+    });
+
+    const index = watchers.value.findIndex((w) => w.id === id);
+    if (index !== -1) {
+      watchers.value[index].status = 'stopped';
+    }
+  };
+
+  const start = async (id: string) => {
+    await useFetch(`/api/watchers/${id}/start`, {
+      method: 'POST',
+      baseURL: useRuntimeConfig().public.apiBaseUrl,
+    });
+
+    const index = watchers.value.findIndex((w) => w.id === id);
+    if (index !== -1) {
+      watchers.value[index].status = 'active';
+    }
+  };
+
+  return {
+    getAll,
+    refresh,
+    getById,
+    create,
+    update,
+    remove,
+    stop,
+    start,
+    watchers,
+  };
 });
