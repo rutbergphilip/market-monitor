@@ -22,6 +22,10 @@ const dbPath = path.isAbsolute(envDbPath)
   : path.join(__dirname, '..', envDbPath);
 const db = new Database(dbPath);
 
+/**
+ * Get all watchers
+ * @returns {Watcher[]} List of all watchers
+ */
 export function getAll(): Watcher[] {
   try {
     const stmt = db.prepare(`SELECT * FROM watchers`);
@@ -48,9 +52,9 @@ export function getAll(): Watcher[] {
 }
 
 /**
- * Create a new job
- * @param input Job input data
- * @returns Created job with all fields
+ * Create a new watcher
+ * @param input Watcher input data
+ * @returns Created watcher with all fields
  */
 export function create(input: CreateWatcherInput): Watcher {
   try {
@@ -94,10 +98,10 @@ export function create(input: CreateWatcherInput): Watcher {
 }
 
 /**
- * Update a job by id
- * @param id Job id to update
- * @param input Job data to update
- * @returns Updated job or null if not found
+ * Update a watcher by id
+ * @param id Watcher id to update
+ * @param input Watcher data to update
+ * @returns Updated watcher or null if not found
  */
 export function update(id: string, input: UpdateWatcherInput): Watcher | null {
   try {
@@ -172,18 +176,50 @@ export function update(id: string, input: UpdateWatcherInput): Watcher | null {
   }
 }
 
+/**
+ * Delete a watcher by id
+ * @param id Watcher id to delete
+ * @returns Number of deleted rows
+ */
+export function remove(id: string): number {
+  try {
+    const stmt = db.prepare(`
+      DELETE FROM watchers WHERE id = ?
+    `);
+    const info = stmt.run(id);
+    logger.info({
+      message: 'Watcher deleted',
+      id,
+      changes: info.changes,
+    });
+    return info.changes;
+  } catch (error) {
+    logger.error({
+      error: error as Error,
+      message: 'Error deleting watcher',
+      id,
+    });
+    throw error;
+  }
+}
+
 type WatcherRow = {
   id: string;
   query: string;
   schedule: string;
   notifications: string; // Stored as JSON string in the database
-  status: 'active' | 'paused';
+  status: 'active' | 'stopped';
   number_of_runs: number;
   last_run: string;
   created_at: string;
   updated_at: string;
 };
 
+/**
+ * Get a watcher by id
+ * @param id Watcher id to fetch
+ * @returns Watcher or null if not found
+ */
 export function getById(id: string): Watcher | null {
   try {
     const stmt = db.prepare(`
