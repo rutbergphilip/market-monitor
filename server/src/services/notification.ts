@@ -4,6 +4,7 @@ import { NOTIFICATION_CONFIG } from '@/constants/notifications';
 import logger from '@/integrations/logger';
 
 import type { BlocketAd } from 'blocket.js';
+import type { Notification } from '@/types/watchers';
 
 /**
  * Formats a Blocket ad for notification
@@ -61,12 +62,19 @@ async function withRetry<T>(
 /**
  * Sends a notification to Discord via webhook with retry capability
  * @param ads List of Blocket ads to notify about
+ * @param webhookUrl Custom webhook URL or undefined to use default
  */
-export async function sendDiscordNotification(ads: BlocketAd[]): Promise<void> {
-  const { webhookUrl, enabled, username, avatarUrl, maxRetries, retryDelay } =
+export async function sendDiscordNotification(
+  ads: BlocketAd[],
+  webhookUrl?: string,
+): Promise<void> {
+  const { enabled, username, avatarUrl, maxRetries, retryDelay } =
     NOTIFICATION_CONFIG.discord;
 
-  if (!enabled || !webhookUrl) {
+  // Use provided webhook URL or fall back to config
+  const targetWebhookUrl = webhookUrl || NOTIFICATION_CONFIG.discord.webhookUrl;
+
+  if (!enabled || !targetWebhookUrl) {
     logger.debug('Discord notifications disabled or missing webhook URL');
     return;
   }
@@ -88,7 +96,7 @@ export async function sendDiscordNotification(ads: BlocketAd[]): Promise<void> {
 
         await sendDiscordBatch(
           batch,
-          webhookUrl,
+          targetWebhookUrl,
           username,
           avatarUrl,
           maxRetries,
@@ -110,7 +118,7 @@ export async function sendDiscordNotification(ads: BlocketAd[]): Promise<void> {
       for (const ad of ads) {
         await sendDiscordSingle(
           ad,
-          webhookUrl,
+          targetWebhookUrl,
           username,
           avatarUrl,
           maxRetries,
@@ -247,8 +255,12 @@ async function sendDiscordSingle(
 /**
  * Sends an email notification (feature flagged off by default, upcoming feature)
  * @param ads List of Blocket ads to notify about
+ * @param email Custom email address or undefined to use default
  */
-async function sendEmailNotification(ads: BlocketAd[]): Promise<void> {
+async function sendEmailNotification(
+  ads: BlocketAd[],
+  email?: string,
+): Promise<void> {
   const { enabled } = NOTIFICATION_CONFIG.email;
 
   // Feature flagged off by default
@@ -260,6 +272,7 @@ async function sendEmailNotification(ads: BlocketAd[]): Promise<void> {
   logger.info({
     message: 'Email notification would be sent',
     count: ads.length,
+    email: email || 'default',
     enabled: false,
   });
 }
@@ -267,8 +280,12 @@ async function sendEmailNotification(ads: BlocketAd[]): Promise<void> {
 /**
  * Sends notifications about new ads through configured channels
  * @param ads List of new Blocket ads
+ * @param notifications Optional specific notification configurations
  */
-export async function notifyAboutAds(ads: BlocketAd[]): Promise<void> {
+export async function notifyAboutAds(
+  ads: BlocketAd[],
+  notifications?: Notification[],
+): Promise<void> {
   if (!ads || !ads.length) {
     logger.debug('No ads to notify about');
     return;
@@ -277,8 +294,30 @@ export async function notifyAboutAds(ads: BlocketAd[]): Promise<void> {
   logger.info({
     message: 'Sending notifications for new ads',
     count: ads.length,
+    customNotifications: notifications ? notifications.length : 0,
   });
 
+  const notificationPromises: Promise<void>[] = [];
+
+  if (notifications && notifications.length > 0) {
+    // Use provided notification configurations
+    for (const notification of notifications) {
+      if (notification.kind === 'DISCORD') {
+        notificationPromises.push(
+          sendDiscordNotification(ads, notification.webhook_url),
+        );
+      } else if (notification.kind === 'EMAIL') {
+        notificationPromises.push(
+          sendEmailNotification(ads, notification.email),
+        );
+      }
+    }
+  } else {
+    // Fall back to default notification behavior
+    notificationPromises.push(sendDiscordNotification(ads));
+    notificationPromises.push(sendEmailNotification(ads));
+  }
+
   // Send notifications in parallel
-  await Promise.all([sendDiscordNotification(ads), sendEmailNotification(ads)]);
+  await Promise.all(notificationPromises);
 }
