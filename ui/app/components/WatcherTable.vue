@@ -56,6 +56,42 @@ async function refresh() {
   }
 }
 
+async function start(watcherId: string) {
+  try {
+    await watcherStore.start(watcherId);
+    toast.add({
+      title: 'Watcher started',
+      color: 'success',
+      icon: 'i-lucide-play',
+    });
+  } catch (error) {
+    toast.add({
+      title: 'Failed to start watcher',
+      color: 'error',
+      icon: 'i-lucide-circle-x',
+    });
+    console.error('Failed to start watcher:', error);
+  }
+}
+
+async function stop(watcherId: string) {
+  try {
+    await watcherStore.stop(watcherId);
+    toast.add({
+      title: 'Watcher paused',
+      color: 'error',
+      icon: 'i-lucide-pause',
+    });
+  } catch (error) {
+    toast.add({
+      title: 'Failed to pause watcher',
+      color: 'error',
+      icon: 'i-lucide-circle-x',
+    });
+    console.error('Failed to pause watcher:', error);
+  }
+}
+
 const columns: TableColumn<Watcher>[] = [
   {
     id: 'select',
@@ -109,7 +145,7 @@ const columns: TableColumn<Watcher>[] = [
     cell: ({ row }) => {
       const color = {
         active: 'success' as const,
-        paused: 'neutral' as const,
+        stopped: 'error' as const,
       }[row.getValue('status') as string];
 
       return h(UBadge, { class: 'capitalize', variant: 'subtle', color }, () =>
@@ -208,12 +244,7 @@ const columns: TableColumn<Watcher>[] = [
             'aria-label': 'Start',
             disabled: watcher.status === 'active',
             onClick: () => {
-              // Add logic to start the watcher
-              toast.add({
-                title: 'Watcher started',
-                color: 'success',
-                icon: 'i-lucide-play',
-              });
+              start(watcher.id!);
             },
           })
         ),
@@ -234,12 +265,7 @@ const columns: TableColumn<Watcher>[] = [
             'aria-label': 'Pause',
             disabled: watcher.status === 'stopped',
             onClick: () => {
-              // Add logic to stop the watcher
-              toast.add({
-                title: 'Watcher paused',
-                color: 'error',
-                icon: 'i-lucide-pause',
-              });
+              stop(watcher.id!);
             },
           })
         ),
