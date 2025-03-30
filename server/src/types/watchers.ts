@@ -17,7 +17,7 @@ export type Watcher = {
   query: string;
   notifications: Notification[];
   schedule: string;
-  status?: 'active' | 'paused';
+  status?: 'active' | 'stopped';
   number_of_runs?: number;
   last_run?: string;
   created_at?: string;
