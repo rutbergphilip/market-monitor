@@ -1,4 +1,4 @@
-export type NotificationTarget = 'DISCORD' | 'EMAIL' | 'SLACK';
+export type NotificationTarget = 'DISCORD' | 'EMAIL';
 
 export type Watcher = {
   id: string;

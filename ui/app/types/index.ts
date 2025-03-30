@@ -1,13 +1,25 @@
-export type NotificationTarget = 'DISCORD' | 'EMAIL' | 'SLACK';
+export type NotificationKind = 'DISCORD' | 'EMAIL';
+
+export type DiscordNotification = {
+  kind: 'DISCORD';
+  webhook_url: string;
+};
+
+export type EmailNotification = {
+  kind: 'EMAIL';
+  email: string;
+};
+
+export type Notification = DiscordNotification | EmailNotification;
 
 export type Watcher = {
   id?: string;
-  status?: 'active' | 'paused';
   query: string;
+  notifications: Notification[];
+  schedule: string;
+  status?: 'active' | 'paused';
   number_of_runs?: number;
   last_run?: string;
-  notifications: NotificationTarget[];
-  schedule: string;
   created_at?: string;
   updated_at?: string;
 };

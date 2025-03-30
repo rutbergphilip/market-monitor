@@ -1,15 +1,12 @@
-import type { NotificationTarget } from '~/types';
+import type { NotificationKind } from '~/types';
 
-export const AVAILABLE_NOTIFICATION_TARGETS: NotificationTarget[] = [
-  'DISCORD',
-  'EMAIL',
-  'SLACK',
-];
+export const NOTIFICATION_TARGETS: NotificationKind[] = ['DISCORD', 'EMAIL'];
 
-export const NOTIFICATION_ICON_MAP: Record<NotificationTarget, string> = {
+export const DISABLED_NOTIFICATION_TARGETS: NotificationKind[] = ['EMAIL'];
+
+export const NOTIFICATION_ICON_MAP: Record<NotificationKind, string> = {
   DISCORD: 'ic:baseline-discord',
   EMAIL: 'material-symbols:mail',
-  SLACK: 'mdi:slack',
 };
 
 export const SCHEDULE_PRESETS = [
