@@ -2,10 +2,15 @@
 import cronstrue from 'cronstrue';
 import * as z from 'zod';
 
-import { SCHEDULE_PRESETS } from '~/constants';
+import {
+  SCHEDULE_PRESETS,
+  NOTIFICATION_TARGETS,
+  NOTIFICATION_ICON_MAP,
+  DISABLED_NOTIFICATION_TARGETS,
+} from '~/constants';
 
 import type { FormError, FormSubmitEvent } from '@nuxt/ui';
-import type { Watcher } from '~/types';
+import type { NotificationKind, Notification, Watcher } from '~/types';
 
 defineEmits(['cancel', 'success']);
 
@@ -20,6 +25,8 @@ const schema = z.object({
 
 type Schema = z.output<typeof schema>;
 
+const selectedNotificationType = ref<NotificationKind>('DISCORD');
+const notificationInput = ref('');
 const state = reactive<Watcher>({
   query: '',
   schedule: '',
@@ -33,8 +40,8 @@ const schedule = computed(() =>
     : cronstrue.toString(state.schedule, { throwExceptionOnParseError: false })
 );
 
-const validate = (state: any): FormError[] => {
-  const errors = [];
+const validate = (state: Partial<Watcher>): FormError[] => {
+  const errors: FormError[] = [];
   if (!state.query) errors.push({ name: 'query', message: 'Required' });
   if (schedule.value === 'Invalid cron expression')
     errors.push({ name: 'schedule', message: 'Required' });
@@ -64,6 +71,68 @@ function selectPreset(preset: { cron: string; label: string }) {
       input.blur();
     }
   });
+}
+
+function addNotification() {
+  if (!notificationInput.value) {
+    toast.add({
+      title: 'Error',
+      description: 'Please enter a valid notification target',
+      color: 'error',
+    });
+    return;
+  }
+
+  let notification: Notification;
+
+  switch (selectedNotificationType.value) {
+    case 'EMAIL':
+      notification = {
+        kind: 'EMAIL',
+        email: notificationInput.value,
+      };
+      break;
+    case 'DISCORD':
+      notification = {
+        kind: 'DISCORD',
+        webhook_url: notificationInput.value,
+      };
+      break;
+    default:
+      toast.add({
+        title: 'Error',
+        description: 'Unsupported notification type',
+        color: 'error',
+      });
+      return;
+  }
+
+  state.notifications.push(notification);
+  notificationInput.value = '';
+}
+
+function removeNotification(index: number) {
+  state.notifications.splice(index, 1);
+}
+
+function getPlaceholderForNotificationType(type: NotificationKind): string {
+  switch (type) {
+    case 'DISCORD':
+      return 'https://discord.com/api/webhooks/your-webhook-url';
+    case 'EMAIL':
+      return 'example@email.com';
+    default:
+      return '';
+  }
+}
+
+function getNotificationValue(notification: Notification): string {
+  if ('webhook_url' in notification) {
+    return notification.webhook_url;
+  } else if ('email' in notification) {
+    return notification.email;
+  }
+  return '';
 }
 </script>
 
@@ -114,6 +183,7 @@ function selectPreset(preset: { cron: string; label: string }) {
           </div>
         </div>
 
+        <div class="h-2" />
         <UCollapsible :open="metadataOpen" class="flex flex-col gap-2 w-full">
           <div
             class="flex items-center gap-2 justify-start cursor-pointer group"
@@ -128,26 +198,94 @@ function selectPreset(preset: { cron: string; label: string }) {
             <p
               class="text-sm text-neutral-500 group-hover:text-neutral-300 transition-colors"
             >
-              Metadata
+              Notification Settings
             </p>
           </div>
 
           <template #content>
             <UFormField label="Notifications" name="notifications">
-              <UInput class="w-full" />
-            </UFormField>
-            <div class="flex flex-col gap-2 w-full">
-              <div
-                v-for="item in state.notifications"
-                :key="item"
-                class="flex gap-2 grow"
-              >
-                <UButton color="error" size="xs" icon="i-lucide-trash" />
-                <p class="text-sm text-neutral-500">
-                  {{ item }}
-                </p>
+              <div class="flex flex-col gap-3 w-full">
+                <!-- Notification Type Selector -->
+                <UButtonGroup>
+                  <UButton
+                    v-for="type in NOTIFICATION_TARGETS"
+                    :key="type"
+                    size="sm"
+                    :icon="NOTIFICATION_ICON_MAP[type]"
+                    :color="
+                      selectedNotificationType === type ? 'primary' : 'neutral'
+                    "
+                    :variant="
+                      selectedNotificationType === type ? 'solid' : 'ghost'
+                    "
+                    :disabled="DISABLED_NOTIFICATION_TARGETS.includes(type)"
+                    @click="selectedNotificationType = type"
+                  >
+                    {{ type }}
+                  </UButton>
+                </UButtonGroup>
+
+                <!-- Input Field with Add Button -->
+                <div class="flex gap-2 items-center">
+                  <UInput
+                    v-model="notificationInput"
+                    class="w-full"
+                    :placeholder="
+                      getPlaceholderForNotificationType(
+                        selectedNotificationType
+                      )
+                    "
+                    @keyup.enter="addNotification"
+                  />
+                  <UButton
+                    color="primary"
+                    icon="i-heroicons-plus"
+                    @click="addNotification"
+                  >
+                    Add
+                  </UButton>
+                </div>
+
+                <!-- List of Added Notifications -->
+                <div
+                  v-if="state.notifications.length"
+                  class="flex flex-col gap-2 mt-2 p-3 bg-gray-800 rounded-md"
+                >
+                  <p class="text-xs text-neutral-400 mb-1 font-medium">
+                    Added Notifications ({{ state.notifications.length }})
+                  </p>
+                  <div
+                    v-for="(notification, index) in state.notifications"
+                    :key="index"
+                    class="flex items-center justify-between px-3 py-2 bg-gray-700 rounded"
+                  >
+                    <div class="flex items-center gap-2">
+                      <UIcon
+                        :name="NOTIFICATION_ICON_MAP[notification.kind]"
+                        class="text-neutral-400"
+                      />
+                      <p
+                        class="text-sm text-neutral-300 truncate max-w-[230px]"
+                      >
+                        {{ getNotificationValue(notification) }}
+                      </p>
+                    </div>
+                    <UButton
+                      color="error"
+                      icon="i-heroicons-trash"
+                      variant="ghost"
+                      aria-label="Remove notification"
+                      @click="removeNotification(index)"
+                    />
+                  </div>
+                </div>
+
+                <div v-else class="text-sm text-neutral-500 mt-1">
+                  No notifications added yet. Add at least one to receive
+                  updates.
+                </div>
               </div>
-            </div>
+            </UFormField>
           </template>
         </UCollapsible>
 
