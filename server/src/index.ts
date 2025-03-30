@@ -8,6 +8,7 @@ dotenv.config();
 import routes from './routes';
 import logger from './integrations/logger';
 import { initializeDb } from './db';
+import { initializeCronSystem } from './services/cron/initialize';
 
 /**
  * Express server for health checks and testing
@@ -36,7 +37,11 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT) : 8080;
 const server = app.listen(PORT, () => {
   logger.info(`Express server running on port ${PORT}`);
 
+  // Initialize the database first
   initializeDb();
+
+  // Initialize the cron system for watchers
+  initializeCronSystem();
 });
 
 process.on('SIGTERM', () => {
