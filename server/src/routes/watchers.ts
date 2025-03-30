@@ -1,20 +1,12 @@
 import { Router } from 'express';
 
+import { WatcherRepository } from '../db/repositories';
+
 import type { Request, Response } from 'express';
 import type { Watcher } from '../types/watchers';
 
 async function getWatchers(req: Request, res: Response) {
-  const watchers: Watcher[] = [
-    {
-      id: '4600',
-      last_run: '2024-03-11T15:30:00',
-      status: 'active',
-      number_of_runs: 5,
-      query: 'Macbook Pro 16"',
-      notifications: ['DISCORD'],
-      schedule: '*/5 * * * *',
-    },
-  ];
+  const watchers = WatcherRepository.getAll();
 
   res.json(watchers);
 }
@@ -27,7 +19,6 @@ router.post('/api/watchers', async (req: Request, res: Response) => {
   const { query, schedule, notifications } = req.body;
 
   const newWatcher: Watcher = {
-    id: Date.now().toString(),
     last_run: new Date().toISOString(),
     status: 'active',
     number_of_runs: 0,
@@ -36,7 +27,9 @@ router.post('/api/watchers', async (req: Request, res: Response) => {
     schedule,
   };
 
-  res.status(201).json(newWatcher);
+  const watcher = WatcherRepository.create(newWatcher);
+
+  res.status(201).json(watcher);
 });
 
 export default router;

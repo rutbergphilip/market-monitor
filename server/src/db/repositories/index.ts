@@ -1,3 +1,3 @@
-import * as jobs from './jobs';
+import * as WatcherRepository from './watchers';
 
-export { jobs };
+export { WatcherRepository };
