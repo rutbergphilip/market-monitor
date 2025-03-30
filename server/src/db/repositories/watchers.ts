@@ -251,3 +251,83 @@ export function getById(id: string): Watcher | null {
     throw error;
   }
 }
+
+/**
+ * @param id Watcher id to start
+ * @description Starts a watcher by updating its status to 'active'
+ * @returns Watcher or null if not found
+ */
+export function start(id: string): Watcher | null {
+  try {
+    const watcher = getById(id);
+
+    if (!watcher) {
+      logger.warn({
+        message: 'Watcher not found for start',
+        id,
+      });
+      return null;
+    }
+
+    const stmt = db.prepare(`
+      UPDATE watchers
+      SET status = 'active'
+      WHERE id = ?
+    `);
+    stmt.run(id);
+
+    logger.info({
+      message: 'Watcher started',
+      id,
+    });
+
+    return { ...watcher, status: 'active' };
+  } catch (error) {
+    logger.error({
+      error: error as Error,
+      message: 'Error starting watcher',
+      id,
+    });
+    throw error;
+  }
+}
+
+/**
+ * @param id Watcher id to stop
+ * @description Stops a watcher by updating its status to 'stopped'
+ * @returns Watcher or null if not found
+ */
+export function stop(id: string): Watcher | null {
+  try {
+    const watcher = getById(id);
+
+    if (!watcher) {
+      logger.warn({
+        message: 'Watcher not found for stop',
+        id,
+      });
+      return null;
+    }
+
+    const stmt = db.prepare(`
+      UPDATE watchers
+      SET status = 'stopped'
+      WHERE id = ?
+    `);
+    stmt.run(id);
+
+    logger.info({
+      message: 'Watcher stopped',
+      id,
+    });
+
+    return { ...watcher, status: 'stopped' };
+  } catch (error) {
+    logger.error({
+      error: error as Error,
+      message: 'Error stopping watcher',
+      id,
+    });
+    throw error;
+  }
+}
