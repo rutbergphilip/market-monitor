@@ -32,9 +32,9 @@ type Schema = z.output<typeof schema>;
 const selectedNotificationType = ref<NotificationKind>('DISCORD');
 const notificationInput = ref('');
 const state = reactive<Watcher>({
-  query: '',
-  schedule: '',
-  notifications: [],
+  query: props.watcher?.query ?? '',
+  schedule: props.watcher?.schedule ?? '',
+  notifications: props.watcher?.notifications ?? [],
 });
 
 const schedule = computed(() =>
@@ -203,7 +203,9 @@ function getNotificationValue(notification: Notification): string {
 
 <template>
   <UModal>
-    <template #header> Create Watcher </template>
+    <template #header>
+      {{ $props.watcher ? 'Edit' : 'Create' }} Watcher
+    </template>
 
     <template #body>
       <UForm
@@ -358,7 +360,12 @@ function getNotificationValue(notification: Notification): string {
 
         <div class="flex gap-2 w-full justify-end">
           <UButton color="neutral" @click="$emit('cancel')"> Cancel </UButton>
-          <UButton aria-label="Create watcher" type="submit"> Create </UButton>
+          <UButton
+            :aria-label="$props.watcher ? 'Edit' : 'Create'"
+            type="submit"
+          >
+            {{ $props.watcher ? 'Update' : 'Create' }}
+          </UButton>
         </div>
       </UForm>
     </template>

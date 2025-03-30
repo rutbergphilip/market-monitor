@@ -5,6 +5,8 @@ import { upperFirst } from 'scule';
 
 import { NOTIFICATION_ICON_MAP } from '~/constants';
 
+import WatcherModal from '~/components/modals/WatcherModal.vue';
+
 import type { TableColumn } from '@nuxt/ui';
 import type { Watcher, NotificationKind } from '~/types';
 
@@ -17,6 +19,21 @@ const UTooltip = resolveComponent('UTooltip');
 
 const watcherStore = useWatcherStore();
 const toast = useToast();
+const overlay = useOverlay();
+
+const modal = overlay.create(WatcherModal, {
+  props: {
+    onCancel: () => modal.close(),
+    onSuccess: () => {
+      modal.close();
+      refresh();
+    },
+  },
+});
+
+async function openWatcherModal(watcher: Watcher) {
+  await modal.open({ watcher });
+}
 
 await watcherStore.refresh();
 const { watchers } = storeToRefs(watcherStore);
@@ -111,7 +128,7 @@ const columns: TableColumn<Watcher>[] = [
         {
           text: cronstrue.toString(schedule),
           placement: 'bottom',
-          delayDuration: 250,
+          delayDuration: 200,
         },
         h(
           'p',
@@ -172,47 +189,121 @@ const columns: TableColumn<Watcher>[] = [
     id: 'actions',
     enableHiding: false,
     cell: ({ row }) => {
-      const items = [
-        {
-          type: 'label',
-          label: 'Actions',
-        },
-        {
-          label: 'Copy ID',
-          onSelect() {
-            navigator.clipboard.writeText(row.original.id!);
+      const watcher = row.original;
 
-            toast.add({
-              title: 'ID copied to clipboard!',
-              color: 'success',
-              icon: 'i-lucide-circle-check',
-            });
+      return h('div', { class: 'flex items-center justify-end gap-2' }, [
+        // Play button with tooltip
+        h(
+          UTooltip,
+          {
+            text: 'Start',
+            placement: 'top',
+            delayDuration: 200,
           },
-        },
-        {
-          label: row.getIsExpanded() ? 'Collapse' : 'Expand',
-          onSelect() {
-            row.toggleExpanded();
-          },
-        },
-        {
-          type: 'separator',
-        },
-        {
-          label: 'View details',
-        },
-      ];
+          h(UButton, {
+            icon: 'i-lucide-play',
+            color: 'success',
+            variant: 'ghost',
+            size: 'xl',
+            'aria-label': 'Start',
+            disabled: watcher.status === 'active',
+            onClick: () => {
+              // Add logic to start the watcher
+              toast.add({
+                title: 'Watcher started',
+                color: 'success',
+                icon: 'i-lucide-play',
+              });
+            },
+          })
+        ),
 
-      return h(
-        'div',
-        { class: 'text-right' },
+        // Pause button with tooltip
+        h(
+          UTooltip,
+          {
+            text: 'Pause',
+            placement: 'top',
+            delayDuration: 200,
+          },
+          h(UButton, {
+            icon: 'i-lucide-pause',
+            color: 'error',
+            variant: 'ghost',
+            size: 'xl',
+            'aria-label': 'Pause',
+            disabled: watcher.status === 'stopped',
+            onClick: () => {
+              // Add logic to stop the watcher
+              toast.add({
+                title: 'Watcher paused',
+                color: 'error',
+                icon: 'i-lucide-pause',
+              });
+            },
+          })
+        ),
+
+        // Edit button with tooltip
+        h(
+          UTooltip,
+          {
+            text: 'Edit',
+            placement: 'top',
+            delayDuration: 200,
+          },
+          h(UButton, {
+            icon: 'i-lucide-pencil',
+            color: 'neutral',
+            variant: 'ghost',
+            size: 'xl',
+            'aria-label': 'Edit',
+            onClick: () => {
+              openWatcherModal(watcher);
+            },
+          })
+        ),
+
+        // Actions dropdown (kept for other actions)
         h(
           UDropdownMenu,
           {
             content: {
               align: 'end',
             },
-            items,
+            items: [
+              {
+                type: 'label',
+                label: 'Actions',
+              },
+              {
+                label: 'Copy ID',
+                onSelect() {
+                  navigator.clipboard.writeText(row.original.id!);
+                  toast.add({
+                    title: 'ID copied to clipboard!',
+                    color: 'success',
+                    icon: 'i-lucide-circle-check',
+                  });
+                },
+              },
+              {
+                label: row.getIsExpanded() ? 'Collapse' : 'Expand',
+                onSelect() {
+                  row.toggleExpanded();
+                },
+              },
+              {
+                type: 'separator',
+              },
+              {
+                label: 'Delete',
+                color: 'error',
+                onSelect() {
+                  // Add delete confirmation logic
+                },
+              },
+            ],
             'aria-label': 'Actions dropdown',
           },
           () =>
@@ -220,11 +311,11 @@ const columns: TableColumn<Watcher>[] = [
               icon: 'i-lucide-ellipsis-vertical',
               color: 'neutral',
               variant: 'ghost',
-              class: 'ml-auto',
+              size: 'xl',
               'aria-label': 'Actions dropdown',
             })
-        )
-      );
+        ),
+      ]);
     },
   },
   {
@@ -235,13 +326,14 @@ const columns: TableColumn<Watcher>[] = [
         {
           text: 'Refresh',
           placement: 'bottom',
-          delayDuration: 250,
+          delayDuration: 200,
           loading: refreshing.value,
           onClick: () => refresh(),
         },
         h(UButton, {
           leadingIcon: 'i-lucide-refresh-cw',
-          variant: 'ghost',
+          variant: 'link',
+          color: 'neutral',
           ui: { leadingIcon: 'scale-150' },
         })
       ),
