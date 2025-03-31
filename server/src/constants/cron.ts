@@ -1,31 +1,35 @@
 import type { BlocketQueryConfig } from 'blocket.js';
+import { SettingRepository } from '@/db/repositories';
+import { SettingKey } from '@/types/settings';
 
-export const BLOCKET_JOB_CONFIG = Object.freeze({
-  cronTime: process.env.BLOCKET_CRON_TIME || '*/5 * * * *',
-  timeZone: process.env.BLOCKET_TIMEZONE || 'Europe/Stockholm',
-  runOnInit: true,
-});
-
+// Default configuration for Blocket queries used by watcher jobs
 export const BLOCKET_QUERY = Object.freeze({
-  query: process.env.BLOCKET_AD_QUERY,
-  limit: parseInt(process.env.BLOCKET_AD_LIMIT ?? '60') || 60,
-  sort: process.env.BLOCKET_AD_SORT ?? 'rel',
-  listingType: process.env.BLOCKET_AD_LISTING_TYPE ?? 's',
-  status: process.env.BLOCKET_AD_STATUS ?? 'active',
-  geolocation: parseInt(process.env.BLOCKET_AD_GL ?? '3') || 3,
-  include: process.env.BLOCKET_AD_INCLUDE ?? 'extend_with_shipping',
+  limit: parseInt(
+    SettingRepository.getValue(SettingKey.BLOCKET_QUERY_LIMIT) || '60',
+  ),
+  sort: SettingRepository.getValue(SettingKey.BLOCKET_QUERY_SORT) || 'rel',
+  listingType:
+    SettingRepository.getValue(SettingKey.BLOCKET_QUERY_LISTING_TYPE) || 's',
+  status:
+    SettingRepository.getValue(SettingKey.BLOCKET_QUERY_STATUS) || 'active',
+  geolocation: parseInt(
+    SettingRepository.getValue(SettingKey.BLOCKET_QUERY_GEOLOCATION) || '3',
+  ),
+  include:
+    SettingRepository.getValue(SettingKey.BLOCKET_QUERY_INCLUDE) ||
+    'extend_with_shipping',
 }) as BlocketQueryConfig;
 
-export const BLOCKET_QUERIES = (process.env.BLOCKET_AD_QUERIES || '')
-  .split(',')
-  .map((query) => query.trim());
-
 export const BLOCKET_MONITORING_CONFIG = Object.freeze({
-  // default values should always be null
   pricing: {
-    active: process.env.OPT_PRICE_CHANGES === 'true',
-    min: parseInt(process.env.OPT_PRICE_MIN ?? 'null') || null,
-    max: parseInt(process.env.OPT_PRICE_MAX ?? 'null') || null,
-    currency: process.env.OPT_PRICE_CURRENCY ?? 'SEK',
+    active:
+      SettingRepository.getValue(SettingKey.PRICE_CHANGES_ACTIVE) === 'true',
+    min: SettingRepository.getValue(SettingKey.PRICE_MIN)
+      ? parseInt(SettingRepository.getValue(SettingKey.PRICE_MIN))
+      : null,
+    max: SettingRepository.getValue(SettingKey.PRICE_MAX)
+      ? parseInt(SettingRepository.getValue(SettingKey.PRICE_MAX))
+      : null,
+    currency: SettingRepository.getValue(SettingKey.PRICE_CURRENCY) || 'SEK',
   },
 });

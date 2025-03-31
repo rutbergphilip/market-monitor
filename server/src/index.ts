@@ -8,6 +8,7 @@ dotenv.config();
 import routes from './routes';
 import logger from './integrations/logger';
 import { initializeDb } from './db';
+import { SettingRepository } from './db/repositories';
 import { initializeCronSystem } from './services/cron/initialize';
 
 /**
@@ -39,6 +40,17 @@ const server = app.listen(PORT, () => {
 
   // Initialize the database first
   initializeDb();
+
+  // Initialize settings with default values
+  try {
+    SettingRepository.initializeSettings();
+    logger.info('Settings initialized successfully');
+  } catch (error) {
+    logger.error({
+      message: 'Failed to initialize settings',
+      error: error as Error,
+    });
+  }
 
   // Initialize the cron system for watchers
   initializeCronSystem();
