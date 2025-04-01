@@ -331,3 +331,47 @@ export function stop(id: string): Watcher | null {
     throw error;
   }
 }
+
+/**
+ * @param id Watcher id to increment run count
+ * @description Increments the run count of a watcher by 1
+ */
+export function incrementRunCount(id: string): void {
+  try {
+    const stmt = db.prepare(`
+      UPDATE watchers
+      SET number_of_runs = number_of_runs + 1
+      WHERE id = ?
+    `);
+    stmt.run(id);
+  } catch (error) {
+    logger.error({
+      error: error as Error,
+      message: 'Error incrementing run count',
+      id,
+    });
+    throw error;
+  }
+}
+
+/**
+ * @param id Watcher id to update
+ */
+export function updateLastRun(id: string): void {
+  try {
+    const now = new Date().toISOString();
+    const stmt = db.prepare(`
+      UPDATE watchers
+      SET last_run = ?
+      WHERE id = ?
+    `);
+    stmt.run(now, id);
+  } catch (error) {
+    logger.error({
+      error: error as Error,
+      message: 'Error updating last run',
+      id,
+    });
+    throw error;
+  }
+}
