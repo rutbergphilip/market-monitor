@@ -92,7 +92,7 @@ async function stop(watcherId: string) {
   }
 }
 
-const columns: TableColumn<Watcher>[] = [
+const columns: ComputedRef<TableColumn<Watcher>[]> = computed(() => [
   {
     id: 'select',
     header: ({ table }) =>
@@ -143,13 +143,21 @@ const columns: TableColumn<Watcher>[] = [
     accessorKey: 'status',
     header: 'Status',
     cell: ({ row }) => {
-      const color = {
-        active: 'success' as const,
-        stopped: 'error' as const,
-      }[row.getValue('status') as string];
+      const watcher = row.original;
 
-      return h(UBadge, { class: 'capitalize', variant: 'subtle', color }, () =>
-        row.getValue('status')
+      const status = watcher.status;
+
+      const color =
+        status === 'active'
+          ? 'success'
+          : status === 'stopped'
+          ? 'error'
+          : 'neutral';
+
+      return h(
+        UBadge,
+        { class: 'capitalize', variant: 'subtle', color },
+        () => status
       );
     },
   },
@@ -360,7 +368,7 @@ const columns: TableColumn<Watcher>[] = [
         })
       ),
   },
-];
+]);
 
 const table = useTemplateRef('table');
 </script>
