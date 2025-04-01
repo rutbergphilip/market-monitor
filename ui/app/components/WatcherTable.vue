@@ -228,47 +228,43 @@ const columns: TableColumn<Watcher>[] = [
       const watcher = row.original;
 
       return h('div', { class: 'flex items-center justify-end gap-2' }, [
-        // Play button with tooltip
-        h(
-          UTooltip,
-          {
-            text: 'Start',
-            placement: 'top',
-            delayDuration: 200,
-          },
-          h(UButton, {
-            icon: 'i-lucide-play',
-            color: 'success',
-            variant: 'ghost',
-            size: 'xl',
-            'aria-label': 'Start',
-            disabled: watcher.status === 'active',
-            onClick: () => {
-              start(watcher.id!);
-            },
-          })
-        ),
-
-        // Pause button with tooltip
-        h(
-          UTooltip,
-          {
-            text: 'Pause',
-            placement: 'top',
-            delayDuration: 200,
-          },
-          h(UButton, {
-            icon: 'i-lucide-pause',
-            color: 'error',
-            variant: 'ghost',
-            size: 'xl',
-            'aria-label': 'Pause',
-            disabled: watcher.status === 'stopped',
-            onClick: () => {
-              stop(watcher.id!);
-            },
-          })
-        ),
+        watcher.status === 'active'
+          ? h(
+              UTooltip,
+              {
+                text: 'Pause',
+                placement: 'top',
+                delayDuration: 200,
+              },
+              h(UButton, {
+                icon: 'i-lucide-pause',
+                color: 'error',
+                variant: 'ghost',
+                size: 'xl',
+                'aria-label': 'Pause',
+                onClick: () => {
+                  stop(watcher.id!);
+                },
+              })
+            )
+          : h(
+              UTooltip,
+              {
+                text: 'Start',
+                placement: 'top',
+                delayDuration: 200,
+              },
+              h(UButton, {
+                icon: 'i-lucide-play',
+                color: 'success',
+                variant: 'ghost',
+                size: 'xl',
+                'aria-label': 'Start',
+                onClick: () => {
+                  start(watcher.id!);
+                },
+              })
+            ),
 
         // Edit button with tooltip
         h(
