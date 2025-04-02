@@ -198,19 +198,6 @@ const columns: ComputedRef<TableColumn<Watcher>[]> = computed(() => [
     },
   },
   {
-    accessorKey: 'number_of_runs',
-    header: () => h('div', { class: 'text-right' }, 'Runs'),
-    cell: ({ row }) => {
-      const numberOfRuns = Number.parseFloat(row.getValue('number_of_runs'));
-
-      return h(
-        'div',
-        { class: 'text-right font-medium' },
-        numberOfRuns.toString()
-      );
-    },
-  },
-  {
     accessorKey: 'notifications',
     header: () => h('div', { class: 'text-right' }, 'Enabled Notifications'),
     cell: ({ row }) => {

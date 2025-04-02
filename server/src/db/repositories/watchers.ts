@@ -37,7 +37,6 @@ export function getAll(): Watcher[] {
       schedule: row.schedule,
       notifications: JSON.parse(row.notifications),
       status: row.status,
-      number_of_runs: row.number_of_runs,
       last_run: row.last_run,
       created_at: row.created_at,
       updated_at: row.updated_at,
@@ -61,8 +60,8 @@ export function create(input: CreateWatcherInput): Watcher {
     const now = new Date().toISOString();
 
     const stmt = db.prepare(`
-      INSERT INTO watchers (query, schedule, notifications, status, number_of_runs, last_run, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO watchers (query, schedule, notifications, status, last_run, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `);
 
     const info = stmt.run(
@@ -70,7 +69,6 @@ export function create(input: CreateWatcherInput): Watcher {
       input.schedule,
       JSON.stringify(input.notifications),
       'active',
-      0,
       null,
       now,
       now,
@@ -88,7 +86,6 @@ export function create(input: CreateWatcherInput): Watcher {
       schedule: input.schedule,
       notifications: input.notifications,
       status: 'active',
-      number_of_runs: 0,
       last_run: null,
       created_at: now,
       updated_at: now,
@@ -215,7 +212,6 @@ type WatcherRow = {
   schedule: string;
   notifications: string; // Stored as JSON string in the database
   status: 'active' | 'stopped';
-  number_of_runs: number;
   last_run: string;
   created_at: string;
   updated_at: string;
@@ -243,7 +239,6 @@ export function getById(id: string): Watcher | null {
       schedule: row.schedule,
       notifications: JSON.parse(row.notifications),
       status: row.status,
-      number_of_runs: row.number_of_runs,
       last_run: row.last_run,
       created_at: row.created_at,
       updated_at: row.updated_at,
@@ -332,28 +327,6 @@ export function stop(id: string): Watcher | null {
     logger.error({
       error: error as Error,
       message: 'Error stopping watcher',
-      id,
-    });
-    throw error;
-  }
-}
-
-/**
- * @param id Watcher id to increment run count
- * @description Increments the run count of a watcher by 1
- */
-export function incrementRunCount(id: string): void {
-  try {
-    const stmt = db.prepare(`
-      UPDATE watchers
-      SET number_of_runs = number_of_runs + 1
-      WHERE id = ?
-    `);
-    stmt.run(id);
-  } catch (error) {
-    logger.error({
-      error: error as Error,
-      message: 'Error incrementing run count',
       id,
     });
     throw error;

@@ -8,17 +8,16 @@ import logger from '@/integrations/logger';
 export function initWatcherEvents(): void {
   emitter.on(WatcherEvents.RUN, (watcherId: string) => {
     try {
-      watcherRepository.incrementRunCount(watcherId);
       watcherRepository.updateLastRun(watcherId);
 
       logger.debug({
-        message: 'Updated watcher run statistics',
+        message: 'Updated watcher last run time',
         watcherId,
       });
     } catch (error) {
       logger.error({
         error: error as Error,
-        message: 'Failed to update watcher run statistics',
+        message: 'Failed to update watcher last run time',
         watcherId,
       });
     }

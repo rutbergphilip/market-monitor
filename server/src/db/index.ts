@@ -18,7 +18,6 @@ export function initializeDb() {
       query TEXT NOT NULL,
       status TEXT NOT NULL DEFAULT 'active',
       last_run TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      number_of_runs INTEGER DEFAULT 0,
       notifications TEXT DEFAULT '[]',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

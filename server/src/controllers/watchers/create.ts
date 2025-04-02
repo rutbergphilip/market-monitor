@@ -10,7 +10,6 @@ export async function create(req: Request, res: Response) {
   const newWatcher: Watcher = {
     last_run: new Date().toISOString(),
     status: 'active',
-    number_of_runs: 0,
     query,
     notifications,
     schedule,
