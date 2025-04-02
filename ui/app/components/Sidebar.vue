@@ -1,11 +1,44 @@
 <script lang="ts" setup>
 import type { NavigationMenuItem } from '@nuxt/ui';
 
+const watcherStore = useWatcherStore();
+
+const { activeWatchers } = storeToRefs(watcherStore);
+
 const items = ref<NavigationMenuItem[][]>([
   [
     {
       label: 'Watchers',
       icon: 'i-lucide-house',
+      to: '/',
+      badge: activeWatchers.value.length,
+    },
+    {
+      label: 'Settings',
+      icon: 'i-lucide-settings',
+      defaultOpen: true,
+      children: [
+        {
+          label: 'General',
+          icon: 'i-lucide-settings',
+          to: '/settings/general',
+        },
+        {
+          label: 'Notifications',
+          icon: 'i-lucide-bell',
+          to: '/settings/notifications',
+        },
+        {
+          label: 'Account',
+          icon: 'i-lucide-user',
+          to: '/settings/account',
+        },
+        {
+          label: 'Preferences',
+          icon: 'i-lucide-sliders',
+          to: '/settings/preferences',
+        },
+      ],
     },
   ],
 ]);
@@ -71,8 +104,11 @@ function toggleSidebar() {
       :collapsed="isCollapsed"
       :class="[
         'data-[orientation=vertical]:w-48 max-w-full',
-        isCollapsed ? 'items-center' : 'items-start'
+        isCollapsed ? 'items-center' : 'items-start',
       ]"
+      :ui="{
+        linkLeadingIcon: 'scale-120',
+      }"
     />
 
     <footer v-if="!isCollapsed" class="mt-auto">
