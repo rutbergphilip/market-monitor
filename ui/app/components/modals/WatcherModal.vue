@@ -73,7 +73,7 @@ async function create(event: FormSubmitEvent<Schema>) {
   const watcher: Watcher = {
     query,
     schedule,
-    notifications: state.notifications ?? [],
+    notifications: state.notifications ? state.notifications : [],
   };
 
   try {
@@ -100,7 +100,7 @@ async function update(event: FormSubmitEvent<Schema>) {
   const watcher: Watcher = {
     query,
     schedule,
-    notifications: state.notifications ?? [],
+    notifications: state.notifications ? state.notifications : [],
   };
 
   try {

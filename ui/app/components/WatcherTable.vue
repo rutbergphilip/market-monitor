@@ -8,7 +8,7 @@ import { NOTIFICATION_ICON_MAP } from '~/constants';
 import WatcherModal from '~/components/modals/WatcherModal.vue';
 
 import type { TableColumn } from '@nuxt/ui';
-import type { Watcher, NotificationKind } from '~/types';
+import type { Watcher, NotificationKind, Notification } from '~/types';
 
 const UButton = resolveComponent('UButton');
 const UCheckbox = resolveComponent('UCheckbox');
@@ -214,14 +214,14 @@ const columns: ComputedRef<TableColumn<Watcher>[]> = computed(() => [
     accessorKey: 'notifications',
     header: () => h('div', { class: 'text-right' }, 'Enabled Notifications'),
     cell: ({ row }) => {
-      const notifications = row.getValue('notifications') as NotificationKind[];
+      const notifications = row.getValue('notifications') as Notification[];
 
       return h(
         'div',
         { class: 'flex flex-wrap items-center justify-end gap-2' },
         notifications.map((notification) =>
           h(UIcon, {
-            name: NOTIFICATION_ICON_MAP[notification],
+            name: NOTIFICATION_ICON_MAP[notification.kind as NotificationKind],
             class: 'text-lg',
             title: notification,
           })
