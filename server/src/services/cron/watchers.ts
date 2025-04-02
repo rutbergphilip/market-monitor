@@ -6,10 +6,7 @@ import { BLOCKET_QUERY } from '@/constants/cron';
 import type { Watcher } from '@/types/watchers';
 import eventEmitter, { WatcherEvents } from '@/events';
 
-// Store active cron jobs by watcher ID
 const watcherJobs = new Map<string, CronJob>();
-
-// Cache for each watcher to track seen ads
 const watcherCaches = new Map<string, Map<string, BlocketAd>>();
 
 /**
@@ -28,7 +25,6 @@ async function fetchAdsForWatcher(watcher: Watcher): Promise<BlocketAd[]> {
  * @returns {Function} - The job function
  */
 function createWatcherJobFunction(watcher: Watcher): () => Promise<void> {
-  // Initialize the cache for this watcher if it doesn't exist
   if (!watcherCaches.has(watcher.id!)) {
     watcherCaches.set(watcher.id!, new Map<string, BlocketAd>());
   }
