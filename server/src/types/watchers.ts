@@ -19,7 +19,7 @@ export type Watcher = {
   schedule: string;
   status?: 'active' | 'stopped';
   number_of_runs?: number;
-  last_run?: string;
+  last_run?: string | null;
   created_at?: string;
   updated_at?: string;
 };

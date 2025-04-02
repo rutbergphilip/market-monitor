@@ -61,14 +61,17 @@ export function create(input: CreateWatcherInput): Watcher {
     const now = new Date().toISOString();
 
     const stmt = db.prepare(`
-      INSERT INTO watchers (query, schedule, notifications, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO watchers (query, schedule, notifications, status, number_of_runs, last_run, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     const info = stmt.run(
       input.query,
       input.schedule,
       JSON.stringify(input.notifications),
+      'active',
+      0,
+      null,
       now,
       now,
     );
@@ -84,6 +87,9 @@ export function create(input: CreateWatcherInput): Watcher {
       query: input.query,
       schedule: input.schedule,
       notifications: input.notifications,
+      status: 'active',
+      number_of_runs: 0,
+      last_run: null,
       created_at: now,
       updated_at: now,
     };
