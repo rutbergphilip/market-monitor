@@ -66,10 +66,13 @@ function toggleSidebar() {
     </header>
 
     <UNavigationMenu
-      v-if="!isCollapsed"
       orientation="vertical"
       :items="items"
-      class="data-[orientation=vertical]:w-48"
+      :collapsed="isCollapsed"
+      :class="[
+        'data-[orientation=vertical]:w-48 max-w-full',
+        isCollapsed ? 'items-center' : 'items-start'
+      ]"
     />
 
     <footer v-if="!isCollapsed" class="mt-auto">
