@@ -2,6 +2,9 @@ import type { Watcher } from '~/types';
 
 export const useWatcherStore = defineStore('watcher', () => {
   const watchers = ref<Watcher[]>([]);
+  const activeWatchers = computed(() =>
+    watchers.value.filter((w) => w.status === 'active')
+  );
 
   const getAll = async () => {
     const { data } = await useFetch<Watcher[]>('/api/watchers', {
@@ -115,5 +118,6 @@ export const useWatcherStore = defineStore('watcher', () => {
     stop,
     start,
     watchers,
+    activeWatchers,
   };
 });
