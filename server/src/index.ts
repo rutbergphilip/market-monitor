@@ -10,27 +10,14 @@ import logger from './integrations/logger';
 import { initializeDb } from './db';
 import { SettingRepository } from './db/repositories';
 import { initializeCronSystem } from './services/cron/initialize';
+import { initWatcherEvents } from './events/watcher-events';
 
-/**
- * Express server for health checks and testing
- * - Health check endpoint: /health
- * - Test Discord notification endpoint: /test-discord
- *   - Method: POST
- *   - Body: JSON with ads to send
- */
 const app = express();
 
-// Middleware to parse JSON bodies
 app.use(express.json());
-
-// Cors
 app.use(cors());
-
-// Register all routes
 app.use(routes);
-
-// 404 handler for undefined routes
-app.use((req, res) => {
+app.use((_, res) => {
   res.status(404).end();
 });
 
@@ -40,6 +27,10 @@ const server = app.listen(PORT, () => {
 
   // Initialize the database first
   initializeDb();
+
+  // Initialize event listeners
+  initWatcherEvents();
+  logger.info('Event listeners initialized');
 
   // Initialize settings with default values
   try {

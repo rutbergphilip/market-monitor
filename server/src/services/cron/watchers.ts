@@ -4,6 +4,7 @@ import logger from '@/integrations/logger';
 import { notifyAboutAds } from '@/services/notification';
 import { BLOCKET_QUERY } from '@/constants/cron';
 import type { Watcher } from '@/types/watchers';
+import eventEmitter, { WatcherEvents } from '@/events';
 
 // Store active cron jobs by watcher ID
 const watcherJobs = new Map<string, CronJob>();
@@ -34,9 +35,10 @@ function createWatcherJobFunction(watcher: Watcher): () => Promise<void> {
 
   let isFirstRun = true;
 
-  // Return the actual job function
   return async () => {
     try {
+      eventEmitter.emit(WatcherEvents.RUN, watcher.id!);
+
       const cache = watcherCaches.get(watcher.id!)!;
       const ads = await fetchAdsForWatcher(watcher);
 
