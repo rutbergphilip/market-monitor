@@ -50,7 +50,7 @@ export const useWatcherStore = defineStore('watcher', () => {
 
   const update = async (watcher: Watcher) => {
     const { data } = await useFetch<Watcher>(`/api/watchers/${watcher.id}`, {
-      method: 'PUT',
+      method: 'PATCH',
       baseURL: useRuntimeConfig().public.apiBaseUrl,
       body: watcher,
     });
