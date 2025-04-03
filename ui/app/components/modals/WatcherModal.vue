@@ -98,6 +98,7 @@ async function create(event: FormSubmitEvent<Schema>) {
 async function update(event: FormSubmitEvent<Schema>) {
   const { query, schedule } = event.data;
   const watcher: Watcher = {
+    id: props.watcher?.id,
     query,
     schedule,
     notifications: state.notifications ? state.notifications : [],
