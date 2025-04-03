@@ -386,9 +386,9 @@ async function testDiscordNotification() {
           >
             <div class="flex items-center space-x-2 mb-4">
               <UCheckbox
+                id="discord-enabled"
                 v-model="discordState.enabled"
                 name="enabled"
-                id="discord-enabled"
               />
               <label for="discord-enabled" class="font-medium"
                 >Enable Discord Notifications</label
@@ -458,8 +458,8 @@ async function testDiscordNotification() {
               <UButton
                 color="neutral"
                 variant="ghost"
-                @click="testDiscordNotification"
                 :disabled="!discordState.enabled || !discordState.webhookUrl"
+                @click="testDiscordNotification"
               >
                 Test Notification
               </UButton>
@@ -487,9 +487,9 @@ async function testDiscordNotification() {
           >
             <div class="flex items-center space-x-2 mb-4">
               <UCheckbox
+                id="email-enabled"
                 v-model="emailState.enabled"
                 name="enabled"
-                id="email-enabled"
                 disabled
               />
               <label for="email-enabled" class="font-medium"
@@ -619,9 +619,9 @@ async function testDiscordNotification() {
 
             <div class="flex items-center space-x-2 mb-4">
               <UCheckbox
+                id="use-tls"
                 v-model="emailState.useTLS"
                 name="useTLS"
-                id="use-tls"
                 disabled
               />
               <label for="use-tls" class="font-medium">Use TLS</label>
@@ -651,9 +651,9 @@ async function testDiscordNotification() {
           >
             <div class="flex items-center space-x-2 mb-4">
               <UCheckbox
+                id="enable-batching"
                 v-model="batchingState.enableBatching"
                 name="enableBatching"
-                id="enable-batching"
               />
               <label for="enable-batching" class="font-medium"
                 >Enable Notification Batching</label
