@@ -199,13 +199,13 @@ const columns: ComputedRef<TableColumn<Watcher>[]> = computed(() => [
   },
   {
     accessorKey: 'notifications',
-    header: () => h('div', { class: 'text-right' }, 'Enabled Notifications'),
+    header: () => h('div', { class: 'text-left' }, 'Enabled Notifications'),
     cell: ({ row }) => {
       const notifications = row.getValue('notifications') as Notification[];
 
       return h(
         'div',
-        { class: 'flex flex-wrap items-center justify-end gap-2' },
+        { class: 'flex flex-wrap items-center justify-start gap-2' },
         notifications.map((notification) =>
           h(UIcon, {
             name: NOTIFICATION_ICON_MAP[notification.kind as NotificationKind],
