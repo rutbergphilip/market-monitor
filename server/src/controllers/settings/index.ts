@@ -29,7 +29,8 @@ export async function getByKey(req: Request, res: Response) {
     const setting = SettingRepository.getByKey(key);
 
     if (!setting) {
-      return res.status(404).json({ error: 'Setting not found' });
+      res.status(404).json({ error: 'Setting not found' });
+      return;
     }
 
     res.json(setting);
@@ -53,7 +54,8 @@ export async function update(req: Request, res: Response) {
 
     // Validate input
     if (value === undefined) {
-      return res.status(400).json({ error: 'Value is required' });
+      res.status(400).json({ error: 'Value is required' });
+      return;
     }
 
     const updatedSetting = SettingRepository.updateByKey(
@@ -63,7 +65,8 @@ export async function update(req: Request, res: Response) {
     );
 
     if (!updatedSetting) {
-      return res.status(404).json({ error: 'Setting not found' });
+      res.status(404).json({ error: 'Setting not found' });
+      return;
     }
 
     res.json(updatedSetting);
