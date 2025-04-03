@@ -384,81 +384,77 @@ async function testDiscordNotification() {
             class="space-y-4"
             @submit="saveDiscordSettings"
           >
-            <UFormGroup class="flex items-center space-x-2">
-              <UCheckbox v-model="discordState.enabled" name="enabled" />
-              <span class="font-medium">Enable Discord Notifications</span>
-            </UFormGroup>
-
-            <UFormGroup
-              label="Webhook URL"
-              name="webhookUrl"
-              help="Discord webhook URL for sending notifications"
-            >
-              <UInput
-                v-model="discordState.webhookUrl"
-                placeholder="https://discord.com/api/webhooks/..."
-                :disabled="!discordState.enabled"
+            <div class="flex items-center space-x-2 mb-4">
+              <UCheckbox
+                v-model="discordState.enabled"
+                name="enabled"
+                id="discord-enabled"
               />
-            </UFormGroup>
-
-            <UFormGroup
-              label="Bot Username"
-              name="username"
-              help="Name that will appear for the bot in Discord"
-            >
-              <UInput
-                v-model="discordState.username"
-                placeholder="Blocket Bot"
-                :disabled="!discordState.enabled"
-              />
-            </UFormGroup>
-
-            <UFormGroup
-              label="Avatar URL"
-              name="avatarUrl"
-              help="URL to the bot's avatar image (optional)"
-            >
-              <UInput
-                v-model="discordState.avatarUrl"
-                placeholder="https://example.com/avatar.png"
-                :disabled="!discordState.enabled"
-              />
-            </UFormGroup>
-
-            <div class="flex gap-4">
-              <UFormGroup
-                label="Max Retries"
-                name="maxRetries"
-                help="Number of retries on failure"
-                class="flex-1"
+              <label for="discord-enabled" class="font-medium"
+                >Enable Discord Notifications</label
               >
-                <UInput
-                  v-model.number="discordState.maxRetries"
-                  type="number"
-                  :min="1"
-                  :max="10"
-                  :disabled="!discordState.enabled"
-                />
-              </UFormGroup>
-
-              <UFormGroup
-                label="Retry Delay (ms)"
-                name="retryDelay"
-                help="Delay between retries in milliseconds"
-                class="flex-1"
-              >
-                <UInput
-                  v-model.number="discordState.retryDelay"
-                  type="number"
-                  :min="500"
-                  :max="10000"
-                  step="100"
-                  :disabled="!discordState.enabled"
-                />
-              </UFormGroup>
             </div>
 
-            <div class="flex gap-2 mt-4 justify-end">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div class="md:col-span-2">
+                <div class="mb-1">
+                  <label
+                    for="discord-webhook-url"
+                    class="block font-medium text-sm"
+                    >Webhook URL</label
+                  >
+                </div>
+                <UInput
+                  id="discord-webhook-url"
+                  v-model="discordState.webhookUrl"
+                  placeholder="https://discord.com/api/webhooks/..."
+                  :disabled="!discordState.enabled"
+                />
+                <p class="text-xs text-neutral-500 mt-1">
+                  Discord webhook URL for sending notifications
+                </p>
+              </div>
+
+              <div>
+                <div class="mb-1">
+                  <label
+                    for="discord-username"
+                    class="block font-medium text-sm"
+                    >Bot Username</label
+                  >
+                </div>
+                <UInput
+                  id="discord-username"
+                  v-model="discordState.username"
+                  placeholder="Blocket Bot"
+                  :disabled="!discordState.enabled"
+                />
+                <p class="text-xs text-neutral-500 mt-1">
+                  Name that will appear for the bot in Discord
+                </p>
+              </div>
+
+              <div>
+                <div class="mb-1">
+                  <label
+                    for="discord-avatar-url"
+                    class="block font-medium text-sm"
+                    >Avatar URL</label
+                  >
+                </div>
+                <UInput
+                  id="discord-avatar-url"
+                  v-model="discordState.avatarUrl"
+                  placeholder="https://example.com/avatar.png"
+                  :disabled="!discordState.enabled"
+                />
+                <p class="text-xs text-neutral-500 mt-1">
+                  URL to the bot's avatar image (optional)
+                </p>
+              </div>
+            </div>
+
+            <div class="flex gap-4 justify-end">
               <UButton
                 color="neutral"
                 variant="ghost"
@@ -467,9 +463,9 @@ async function testDiscordNotification() {
               >
                 Test Notification
               </UButton>
-              <UButton type="submit" :loading="isSaving"
-                >Save Discord Settings</UButton
-              >
+              <UButton type="submit" :loading="isSaving">
+                Save Discord Settings
+              </UButton>
             </div>
           </UForm>
         </UCard>
@@ -489,119 +485,152 @@ async function testDiscordNotification() {
             class="space-y-4"
             @submit="saveEmailSettings"
           >
-            <UFormGroup class="flex items-center space-x-2">
-              <UCheckbox v-model="emailState.enabled" name="enabled" disabled />
-              <span class="font-medium">Enable Email Notifications</span>
-            </UFormGroup>
-
-            <div class="flex gap-4">
-              <UFormGroup
-                label="From Email"
-                name="from"
-                help="Sender email address"
-                class="flex-1"
+            <div class="flex items-center space-x-2 mb-4">
+              <UCheckbox
+                v-model="emailState.enabled"
+                name="enabled"
+                id="email-enabled"
+                disabled
+              />
+              <label for="email-enabled" class="font-medium"
+                >Enable Email Notifications</label
               >
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <div class="mb-1">
+                  <label for="email-from" class="block font-medium text-sm"
+                    >From Email</label
+                  >
+                </div>
                 <UInput
+                  id="email-from"
                   v-model="emailState.from"
                   placeholder="sender@example.com"
                   disabled
                 />
-              </UFormGroup>
+                <p class="text-xs text-neutral-500 mt-1">
+                  Sender email address
+                </p>
+              </div>
 
-              <UFormGroup
-                label="To Email"
-                name="to"
-                help="Recipient email address"
-                class="flex-1"
-              >
+              <div>
+                <div class="mb-1">
+                  <label for="email-to" class="block font-medium text-sm"
+                    >To Email</label
+                  >
+                </div>
                 <UInput
+                  id="email-to"
                   v-model="emailState.to"
                   placeholder="recipient@example.com"
                   disabled
                 />
-              </UFormGroup>
-            </div>
+                <p class="text-xs text-neutral-500 mt-1">
+                  Recipient email address
+                </p>
+              </div>
 
-            <UFormGroup
-              label="Email Subject"
-              name="subject"
-              help="Subject line for notification emails"
-            >
-              <UInput
-                v-model="emailState.subject"
-                placeholder="New Blocket Listings"
-                disabled
-              />
-            </UFormGroup>
-
-            <div class="flex gap-4">
-              <UFormGroup
-                label="SMTP Host"
-                name="smtpHost"
-                help="SMTP server address"
-                class="flex-1"
-              >
+              <div class="md:col-span-2">
+                <div class="mb-1">
+                  <label for="email-subject" class="block font-medium text-sm"
+                    >Email Subject</label
+                  >
+                </div>
                 <UInput
+                  id="email-subject"
+                  v-model="emailState.subject"
+                  placeholder="New Blocket Listings"
+                  disabled
+                />
+                <p class="text-xs text-neutral-500 mt-1">
+                  Subject line for notification emails
+                </p>
+              </div>
+
+              <div>
+                <div class="mb-1">
+                  <label for="smtp-host" class="block font-medium text-sm"
+                    >SMTP Host</label
+                  >
+                </div>
+                <UInput
+                  id="smtp-host"
                   v-model="emailState.smtpHost"
                   placeholder="smtp.example.com"
                   disabled
                 />
-              </UFormGroup>
+                <p class="text-xs text-neutral-500 mt-1">SMTP server address</p>
+              </div>
 
-              <UFormGroup
-                label="SMTP Port"
-                name="smtpPort"
-                help="SMTP server port"
-                class="flex-1"
-              >
+              <div>
+                <div class="mb-1">
+                  <label for="smtp-port" class="block font-medium text-sm"
+                    >SMTP Port</label
+                  >
+                </div>
                 <UInput
+                  id="smtp-port"
                   v-model.number="emailState.smtpPort"
                   type="number"
                   :min="1"
                   :max="65535"
                   disabled
                 />
-              </UFormGroup>
-            </div>
+                <p class="text-xs text-neutral-500 mt-1">SMTP server port</p>
+              </div>
 
-            <div class="flex gap-4">
-              <UFormGroup
-                label="SMTP Username"
-                name="smtpUser"
-                help="SMTP authentication username"
-                class="flex-1"
-              >
+              <div>
+                <div class="mb-1">
+                  <label for="smtp-user" class="block font-medium text-sm"
+                    >SMTP Username</label
+                  >
+                </div>
                 <UInput
+                  id="smtp-user"
                   v-model="emailState.smtpUser"
                   placeholder="username"
                   disabled
                 />
-              </UFormGroup>
+                <p class="text-xs text-neutral-500 mt-1">
+                  SMTP authentication username
+                </p>
+              </div>
 
-              <UFormGroup
-                label="SMTP Password"
-                name="smtpPass"
-                help="SMTP authentication password"
-                class="flex-1"
-              >
+              <div>
+                <div class="mb-1">
+                  <label for="smtp-pass" class="block font-medium text-sm"
+                    >SMTP Password</label
+                  >
+                </div>
                 <UInput
+                  id="smtp-pass"
                   v-model="emailState.smtpPass"
                   type="password"
                   placeholder="••••••••"
                   disabled
                 />
-              </UFormGroup>
+                <p class="text-xs text-neutral-500 mt-1">
+                  SMTP authentication password
+                </p>
+              </div>
             </div>
 
-            <UFormGroup class="flex items-center space-x-2">
-              <UCheckbox v-model="emailState.useTLS" name="useTLS" disabled />
-              <span class="font-medium">Use TLS</span>
-            </UFormGroup>
+            <div class="flex items-center space-x-2 mb-4">
+              <UCheckbox
+                v-model="emailState.useTLS"
+                name="useTLS"
+                id="use-tls"
+                disabled
+              />
+              <label for="use-tls" class="font-medium">Use TLS</label>
+            </div>
 
-            <div class="flex justify-end mt-4">
-              <UButton type="submit" :loading="isSaving" disabled
-                >Save Email Settings</UButton
-              >
+            <div class="flex justify-end">
+              <UButton type="submit" :loading="isSaving" disabled>
+                Save Email Settings
+              </UButton>
             </div>
           </UForm>
         </UCard>
@@ -620,32 +649,40 @@ async function testDiscordNotification() {
             class="space-y-4"
             @submit="saveBatchingSettings"
           >
-            <UFormGroup class="flex items-center space-x-2">
+            <div class="flex items-center space-x-2 mb-4">
               <UCheckbox
                 v-model="batchingState.enableBatching"
                 name="enableBatching"
+                id="enable-batching"
               />
-              <span class="font-medium">Enable Notification Batching</span>
-            </UFormGroup>
+              <label for="enable-batching" class="font-medium"
+                >Enable Notification Batching</label
+              >
+            </div>
 
-            <UFormGroup
-              label="Batch Size"
-              name="batchSize"
-              help="Number of notifications to send in one batch"
-            >
+            <div class="mb-4">
+              <div class="mb-1">
+                <label for="batch-size" class="block font-medium text-sm"
+                  >Batch Size</label
+                >
+              </div>
               <UInput
+                id="batch-size"
                 v-model.number="batchingState.batchSize"
                 type="number"
                 :min="1"
                 :max="100"
                 :disabled="!batchingState.enableBatching"
               />
-            </UFormGroup>
+              <p class="text-xs text-neutral-500 mt-1">
+                Number of notifications to send in one batch
+              </p>
+            </div>
 
-            <div class="flex justify-end mt-4">
-              <UButton type="submit" :loading="isSaving"
-                >Save Batching Settings</UButton
-              >
+            <div class="flex justify-end">
+              <UButton type="submit" :loading="isSaving">
+                Save Batching Settings
+              </UButton>
             </div>
           </UForm>
         </UCard>
