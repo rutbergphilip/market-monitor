@@ -214,88 +214,23 @@ async function resetSettings() {
             class="space-y-4"
             @submit="saveBlocketQuerySettings"
           >
-            <UFormGroup
-              label="Results Limit"
-              name="limit"
-              help="Maximum number of results to fetch per query"
-            >
+            <div class="mb-4">
+              <div class="mb-1">
+                <label for="results-limit" class="block font-medium text-sm"
+                  >Results Limit</label
+                >
+              </div>
               <UInput
+                id="results-limit"
                 v-model.number="blocketQueryState.limit"
                 type="number"
                 :min="1"
                 :max="60"
               />
-            </UFormGroup>
-
-            <UFormGroup
-              label="Sort Order"
-              name="sort"
-              help="How to sort the search results"
-            >
-              <URadioGroup v-model="blocketQueryState.sort" class="flex gap-4">
-                <URadio value="rel" label="Relevance" />
-                <URadio value="dat" label="Date (Newest first)" />
-                <URadio value="pri" label="Price (Lowest first)" />
-              </URadioGroup>
-            </UFormGroup>
-
-            <UFormGroup
-              label="Listing Type"
-              name="listingType"
-              help="Type of listings to search for"
-            >
-              <URadioGroup
-                v-model="blocketQueryState.listingType"
-                class="flex gap-4"
-              >
-                <URadio value="s" label="Selling" />
-                <URadio value="w" label="Wanted" />
-              </URadioGroup>
-            </UFormGroup>
-
-            <UFormGroup
-              label="Status"
-              name="status"
-              help="Status of listings to fetch"
-            >
-              <URadioGroup
-                v-model="blocketQueryState.status"
-                class="flex gap-4"
-              >
-                <URadio value="active" label="Active only" />
-                <URadio value="all" label="All listings" />
-              </URadioGroup>
-            </UFormGroup>
-
-            <UFormGroup
-              label="Geolocation"
-              name="geolocation"
-              help="Geographical area to search in"
-            >
-              <URadioGroup
-                v-model="blocketQueryState.geolocation"
-                class="flex gap-4"
-              >
-                <URadio :value="3" label="Sweden (3)" />
-              </URadioGroup>
-            </UFormGroup>
-
-            <UFormGroup
-              label="Include"
-              name="include"
-              help="Additional data to include in results"
-            >
-              <URadioGroup
-                v-model="blocketQueryState.include"
-                class="flex gap-4"
-              >
-                <URadio
-                  value="extend_with_shipping"
-                  label="With shipping info"
-                />
-                <URadio value="" label="Basic data" />
-              </URadioGroup>
-            </UFormGroup>
+              <p class="text-xs text-neutral-500 mt-1">
+                Maximum number of results to fetch per query
+              </p>
+            </div>
 
             <div class="flex justify-end mt-4">
               <UButton type="submit" :loading="isSaving"
