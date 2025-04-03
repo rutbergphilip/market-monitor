@@ -33,11 +33,6 @@ const items = ref<NavigationMenuItem[][]>([
           icon: 'i-lucide-user',
           to: '/settings/account',
         },
-        {
-          label: 'Preferences',
-          icon: 'i-lucide-sliders',
-          to: '/settings/preferences',
-        },
       ],
     },
   ],
@@ -52,7 +47,7 @@ function toggleSidebar() {
 
 <template>
   <UContainer
-    class="flex flex-col h-screen py-5 gap-5 bg-neutral-800 border-r-[1px] border-r-gray-100 dark:border-r-gray-700"
+    class="flex flex-col h-dvh py-5 gap-5 bg-neutral-900 border-r-[1px] border-r-neutral-800 dark:border-r-neutral-700"
     :class="{ 'w-16': isCollapsed }"
   >
     <header
@@ -107,7 +102,8 @@ function toggleSidebar() {
         isCollapsed ? 'items-center' : 'items-start',
       ]"
       :ui="{
-        linkLeadingIcon: 'scale-120',
+        list: isCollapsed ? 'flex flex-col gap-2 w-fit' : 'w-48',
+        item: isCollapsed ? 'scale-120' : '',
       }"
     />
 
