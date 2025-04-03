@@ -22,13 +22,6 @@ const blocketQuerySchema = z.object({
   include: z.string(),
 });
 
-const pricingSchema = z.object({
-  active: z.boolean(),
-  min: z.string(),
-  max: z.string(),
-  currency: z.string().min(1, 'Required'),
-});
-
 // Form states
 const blocketQueryState = reactive({
   limit: 60,
@@ -134,44 +127,6 @@ async function saveBlocketQuerySettings() {
   }
 }
 
-// Save Price Monitoring settings
-async function savePricingSettings() {
-  isSaving.value = true;
-  try {
-    await settingsStore.updateSetting(
-      'monitoring.pricing.active',
-      pricingState.active.toString()
-    );
-    await settingsStore.updateSetting(
-      'monitoring.pricing.min',
-      pricingState.min
-    );
-    await settingsStore.updateSetting(
-      'monitoring.pricing.max',
-      pricingState.max
-    );
-    await settingsStore.updateSetting(
-      'monitoring.pricing.currency',
-      pricingState.currency
-    );
-
-    toast.add({
-      title: 'Success',
-      description: 'Price monitoring settings saved',
-      color: 'success',
-    });
-  } catch (error) {
-    toast.add({
-      title: 'Error',
-      description: 'Failed to save price monitoring settings',
-      color: 'error',
-    });
-    console.error('Failed to save price monitoring settings:', error);
-  } finally {
-    isSaving.value = false;
-  }
-}
-
 // Reset all settings to defaults
 async function resetSettings() {
   try {
@@ -268,7 +223,7 @@ async function resetSettings() {
                 v-model.number="blocketQueryState.limit"
                 type="number"
                 :min="1"
-                :max="100"
+                :max="60"
               />
             </UFormGroup>
 
@@ -345,78 +300,6 @@ async function resetSettings() {
             <div class="flex justify-end mt-4">
               <UButton type="submit" :loading="isSaving"
                 >Save Query Settings</UButton
-              >
-            </div>
-          </UForm>
-        </UCard>
-
-        <!-- Price Monitoring Settings -->
-        <UCard>
-          <template #header>
-            <div class="flex items-center">
-              <UIcon name="mdi:currency-usd" class="mr-2 text-xl" />
-              <h2 class="text-lg font-semibold">Price Monitoring</h2>
-              <UBadge class="ml-2" color="neutral">Beta</UBadge>
-            </div>
-          </template>
-          <UForm
-            :schema="pricingSchema"
-            :state="pricingState"
-            class="space-y-4"
-            @submit="savePricingSettings"
-          >
-            <UFormGroup class="flex items-center space-x-2">
-              <UCheckbox v-model="pricingState.active" name="active" />
-              <span class="font-medium">Monitor price changes</span>
-            </UFormGroup>
-
-            <div class="flex gap-4">
-              <UFormGroup
-                label="Min Price"
-                name="min"
-                help="Minimum price to monitor (leave empty for no minimum)"
-                class="flex-1"
-              >
-                <UInput
-                  v-model="pricingState.min"
-                  placeholder="0"
-                  :disabled="!pricingState.active"
-                />
-              </UFormGroup>
-
-              <UFormGroup
-                label="Max Price"
-                name="max"
-                help="Maximum price to monitor (leave empty for no maximum)"
-                class="flex-1"
-              >
-                <UInput
-                  v-model="pricingState.max"
-                  placeholder="10000"
-                  :disabled="!pricingState.active"
-                />
-              </UFormGroup>
-            </div>
-
-            <UFormGroup
-              label="Currency"
-              name="currency"
-              help="Currency for price monitoring"
-            >
-              <URadioGroup
-                v-model="pricingState.currency"
-                class="flex gap-4"
-                :disabled="!pricingState.active"
-              >
-                <URadio value="SEK" label="SEK" />
-                <URadio value="EUR" label="EUR" />
-                <URadio value="USD" label="USD" />
-              </URadioGroup>
-            </UFormGroup>
-
-            <div class="flex justify-end mt-4">
-              <UButton type="submit" :loading="isSaving"
-                >Save Price Settings</UButton
               >
             </div>
           </UForm>
