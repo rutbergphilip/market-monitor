@@ -40,6 +40,7 @@ const items = ref<NavigationMenuItem[][]>([
 ]);
 
 const isCollapsed = ref(false);
+provide('sidebarCollapsed', isCollapsed);
 
 function toggleSidebar() {
   isCollapsed.value = !isCollapsed.value;
@@ -48,8 +49,8 @@ function toggleSidebar() {
 
 <template>
   <UContainer
-    class="flex flex-col h-dvh py-5 gap-5 bg-neutral-900 border-r-[1px] border-r-neutral-800 dark:border-r-neutral-700"
-    :class="{ 'w-16': isCollapsed }"
+    class="flex flex-col h-dvh py-5 gap-5 bg-neutral-900 border-r-[1px] border-r-neutral-800 dark:border-r-neutral-700 fixed left-0 top-0 z-10"
+    :class="{ 'w-16': isCollapsed, 'w-60': !isCollapsed }"
   >
     <header
       class="flex items-center justify-between"
