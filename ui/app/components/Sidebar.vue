@@ -17,6 +17,7 @@ const items = ref<NavigationMenuItem[][]>([
       label: 'Settings',
       icon: 'i-lucide-settings',
       defaultOpen: true,
+      disabled: true,
       children: [
         {
           label: 'General',
