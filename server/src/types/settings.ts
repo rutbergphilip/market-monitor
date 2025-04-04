@@ -10,12 +10,8 @@ export type Setting = {
 // Settings keys and their default values
 export enum SettingKey {
   // Discord notification settings
-  NOTIFICATION_DISCORD_ENABLED = 'notification.discord.enabled',
-  NOTIFICATION_DISCORD_WEBHOOK_URL = 'notification.discord.webhook_url',
   NOTIFICATION_DISCORD_USERNAME = 'notification.discord.username',
   NOTIFICATION_DISCORD_AVATAR_URL = 'notification.discord.avatar_url',
-  NOTIFICATION_DISCORD_MAX_RETRIES = 'notification.discord.max_retries',
-  NOTIFICATION_DISCORD_RETRY_DELAY = 'notification.discord.retry_delay',
 
   // Email notification settings
   NOTIFICATION_EMAIL_ENABLED = 'notification.email.enabled',
@@ -53,14 +49,6 @@ export const DEFAULT_SETTINGS: Record<
   { value: string; description: string }
 > = {
   // Discord notification settings
-  [SettingKey.NOTIFICATION_DISCORD_ENABLED]: {
-    value: 'false',
-    description: 'Enable Discord notifications',
-  },
-  [SettingKey.NOTIFICATION_DISCORD_WEBHOOK_URL]: {
-    value: '',
-    description: 'Discord webhook URL for notifications',
-  },
   [SettingKey.NOTIFICATION_DISCORD_USERNAME]: {
     value: 'Blocket Bot',
     description: 'Username to display for Discord notifications',
@@ -69,14 +57,6 @@ export const DEFAULT_SETTINGS: Record<
     value:
       'https://media.licdn.com/dms/image/v2/C4D0BAQFRais3CkgqRw/company-logo_200_200/company-logo_200_200/0/1661494474152/blocket_se_logo?e=2147483647&v=beta&t=f6-lmVB7bEh-xK7tFOV5wa3AKgmLaTI5UeN1lc9PF_o',
     description: 'Avatar URL for Discord webhook',
-  },
-  [SettingKey.NOTIFICATION_DISCORD_MAX_RETRIES]: {
-    value: '3',
-    description: 'Maximum number of retries for failed Discord webhook calls',
-  },
-  [SettingKey.NOTIFICATION_DISCORD_RETRY_DELAY]: {
-    value: '1000',
-    description: 'Delay between retry attempts for Discord webhook in ms',
   },
 
   // Email notification settings
