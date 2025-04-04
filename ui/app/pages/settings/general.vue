@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import * as z from 'zod';
+import BlocketQuerySettings from '~/components/settings/general/BlocketQuerySettings.vue';
 
 definePageMeta({
   layout: 'default',
@@ -8,36 +8,50 @@ definePageMeta({
 const settingsStore = useSettingsStore();
 const toast = useToast();
 
+type BlocketQueryRef = {
+  blocketQueryState: {
+    limit: number;
+    sort: 'rel' | 'dat' | 'pri';
+    listingType: 's' | 'w';
+    status: 'active' | 'all';
+    geolocation: number;
+    include: string;
+  };
+};
+
+const blocketQueryRef = ref<BlocketQueryRef | null>(null);
+
 const isLoading = ref(true);
 const isSaving = ref(false);
 const resetConfirmationOpen = ref(false);
 
-// Form schemas for different sections
-const blocketQuerySchema = z.object({
-  limit: z.number().int().min(1, 'Min 1').max(100, 'Max 100'),
-  sort: z.enum(['rel', 'dat', 'pri']),
-  listingType: z.enum(['s', 'w']),
-  status: z.enum(['active', 'all']),
-  geolocation: z.number().int().min(1, 'Min 1'),
-  include: z.string(),
-});
-
-// Form states
-const blocketQueryState = reactive({
-  limit: 60,
-  sort: 'rel',
-  listingType: 's',
-  status: 'active',
-  geolocation: 3,
-  include: 'extend_with_shipping',
-});
-
-const pricingState = reactive({
-  active: false,
-  min: '',
-  max: '',
-  currency: 'SEK',
-});
+const settingsMap = {
+  'blocket.query.limit': (value: string) => {
+    if (blocketQueryRef.value)
+      blocketQueryRef.value.blocketQueryState.limit = parseInt(value) || 60;
+  },
+  'blocket.query.sort': (value: string) => {
+    if (blocketQueryRef.value)
+      blocketQueryRef.value.blocketQueryState.sort = value as 'rel';
+  },
+  'blocket.query.listing_type': (value: string) => {
+    if (blocketQueryRef.value)
+      blocketQueryRef.value.blocketQueryState.listingType = value as 's' | 'w';
+  },
+  'blocket.query.status': (value: string) => {
+    if (blocketQueryRef.value)
+      blocketQueryRef.value.blocketQueryState.status = value as 'active';
+  },
+  'blocket.query.geolocation': (value: string) => {
+    if (blocketQueryRef.value)
+      blocketQueryRef.value.blocketQueryState.geolocation =
+        parseInt(value) || 3;
+  },
+  'blocket.query.include': (value: string) => {
+    if (blocketQueryRef.value)
+      blocketQueryRef.value.blocketQueryState.include = value;
+  },
+};
 
 // Load settings from the store
 onMounted(async () => {
@@ -45,28 +59,10 @@ onMounted(async () => {
   try {
     await settingsStore.fetchSettings();
 
-    // Map settings to state objects
     settingsStore.settings.forEach((setting) => {
-      if (setting.key === 'blocket.query.limit') {
-        blocketQueryState.limit = parseInt(setting.value) || 60;
-      } else if (setting.key === 'blocket.query.sort') {
-        blocketQueryState.sort = setting.value as 'rel' | 'dat' | 'pri';
-      } else if (setting.key === 'blocket.query.listing_type') {
-        blocketQueryState.listingType = setting.value as 's' | 'w';
-      } else if (setting.key === 'blocket.query.status') {
-        blocketQueryState.status = setting.value as 'active' | 'all';
-      } else if (setting.key === 'blocket.query.geolocation') {
-        blocketQueryState.geolocation = parseInt(setting.value) || 3;
-      } else if (setting.key === 'blocket.query.include') {
-        blocketQueryState.include = setting.value;
-      } else if (setting.key === 'monitoring.pricing.active') {
-        pricingState.active = setting.value === 'true';
-      } else if (setting.key === 'monitoring.pricing.min') {
-        pricingState.min = setting.value;
-      } else if (setting.key === 'monitoring.pricing.max') {
-        pricingState.max = setting.value;
-      } else if (setting.key === 'monitoring.pricing.currency') {
-        pricingState.currency = setting.value;
+      const mapFn = settingsMap[setting.key as keyof typeof settingsMap];
+      if (mapFn) {
+        mapFn(setting.value);
       }
     });
   } catch (error) {
@@ -81,34 +77,47 @@ onMounted(async () => {
   }
 });
 
-// Save Blocket Query settings
+async function updateSettings(
+  settings: Array<{ key: string; value: string }>
+): Promise<void> {
+  for (const setting of settings) {
+    await settingsStore.updateSetting(setting.key, setting.value);
+  }
+}
+
 async function saveBlocketQuerySettings() {
+  if (!blocketQueryRef.value) return;
+
   isSaving.value = true;
   try {
-    await settingsStore.updateSetting(
-      'blocket.query.limit',
-      blocketQueryState.limit.toString()
-    );
-    await settingsStore.updateSetting(
-      'blocket.query.sort',
-      blocketQueryState.sort
-    );
-    await settingsStore.updateSetting(
-      'blocket.query.listing_type',
-      blocketQueryState.listingType
-    );
-    await settingsStore.updateSetting(
-      'blocket.query.status',
-      blocketQueryState.status
-    );
-    await settingsStore.updateSetting(
-      'blocket.query.geolocation',
-      blocketQueryState.geolocation.toString()
-    );
-    await settingsStore.updateSetting(
-      'blocket.query.include',
-      blocketQueryState.include
-    );
+    const querySettings = [
+      {
+        key: 'blocket.query.limit',
+        value: blocketQueryRef.value.blocketQueryState.limit.toString(),
+      },
+      {
+        key: 'blocket.query.sort',
+        value: blocketQueryRef.value.blocketQueryState.sort,
+      },
+      {
+        key: 'blocket.query.listing_type',
+        value: blocketQueryRef.value.blocketQueryState.listingType,
+      },
+      {
+        key: 'blocket.query.status',
+        value: blocketQueryRef.value.blocketQueryState.status,
+      },
+      {
+        key: 'blocket.query.geolocation',
+        value: blocketQueryRef.value.blocketQueryState.geolocation.toString(),
+      },
+      {
+        key: 'blocket.query.include',
+        value: blocketQueryRef.value.blocketQueryState.include,
+      },
+    ];
+
+    await updateSettings(querySettings);
 
     toast.add({
       title: 'Success',
@@ -127,7 +136,6 @@ async function saveBlocketQuerySettings() {
   }
 }
 
-// Reset all settings to defaults
 async function resetSettings() {
   try {
     await settingsStore.resetToDefaults();
@@ -200,45 +208,12 @@ async function resetSettings() {
       </div>
 
       <div v-else class="space-y-6">
-        <!-- Blocket Query Settings -->
-        <UCard>
-          <template #header>
-            <div class="flex items-center">
-              <UIcon name="ic:baseline-search" class="mr-2 text-xl" />
-              <h2 class="text-lg font-semibold">Blocket Query Settings</h2>
-            </div>
-          </template>
-          <UForm
-            :schema="blocketQuerySchema"
-            :state="blocketQueryState"
-            class="space-y-4"
-            @submit="saveBlocketQuerySettings"
-          >
-            <div class="mb-4">
-              <div class="mb-1">
-                <label for="results-limit" class="block font-medium text-sm"
-                  >Results Limit</label
-                >
-              </div>
-              <UInput
-                id="results-limit"
-                v-model.number="blocketQueryState.limit"
-                type="number"
-                :min="1"
-                :max="60"
-              />
-              <p class="text-xs text-neutral-500 mt-1">
-                Maximum number of results to fetch per query
-              </p>
-            </div>
-
-            <div class="flex justify-end mt-4">
-              <UButton type="submit" :loading="isSaving"
-                >Save Query Settings</UButton
-              >
-            </div>
-          </UForm>
-        </UCard>
+        <BlocketQuerySettings
+          ref="blocketQueryRef"
+          :is-loading="isLoading"
+          :is-saving="isSaving"
+          @save="saveBlocketQuerySettings"
+        />
       </div>
     </div>
   </div>
