@@ -14,6 +14,8 @@ type DiscordRef = {
   discordState: {
     username: string;
     avatarUrl: string;
+    maxRetries: number;
+    retryDelay: number;
   };
 };
 
@@ -52,6 +54,14 @@ const settingsMap = {
   },
   'notification.discord.avatar_url': (value: string) => {
     if (discordRef.value) discordRef.value.discordState.avatarUrl = value;
+  },
+  'notification.discord.max_retries': (value: string) => {
+    if (discordRef.value)
+      discordRef.value.discordState.maxRetries = parseInt(value) || 3;
+  },
+  'notification.discord.retry_delay': (value: string) => {
+    if (discordRef.value)
+      discordRef.value.discordState.retryDelay = parseInt(value) || 1000;
   },
 
   'notification.email.enabled': (value: string) => {
@@ -138,6 +148,14 @@ async function saveDiscordSettings() {
       {
         key: 'notification.discord.avatar_url',
         value: discordRef.value.discordState.avatarUrl,
+      },
+      {
+        key: 'notification.discord.max_retries',
+        value: discordRef.value.discordState.maxRetries.toString(),
+      },
+      {
+        key: 'notification.discord.retry_delay',
+        value: discordRef.value.discordState.retryDelay.toString(),
       },
     ];
 

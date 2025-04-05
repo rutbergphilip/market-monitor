@@ -37,22 +37,6 @@ function saveProfileSettings() {
     <div class="space-y-4">
       <div class="mb-4">
         <div class="mb-1">
-          <label for="display-name" class="block font-medium text-sm"
-            >Display Name</label
-          >
-        </div>
-        <UInput
-          id="display-name"
-          v-model="profileState.displayName"
-          placeholder="Your name"
-        />
-        <p class="text-xs text-neutral-500 mt-1">
-          Your name as displayed in the application
-        </p>
-      </div>
-
-      <div class="mb-4">
-        <div class="mb-1">
           <label for="email" class="block font-medium text-sm"
             >Email Address</label
           >
@@ -65,6 +49,22 @@ function saveProfileSettings() {
         />
         <p class="text-xs text-neutral-500 mt-1">
           Your email address for notifications and account recovery
+        </p>
+      </div>
+
+      <div class="mb-4">
+        <div class="mb-1">
+          <label for="display-name" class="block font-medium text-sm"
+            >Display Name</label
+          >
+        </div>
+        <UInput
+          id="display-name"
+          v-model="profileState.displayName"
+          placeholder="Your name"
+        />
+        <p class="text-xs text-neutral-500 mt-1">
+          Your name as displayed in the application
         </p>
       </div>
 
