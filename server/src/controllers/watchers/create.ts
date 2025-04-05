@@ -5,7 +5,7 @@ import type { Watcher } from '@/types/watchers';
 import type { Request, Response } from 'express';
 
 export async function create(req: Request, res: Response) {
-  const { query, schedule, notifications } = req.body;
+  const { query, schedule, notifications, min_price, max_price } = req.body;
 
   const newWatcher: Watcher = {
     last_run: new Date().toISOString(),
@@ -13,6 +13,8 @@ export async function create(req: Request, res: Response) {
     query,
     notifications,
     schedule,
+    min_price: min_price || null,
+    max_price: max_price || null,
   };
 
   const watcher = WatcherRepository.create(newWatcher);
