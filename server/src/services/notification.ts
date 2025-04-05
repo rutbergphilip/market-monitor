@@ -161,7 +161,9 @@ async function sendDiscordBatch(
   if (ads.length === 0) return;
 
   const defaultUsername = username || 'Blocket Bot';
-  const defaultAvatarUrl = avatarUrl || ads[0]?.images?.[0]?.url || undefined;
+  const defaultAvatarUrl =
+    avatarUrl ||
+    'https://public-assets.blocketcdn.se/static/images/blocketLogotype.png';
 
   const embeds = ads.map((ad) => {
     const adInfo = formatAdInfo(ad);
@@ -244,7 +246,9 @@ async function sendDiscordSingle(
   const adInfo = formatAdInfo(ad);
 
   const defaultUsername = username || 'Blocket Bot';
-  const defaultAvatarUrl = avatarUrl || ad.images?.[0]?.url || undefined;
+  const defaultAvatarUrl =
+    avatarUrl ||
+    'https://public-assets.blocketcdn.se/static/images/blocketLogotype.png';
 
   // Create embed fields including the watcher information
   const fields = [
