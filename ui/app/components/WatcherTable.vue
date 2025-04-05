@@ -185,6 +185,33 @@ const columns: ComputedRef<TableColumn<Watcher>[]> = computed(() => [
     },
   },
   {
+    id: 'price_range',
+    header: 'Price Range',
+    cell: ({ row }) => {
+      const watcher = row.original;
+      const minPrice = watcher.min_price;
+      const maxPrice = watcher.max_price;
+
+      if (minPrice === null && maxPrice === null) {
+        return h('span', { class: 'text-neutral-500' }, 'Any price');
+      }
+
+      if (minPrice !== null && maxPrice !== null) {
+        return h('span', {}, `${minPrice} - ${maxPrice} SEK`);
+      }
+
+      if (minPrice !== null) {
+        return h('span', {}, `Min: ${minPrice} SEK`);
+      }
+
+      if (maxPrice !== null) {
+        return h('span', {}, `Max: ${maxPrice} SEK`);
+      }
+
+      return h('span', { class: 'text-neutral-500' }, 'Any price');
+    },
+  },
+  {
     accessorKey: 'last_run',
     header: 'Last Run',
     cell: ({ row }) => {

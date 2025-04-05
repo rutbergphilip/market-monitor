@@ -22,6 +22,8 @@ export type Watcher = {
   last_run?: string;
   created_at?: string;
   updated_at?: string;
+  min_price?: number | null;
+  max_price?: number | null;
 };
 
 export type Setting = {

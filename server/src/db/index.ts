@@ -19,12 +19,46 @@ export function initializeDb() {
       status TEXT NOT NULL DEFAULT 'active',
       last_run TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       notifications TEXT DEFAULT '[]',
+      min_price INTEGER,
+      max_price INTEGER,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
 
-  // Create settings table for application configuration
+  try {
+    const { count: hasMinPriceColumn } = db
+      .prepare(
+        `
+      SELECT COUNT(*) as count FROM pragma_table_info('watchers') WHERE name='min_price'
+    `,
+      )
+      .get() as { count: number };
+
+    const { count: hasMaxPriceColumn } = db
+      .prepare(
+        `
+      SELECT COUNT(*) as count FROM pragma_table_info('watchers') WHERE name='max_price'
+    `,
+      )
+      .get() as { count: number };
+
+    if (hasMinPriceColumn === 0) {
+      logger.info('Adding min_price column to watchers table');
+      db.exec(`ALTER TABLE watchers ADD COLUMN min_price INTEGER`);
+    }
+
+    if (hasMaxPriceColumn === 0) {
+      logger.info('Adding max_price column to watchers table');
+      db.exec(`ALTER TABLE watchers ADD COLUMN max_price INTEGER`);
+    }
+  } catch (error) {
+    logger.error({
+      message: 'Error adding price range columns to watchers table',
+      error,
+    });
+  }
+
   db.exec(`
     CREATE TABLE IF NOT EXISTS settings (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -37,5 +71,4 @@ export function initializeDb() {
   `);
 }
 
-// Export the database instance for repositories
 export { db };

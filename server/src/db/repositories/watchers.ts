@@ -8,12 +8,16 @@ type CreateWatcherInput = {
   query: string;
   schedule: string;
   notifications: Watcher['notifications'];
+  min_price?: number | null;
+  max_price?: number | null;
 };
 
 type UpdateWatcherInput = {
   query?: string;
   schedule?: string;
   notifications?: Watcher['notifications'];
+  min_price?: number | null;
+  max_price?: number | null;
 };
 
 const envDbPath = process.env.DB_PATH || 'db.sqlite';
@@ -40,6 +44,8 @@ export function getAll(): Watcher[] {
       last_run: row.last_run,
       created_at: row.created_at,
       updated_at: row.updated_at,
+      min_price: row.min_price,
+      max_price: row.max_price,
     }));
   } catch (error) {
     logger.error({
@@ -60,8 +66,8 @@ export function create(input: CreateWatcherInput): Watcher {
     const now = new Date().toISOString();
 
     const stmt = db.prepare(`
-      INSERT INTO watchers (query, schedule, notifications, status, last_run, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO watchers (query, schedule, notifications, status, last_run, created_at, updated_at, min_price, max_price)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     const info = stmt.run(
@@ -72,6 +78,8 @@ export function create(input: CreateWatcherInput): Watcher {
       null,
       now,
       now,
+      input.min_price || null,
+      input.max_price || null,
     );
 
     logger.info({
@@ -89,6 +97,8 @@ export function create(input: CreateWatcherInput): Watcher {
       last_run: null,
       created_at: now,
       updated_at: now,
+      min_price: input.min_price || null,
+      max_price: input.max_price || null,
     };
   } catch (error) {
     logger.error({
@@ -134,6 +144,16 @@ export function update(id: string, input: UpdateWatcherInput): Watcher | null {
     if (input.notifications !== undefined) {
       updates.push('notifications = ?');
       values.push(JSON.stringify(input.notifications));
+    }
+
+    if (input.min_price !== undefined) {
+      updates.push('min_price = ?');
+      values.push(input.min_price);
+    }
+
+    if (input.max_price !== undefined) {
+      updates.push('max_price = ?');
+      values.push(input.max_price);
     }
 
     if (updates.length === 0) {
@@ -215,6 +235,8 @@ type WatcherRow = {
   last_run: string;
   created_at: string;
   updated_at: string;
+  min_price: number | null;
+  max_price: number | null;
 };
 
 /**
@@ -242,6 +264,8 @@ export function getById(id: string): Watcher | null {
       last_run: row.last_run,
       created_at: row.created_at,
       updated_at: row.updated_at,
+      min_price: row.min_price,
+      max_price: row.max_price,
     };
   } catch (error) {
     logger.error({

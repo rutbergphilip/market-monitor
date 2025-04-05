@@ -25,7 +25,7 @@ const logger = winston.createLogger({
 
 type LogInfo = {
   [key: string]: any;
-  error?: Error;
+  error?: Error | any;
   message?: string;
 };
 

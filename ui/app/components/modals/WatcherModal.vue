@@ -35,6 +35,8 @@ const state = reactive<Watcher>({
   query: props.watcher?.query ?? '',
   schedule: props.watcher?.schedule ?? '',
   notifications: props.watcher?.notifications ?? [],
+  min_price: props.watcher?.min_price ?? null,
+  max_price: props.watcher?.max_price ?? null,
 });
 
 const schedule = computed(() =>
@@ -57,6 +59,8 @@ onMounted(() => {
     state.query = props.watcher.query;
     state.schedule = props.watcher.schedule;
     state.notifications = [...props.watcher.notifications];
+    state.min_price = props.watcher.min_price ?? null;
+    state.max_price = props.watcher.max_price ?? null;
   }
 });
 
@@ -74,6 +78,8 @@ async function create(event: FormSubmitEvent<Schema>) {
     query,
     schedule,
     notifications: state.notifications ? state.notifications : [],
+    min_price: state.min_price,
+    max_price: state.max_price,
   };
 
   try {
@@ -102,6 +108,8 @@ async function update(event: FormSubmitEvent<Schema>) {
     query,
     schedule,
     notifications: state.notifications ? state.notifications : [],
+    min_price: state.min_price,
+    max_price: state.max_price,
   };
 
   try {
@@ -251,7 +259,43 @@ function getNotificationValue(notification: Notification): string {
           </div>
         </div>
 
+        <!-- Price Range Fields -->
+        <div class="flex flex-col gap-4 w-full">
+          <p class="text-sm font-medium">Price Range</p>
+          <div class="flex gap-4">
+            <UFormField
+              label="Minimum Price (SEK)"
+              name="min_price"
+              class="w-full"
+            >
+              <UInput
+                v-model.number="state.min_price"
+                type="number"
+                min="0"
+                placeholder="Enter minimum price"
+              />
+            </UFormField>
+            <UFormField
+              label="Maximum Price (SEK)"
+              name="max_price"
+              class="w-full"
+            >
+              <UInput
+                v-model.number="state.max_price"
+                type="number"
+                min="0"
+                placeholder="Enter maximum price"
+              />
+            </UFormField>
+          </div>
+          <p class="text-xs text-neutral-500">
+            Set price range to filter out items. Leave empty for no price
+            filtering.
+          </p>
+        </div>
+
         <div class="h-2" />
+
         <UCollapsible :open="metadataOpen" class="flex flex-col gap-2 w-full">
           <div
             class="flex items-center gap-2 justify-start cursor-pointer group"

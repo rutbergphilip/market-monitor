@@ -47,20 +47,41 @@ function createWatcherJobFunction(watcher: Watcher): () => Promise<void> {
         return;
       }
 
+      // Filter ads based on price range if configured
+      const filteredAds = ads.filter((ad) => {
+        if (!ad.price || !ad.price.value) return true;
+
+        // Apply minimum price filter if set
+        if (watcher.min_price !== undefined && watcher.min_price !== null) {
+          if (ad.price.value < watcher.min_price) return false;
+        }
+
+        // Apply maximum price filter if set
+        if (watcher.max_price !== undefined && watcher.max_price !== null) {
+          if (ad.price.value > watcher.max_price) return false;
+        }
+
+        return true;
+      });
+
       if (isFirstRun) {
-        for (const ad of ads) {
+        for (const ad of filteredAds) {
           cache.set(ad.ad_id, ad);
         }
         isFirstRun = false;
         logger.info({
-          message: `First run for watcher: cached ${ads.length} existing ads`,
+          message: `First run for watcher: cached ${filteredAds.length} existing ads (${ads.length - filteredAds.length} excluded by price range)`,
           watcherId: watcher.id,
           query: watcher.query,
+          priceRange: {
+            min: watcher.min_price,
+            max: watcher.max_price,
+          },
         });
         return;
       }
 
-      const newAds = ads.filter((ad) => !cache.has(ad.ad_id));
+      const newAds = filteredAds.filter((ad) => !cache.has(ad.ad_id));
 
       if (newAds.length > 0) {
         await notifyAboutAds(newAds, watcher.notifications);
@@ -74,6 +95,10 @@ function createWatcherJobFunction(watcher: Watcher): () => Promise<void> {
         message: `Job completed for watcher: found ${newAds.length} new ads`,
         watcherId: watcher.id,
         query: watcher.query,
+        priceRange: {
+          min: watcher.min_price,
+          max: watcher.max_price,
+        },
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
