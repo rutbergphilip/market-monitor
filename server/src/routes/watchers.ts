@@ -8,6 +8,7 @@ import {
   remove,
   start,
   stop,
+  triggerWatcher,
 } from '../controllers/watchers';
 
 const router = Router();
@@ -22,5 +23,8 @@ router.get('/api/watchers/:id', getById);
 // Start or stop a watcher
 router.post('/api/watchers/:id/start', start);
 router.post('/api/watchers/:id/stop', stop);
+
+// Manually trigger a watcher
+router.post('/api/watchers/:id/trigger', triggerWatcher);
 
 export default router;

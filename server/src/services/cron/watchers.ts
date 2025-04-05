@@ -207,3 +207,46 @@ export function initializeWatcherJobs(watchers: Watcher[]): void {
     message: `Initialized ${watchers.filter((w) => w.status === 'active').length} watcher jobs`,
   });
 }
+
+/**
+ * Manually run a watcher job once immediately
+ * This runs the watcher function once without affecting its scheduled cron job
+ * @param watcher - The watcher to run manually
+ */
+export async function runWatcherManually(watcher: Watcher): Promise<void> {
+  if (!watcher.id) {
+    logger.error({
+      message: 'Attempted to run a watcher without ID',
+      watcher,
+    });
+    return;
+  }
+
+  logger.info({
+    message: 'Manually triggering watcher job',
+    watcherId: watcher.id,
+    query: watcher.query,
+  });
+
+  try {
+    // Get the watcher job function
+    const jobFunction = createWatcherJobFunction(watcher);
+
+    // Execute the job function immediately
+    await jobFunction();
+
+    logger.info({
+      message: 'Manual watcher job completed',
+      watcherId: watcher.id,
+      query: watcher.query,
+    });
+  } catch (error) {
+    logger.error({
+      error: error as Error,
+      message: 'Error in manual watcher job execution',
+      watcherId: watcher.id,
+      query: watcher.query,
+    });
+    throw error;
+  }
+}

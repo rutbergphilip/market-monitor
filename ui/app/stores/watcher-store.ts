@@ -108,6 +108,13 @@ export const useWatcherStore = defineStore('watcher', () => {
     }
   };
 
+  const trigger = async (id: string) => {
+    await useFetch(`/api/watchers/${id}/trigger`, {
+      method: 'POST',
+      baseURL: useRuntimeConfig().public.apiBaseUrl,
+    });
+  };
+
   return {
     getAll,
     refresh,
@@ -117,6 +124,7 @@ export const useWatcherStore = defineStore('watcher', () => {
     remove,
     stop,
     start,
+    trigger,
     watchers,
     activeWatchers,
   };

@@ -1,7 +1,10 @@
-export * from './get-all';
-export * from './create';
-export * from './update';
-export * from './remove';
-export * from './get-by-id';
-export * from './start';
-export * from './stop';
+import { getAll } from './get-all';
+import { getById } from './get-by-id';
+import { create } from './create';
+import { update } from './update';
+import { remove } from './remove';
+import { start } from './start';
+import { stop } from './stop';
+import { triggerWatcher } from './trigger';
+
+export { getAll, getById, create, update, remove, start, stop, triggerWatcher };

@@ -135,6 +135,29 @@ async function deleteWatcher(watcherId: string) {
   }
 }
 
+async function trigger(watcherId: string) {
+  try {
+    refreshing.value = true;
+    await watcherStore.trigger(watcherId);
+    toast.add({
+      title: 'Watcher triggered',
+      description: 'The watcher job is running now',
+      color: 'success',
+      icon: 'i-lucide-zap',
+    });
+  } catch (error) {
+    toast.add({
+      title: 'Failed to trigger watcher',
+      description: 'An error occurred while triggering the watcher',
+      color: 'error',
+      icon: 'i-lucide-circle-x',
+    });
+    console.error('Failed to trigger watcher:', error);
+  } finally {
+    refreshing.value = false;
+  }
+}
+
 const columns: ComputedRef<TableColumn<Watcher>[]> = computed(() => [
   // {
   //   id: 'select',
@@ -347,6 +370,26 @@ const columns: ComputedRef<TableColumn<Watcher>[]> = computed(() => [
             'aria-label': 'Edit',
             onClick: () => {
               openWatcherModal(watcher);
+            },
+          })
+        ),
+
+        // Trigger button with tooltip
+        h(
+          UTooltip,
+          {
+            text: 'Trigger',
+            placement: 'top',
+            delayDuration: 200,
+          },
+          h(UButton, {
+            icon: 'i-lucide-zap',
+            color: 'success',
+            variant: 'ghost',
+            size: 'xl',
+            'aria-label': 'Trigger',
+            onClick: () => {
+              trigger(watcher.id!);
             },
           })
         ),
