@@ -68,12 +68,12 @@ export const useWatcherStore = defineStore('watcher', () => {
   };
 
   const remove = async (id: string) => {
-    const { data } = await useFetch(`/api/watchers/${id}`, {
+    const { status } = await useFetch(`/api/watchers/${id}`, {
       method: 'DELETE',
       baseURL: useRuntimeConfig().public.apiBaseUrl,
     });
 
-    if (!data.value) {
+    if (status.value !== 'success') {
       throw new Error('Failed to delete watcher');
     }
 

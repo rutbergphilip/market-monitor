@@ -19,6 +19,7 @@ const props = defineProps({
 
 const watcherStore = useWatcherStore();
 const toast = useToast();
+const { copy } = useClipboard();
 
 const metadataOpen = ref(false);
 
@@ -382,13 +383,30 @@ function getNotificationValue(notification: Notification): string {
                         {{ getNotificationValue(notification) }}
                       </p>
                     </div>
-                    <UButton
-                      color="error"
-                      icon="i-heroicons-trash"
-                      variant="ghost"
-                      aria-label="Remove notification"
-                      @click="removeNotification(index)"
-                    />
+                    <div class="flex gap-1">
+                      <UButton
+                        color="primary"
+                        icon="i-heroicons-clipboard-document"
+                        variant="ghost"
+                        aria-label="Copy notification"
+                        @click="
+                          copy(getNotificationValue(notification));
+                          toast.add({
+                            title: 'Copied!',
+                            description: 'Notification copied to clipboard',
+                            color: 'success',
+                            duration: 2000,
+                          });
+                        "
+                      />
+                      <UButton
+                        color="error"
+                        icon="i-heroicons-trash"
+                        variant="ghost"
+                        aria-label="Remove notification"
+                        @click="removeNotification(index)"
+                      />
+                    </div>
                   </div>
                 </div>
 

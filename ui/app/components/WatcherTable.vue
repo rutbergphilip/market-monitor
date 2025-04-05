@@ -6,6 +6,7 @@ import { upperFirst } from 'scule';
 import { NOTIFICATION_ICON_MAP } from '~/constants';
 
 import WatcherModal from '~/components/modals/WatcherModal.vue';
+import ConfirmationModal from '~/components/modals/ConfirmationModal.vue';
 
 import type { TableColumn } from '@nuxt/ui';
 import type { Watcher, NotificationKind, Notification } from '~/types';
@@ -21,18 +22,39 @@ const watcherStore = useWatcherStore();
 const toast = useToast();
 const overlay = useOverlay();
 
-const modal = overlay.create(WatcherModal, {
+const watcherModal = overlay.create(WatcherModal, {
   props: {
-    onCancel: () => modal.close(),
+    onCancel: () => watcherModal.close(),
     onSuccess: () => {
-      modal.close();
+      watcherModal.close();
       refresh();
     },
   },
 });
 
+const confirmationModal = overlay.create(ConfirmationModal, {
+  props: {
+    title: 'Delete Watcher',
+    message:
+      'Are you sure you want to delete this watcher? This action cannot be undone.',
+    onCancel: () => confirmationModal.close(),
+    onConfirm: (watcherId: string) => {
+      confirmationModal.close();
+      deleteWatcher(watcherId);
+    },
+  },
+});
+
 async function openWatcherModal(watcher: Watcher) {
-  await modal.open({ watcher });
+  await watcherModal.open({ watcher });
+}
+
+async function openConfirmationModal(watcherId: string) {
+  const confirmed = await confirmationModal.open();
+
+  if (confirmed) {
+    await deleteWatcher(watcherId);
+  }
 }
 
 await watcherStore.refresh();
@@ -89,6 +111,27 @@ async function stop(watcherId: string) {
       icon: 'i-lucide-circle-x',
     });
     console.error('Failed to pause watcher:', error);
+  }
+}
+
+async function deleteWatcher(watcherId: string) {
+  try {
+    await watcherStore.remove(watcherId);
+    await refresh();
+    toast.add({
+      title: 'Watcher deleted',
+      description: 'The watcher has been permanently deleted',
+      color: 'success',
+      icon: 'i-lucide-check',
+    });
+  } catch (error) {
+    toast.add({
+      title: 'Failed to delete watcher',
+      description: 'An error occurred while deleting the watcher',
+      color: 'error',
+      icon: 'i-lucide-circle-x',
+    });
+    console.error('Failed to delete watcher:', error);
   }
 }
 
@@ -344,7 +387,7 @@ const columns: ComputedRef<TableColumn<Watcher>[]> = computed(() => [
                 label: 'Delete',
                 color: 'error',
                 onSelect() {
-                  // Add delete confirmation logic
+                  openConfirmationModal(watcher.id!);
                 },
               },
             ],
