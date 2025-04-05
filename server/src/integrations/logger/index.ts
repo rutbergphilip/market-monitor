@@ -1,9 +1,7 @@
 import winston from 'winston';
 
-// Get log level from environment variable or default to 'info'
 const logLevel = process.env.LOG_LEVEL || 'info';
 
-// Create Winston logger instance
 const logger = winston.createLogger({
   level: logLevel,
   format: winston.format.combine(
@@ -25,7 +23,6 @@ const logger = winston.createLogger({
   ],
 });
 
-// Type for log entry information
 type LogInfo = {
   [key: string]: any;
   error?: Error;
@@ -84,10 +81,8 @@ export function debug(messageOrInfo: string | LogInfo): void {
   }
 }
 
-// Export the raw winston logger in case advanced functionality is needed
 export { logger as winston };
 
-// Export a default logger object with all methods
 export default {
   info,
   error,

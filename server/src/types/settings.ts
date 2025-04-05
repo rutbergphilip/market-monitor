@@ -12,9 +12,10 @@ export enum SettingKey {
   // Discord notification settings
   NOTIFICATION_DISCORD_USERNAME = 'notification.discord.username',
   NOTIFICATION_DISCORD_AVATAR_URL = 'notification.discord.avatar_url',
+  NOTIFICATION_DISCORD_MAX_RETRIES = 'notification.discord.max_retries',
+  NOTIFICATION_DISCORD_RETRY_DELAY = 'notification.discord.retry_delay',
 
   // Email notification settings
-  NOTIFICATION_EMAIL_ENABLED = 'notification.email.enabled',
   NOTIFICATION_EMAIL_FROM = 'notification.email.from',
   NOTIFICATION_EMAIL_TO = 'notification.email.to',
   NOTIFICATION_EMAIL_SUBJECT = 'notification.email.subject',
@@ -27,12 +28,6 @@ export enum SettingKey {
   // General notification settings
   NOTIFICATION_BATCH_SIZE = 'notification.general.batch_size',
   NOTIFICATION_ENABLE_BATCHING = 'notification.general.enable_batching',
-
-  // Blocket monitoring settings
-  PRICE_CHANGES_ACTIVE = 'monitoring.pricing.active',
-  PRICE_MIN = 'monitoring.pricing.min',
-  PRICE_MAX = 'monitoring.pricing.max',
-  PRICE_CURRENCY = 'monitoring.pricing.currency',
 
   // Blocket query settings
   BLOCKET_QUERY_LIMIT = 'blocket.query.limit',
@@ -58,12 +53,16 @@ export const DEFAULT_SETTINGS: Record<
       'https://media.licdn.com/dms/image/v2/C4D0BAQFRais3CkgqRw/company-logo_200_200/company-logo_200_200/0/1661494474152/blocket_se_logo?e=2147483647&v=beta&t=f6-lmVB7bEh-xK7tFOV5wa3AKgmLaTI5UeN1lc9PF_o',
     description: 'Avatar URL for Discord webhook',
   },
+  [SettingKey.NOTIFICATION_DISCORD_MAX_RETRIES]: {
+    value: '3',
+    description: 'Maximum number of retries for failed Discord webhook calls',
+  },
+  [SettingKey.NOTIFICATION_DISCORD_RETRY_DELAY]: {
+    value: '1000',
+    description: 'Delay between retry attempts for Discord webhook in ms',
+  },
 
   // Email notification settings
-  [SettingKey.NOTIFICATION_EMAIL_ENABLED]: {
-    value: 'false',
-    description: 'Enable email notifications',
-  },
   [SettingKey.NOTIFICATION_EMAIL_FROM]: {
     value: '',
     description: 'Email address to send notifications from',
@@ -105,24 +104,6 @@ export const DEFAULT_SETTINGS: Record<
   [SettingKey.NOTIFICATION_ENABLE_BATCHING]: {
     value: 'true',
     description: 'Enable/disable notification batching',
-  },
-
-  // Blocket monitoring settings
-  [SettingKey.PRICE_CHANGES_ACTIVE]: {
-    value: 'false',
-    description: 'Monitor price changes',
-  },
-  [SettingKey.PRICE_MIN]: {
-    value: '',
-    description: 'Minimum price for monitoring (leave empty for no minimum)',
-  },
-  [SettingKey.PRICE_MAX]: {
-    value: '',
-    description: 'Maximum price for monitoring (leave empty for no maximum)',
-  },
-  [SettingKey.PRICE_CURRENCY]: {
-    value: 'SEK',
-    description: 'Currency for price monitoring',
   },
 
   // Blocket query settings

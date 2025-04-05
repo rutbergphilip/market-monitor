@@ -8,12 +8,6 @@ import { SettingKey } from '@/types/settings';
  */
 export const NOTIFICATION_CONFIG = freeze({
   discord: {
-    enabled:
-      SettingRepository.getValue(SettingKey.NOTIFICATION_DISCORD_ENABLED) ===
-      'true',
-    webhookUrl: SettingRepository.getValue(
-      SettingKey.NOTIFICATION_DISCORD_WEBHOOK_URL,
-    ),
     username: SettingRepository.getValue(
       SettingKey.NOTIFICATION_DISCORD_USERNAME,
     ),
@@ -33,9 +27,6 @@ export const NOTIFICATION_CONFIG = freeze({
   },
   email: {
     // Feature flag - disabled by default
-    enabled:
-      SettingRepository.getValue(SettingKey.NOTIFICATION_EMAIL_ENABLED) ===
-      'true',
     from: SettingRepository.getValue(SettingKey.NOTIFICATION_EMAIL_FROM),
     to: SettingRepository.getValue(SettingKey.NOTIFICATION_EMAIL_TO),
     subject: SettingRepository.getValue(SettingKey.NOTIFICATION_EMAIL_SUBJECT),

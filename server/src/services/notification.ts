@@ -63,19 +63,17 @@ async function withRetry<T>(
  * Sends a notification to Discord via webhook with retry capability
  * @param ads List of Blocket ads to notify about
  * @param webhookUrl Custom webhook URL or undefined to use default
+ * @param enabled Whether this notification should be sent (defaults to true for explicit webhooks)
  */
 export async function sendDiscordNotification(
   ads: BlocketAd[],
   webhookUrl?: string,
 ): Promise<void> {
-  const { enabled, username, avatarUrl, maxRetries, retryDelay } =
+  const { username, avatarUrl, maxRetries, retryDelay } =
     NOTIFICATION_CONFIG.discord;
 
-  // Use provided webhook URL or fall back to config
-  const targetWebhookUrl = webhookUrl || NOTIFICATION_CONFIG.discord.webhookUrl;
-
-  if (!enabled || !targetWebhookUrl) {
-    logger.debug('Discord notifications disabled or missing webhook URL');
+  if (!webhookUrl) {
+    logger.debug('Discord notification skipped - missing webhook URL');
     return;
   }
 
@@ -96,7 +94,7 @@ export async function sendDiscordNotification(
 
         await sendDiscordBatch(
           batch,
-          targetWebhookUrl,
+          webhookUrl,
           username,
           avatarUrl,
           maxRetries,
@@ -118,7 +116,7 @@ export async function sendDiscordNotification(
       for (const ad of ads) {
         await sendDiscordSingle(
           ad,
-          targetWebhookUrl,
+          webhookUrl,
           username,
           avatarUrl,
           maxRetries,
@@ -261,19 +259,11 @@ async function sendEmailNotification(
   ads: BlocketAd[],
   email?: string,
 ): Promise<void> {
-  const { enabled } = NOTIFICATION_CONFIG.email;
-
-  // Feature flagged off by default
-  if (!enabled) {
-    return;
-  }
-
-  // Email implementation would go here when feature flag is enabled
+  // Email implementation will go here
   logger.info({
     message: 'Email notification would be sent',
     count: ads.length,
     email: email || 'default',
-    enabled: false,
   });
 }
 
@@ -314,7 +304,6 @@ export async function notifyAboutAds(
     }
   } else {
     // Fall back to default notification behavior
-    notificationPromises.push(sendDiscordNotification(ads));
     notificationPromises.push(sendEmailNotification(ads));
   }
 
