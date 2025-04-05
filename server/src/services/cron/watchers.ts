@@ -164,7 +164,7 @@ export function startWatcherJob(watcher: Watcher): void {
 }
 
 /**
- * Stops a running cron job for a watcher
+ * Stops a running cron job for a watcher and cleans up resources
  * @param watcherId - The ID of the watcher to stop
  */
 export function stopWatcherJob(watcherId: string): void {
@@ -173,8 +173,14 @@ export function stopWatcherJob(watcherId: string): void {
   if (job) {
     job.stop();
     watcherJobs.delete(watcherId);
+
+    // Also clean up the cache for this watcher to prevent memory leaks
+    if (watcherCaches.has(watcherId)) {
+      watcherCaches.delete(watcherId);
+    }
+
     logger.info({
-      message: 'Watcher job stopped',
+      message: 'Watcher job stopped and resources cleaned up',
       watcherId,
     });
   }
