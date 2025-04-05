@@ -143,8 +143,8 @@ async function changePassword() {
         </p>
       </header>
 
-      <div v-if="isLoading" class="flex justify-center my-10">
-        <UIcon name="i-lucide-loader-2" class="animate-spin text-4xl" />
+      <div v-if="isLoading" class="space-y-6">
+        <USkeleton class="h-[500px] w-full" />
       </div>
 
       <div v-else class="space-y-6">
