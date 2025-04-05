@@ -12,7 +12,7 @@ import type { TableColumn } from '@nuxt/ui';
 import type { Watcher, NotificationKind, Notification } from '~/types';
 
 const UButton = resolveComponent('UButton');
-const UCheckbox = resolveComponent('UCheckbox');
+// const UCheckbox = resolveComponent('UCheckbox');
 const UBadge = resolveComponent('UBadge');
 const UDropdownMenu = resolveComponent('UDropdownMenu');
 const UIcon = resolveComponent('UIcon');
@@ -136,27 +136,27 @@ async function deleteWatcher(watcherId: string) {
 }
 
 const columns: ComputedRef<TableColumn<Watcher>[]> = computed(() => [
-  {
-    id: 'select',
-    header: ({ table }) =>
-      h(UCheckbox, {
-        modelValue: table.getIsSomePageRowsSelected()
-          ? 'indeterminate'
-          : table.getIsAllPageRowsSelected(),
-        'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
-          table.toggleAllPageRowsSelected(!!value),
-        'aria-label': 'Select all',
-      }),
-    cell: ({ row }) =>
-      h(UCheckbox, {
-        modelValue: row.getIsSelected(),
-        'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
-          row.toggleSelected(!!value),
-        'aria-label': 'Select row',
-      }),
-    enableSorting: false,
-    enableHiding: false,
-  },
+  // {
+  //   id: 'select',
+  //   header: ({ table }) =>
+  //     h(UCheckbox, {
+  //       modelValue: table.getIsSomePageRowsSelected()
+  //         ? 'indeterminate'
+  //         : table.getIsAllPageRowsSelected(),
+  //       'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
+  //         table.toggleAllPageRowsSelected(!!value),
+  //       'aria-label': 'Select all',
+  //     }),
+  //   cell: ({ row }) =>
+  //     h(UCheckbox, {
+  //       modelValue: row.getIsSelected(),
+  //       'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
+  //         row.toggleSelected(!!value),
+  //       'aria-label': 'Select row',
+  //     }),
+  //   enableSorting: false,
+  //   enableHiding: false,
+  // },
   {
     accessorKey: 'id',
     header: '#',

@@ -4,6 +4,17 @@ import * as z from 'zod';
 const props = defineProps<{
   isLoading: boolean;
   isSaving: boolean;
+  settings?: {
+    enabled: boolean;
+    from: string;
+    to: string;
+    subject: string;
+    smtpHost: string;
+    smtpPort: number;
+    smtpUser: string;
+    smtpPass: string;
+    useTLS: boolean;
+  };
 }>();
 
 const emit = defineEmits<{
@@ -23,15 +34,15 @@ const emailSchema = z.object({
 });
 
 const emailState = reactive({
-  enabled: false,
-  from: '',
-  to: '',
-  subject: 'New Blocket listings found',
-  smtpHost: '',
-  smtpPort: 587,
-  smtpUser: '',
-  smtpPass: '',
-  useTLS: true,
+  enabled: props.settings?.enabled || false,
+  from: props.settings?.from || '',
+  to: props.settings?.to || '',
+  subject: props.settings?.subject || 'New Blocket listings found',
+  smtpHost: props.settings?.smtpHost || '',
+  smtpPort: props.settings?.smtpPort || 587,
+  smtpUser: props.settings?.smtpUser || '',
+  smtpPass: props.settings?.smtpPass || '',
+  useTLS: props.settings?.useTLS || true,
 });
 
 defineExpose({

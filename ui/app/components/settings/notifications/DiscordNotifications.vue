@@ -4,6 +4,12 @@ import * as z from 'zod';
 const props = defineProps<{
   isLoading: boolean;
   isSaving: boolean;
+  settings?: {
+    username?: string;
+    avatarUrl?: string;
+    maxRetries?: number;
+    retryDelay?: number;
+  };
 }>();
 
 const emit = defineEmits<{
@@ -22,10 +28,10 @@ const discordSchema = z.object({
 });
 
 const discordState = reactive({
-  username: 'Blocket Bot',
-  avatarUrl: '',
-  maxRetries: 3,
-  retryDelay: 1000,
+  username: props.settings?.username || 'Blocket Bot',
+  avatarUrl: props.settings?.avatarUrl || '',
+  maxRetries: props.settings?.maxRetries || 3,
+  retryDelay: props.settings?.retryDelay || 1000,
 });
 
 defineExpose({

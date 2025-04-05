@@ -48,6 +48,63 @@ const isLoading = ref(true);
 const isSaving = ref(false);
 const resetConfirmationOpen = ref(false);
 
+const discordSettings = computed(() => {
+  if (!settingsStore.settings.length) return undefined;
+
+  return {
+    username:
+      settingsStore.getSettingValue('notification.discord.username') ||
+      'Blocket Bot',
+    avatarUrl:
+      settingsStore.getSettingValue('notification.discord.avatar_url') || '',
+    maxRetries: parseInt(
+      settingsStore.getSettingValue('notification.discord.max_retries') || '3'
+    ),
+    retryDelay: parseInt(
+      settingsStore.getSettingValue('notification.discord.retry_delay') ||
+        '1000'
+    ),
+  };
+});
+
+const emailSettings = computed(() => {
+  if (!settingsStore.settings.length) return undefined;
+
+  return {
+    enabled:
+      settingsStore.getSettingValue('notification.email.enabled') === 'true',
+    from: settingsStore.getSettingValue('notification.email.from') || '',
+    to: settingsStore.getSettingValue('notification.email.to') || '',
+    subject:
+      settingsStore.getSettingValue('notification.email.subject') ||
+      'New Blocket Listings',
+    smtpHost:
+      settingsStore.getSettingValue('notification.email.smtp_host') || '',
+    smtpPort: parseInt(
+      settingsStore.getSettingValue('notification.email.smtp_port') || '587'
+    ),
+    smtpUser:
+      settingsStore.getSettingValue('notification.email.smtp_user') || '',
+    smtpPass:
+      settingsStore.getSettingValue('notification.email.smtp_pass') || '',
+    useTLS:
+      settingsStore.getSettingValue('notification.email.use_tls') === 'true',
+  };
+});
+
+const batchingSettings = computed(() => {
+  if (!settingsStore.settings.length) return undefined;
+
+  return {
+    enableBatching:
+      settingsStore.getSettingValue('notification.general.enable_batching') ===
+      'true',
+    batchSize: parseInt(
+      settingsStore.getSettingValue('notification.general.batch_size') || '10'
+    ),
+  };
+});
+
 const settingsMap = {
   'notification.discord.username': (value: string) => {
     if (discordRef.value) discordRef.value.discordState.username = value;
@@ -379,6 +436,7 @@ async function testDiscordNotification() {
           ref="discordRef"
           :is-loading="isLoading"
           :is-saving="isSaving"
+          :settings="discordSettings"
           @save="saveDiscordSettings"
           @test="testDiscordNotification"
         />
@@ -387,6 +445,7 @@ async function testDiscordNotification() {
           ref="emailRef"
           :is-loading="isLoading"
           :is-saving="isSaving"
+          :settings="emailSettings"
           @save="saveEmailSettings"
         />
 
@@ -394,6 +453,7 @@ async function testDiscordNotification() {
           ref="batchingRef"
           :is-loading="isLoading"
           :is-saving="isSaving"
+          :settings="batchingSettings"
           @save="saveBatchingSettings"
         />
       </div>

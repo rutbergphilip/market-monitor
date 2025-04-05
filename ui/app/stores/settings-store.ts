@@ -20,6 +20,12 @@ export const useSettingsStore = defineStore('settings', () => {
     return groups;
   });
 
+  // Helper to get a setting value by key
+  const getSettingValue = (key: string): string => {
+    const setting = settings.value.find((s) => s.key === key);
+    return setting ? setting.value : '';
+  };
+
   // Get all settings
   const fetchSettings = async () => {
     isLoading.value = true;
@@ -140,5 +146,6 @@ export const useSettingsStore = defineStore('settings', () => {
     fetchDefaultSettings,
     updateSetting,
     resetToDefaults,
+    getSettingValue,
   };
 });

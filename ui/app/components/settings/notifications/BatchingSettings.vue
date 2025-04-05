@@ -4,6 +4,10 @@ import * as z from 'zod';
 const props = defineProps<{
   isLoading: boolean;
   isSaving: boolean;
+  settings?: {
+    enableBatching: boolean;
+    batchSize: number;
+  };
 }>();
 
 const emit = defineEmits<{
@@ -16,8 +20,8 @@ const batchingSchema = z.object({
 });
 
 const batchingState = reactive({
-  enableBatching: true,
-  batchSize: 10,
+  enableBatching: props.settings?.enableBatching ?? true,
+  batchSize: props.settings?.batchSize ?? 10,
 });
 
 defineExpose({

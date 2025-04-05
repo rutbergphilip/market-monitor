@@ -109,8 +109,8 @@ async function update(event: FormSubmitEvent<Schema>) {
     query,
     schedule,
     notifications: state.notifications ? state.notifications : [],
-    min_price: state.min_price,
-    max_price: state.max_price,
+    min_price: state.min_price || null,
+    max_price: state.max_price || null,
   };
 
   try {
