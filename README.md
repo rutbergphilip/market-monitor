@@ -1,139 +1,157 @@
-# 🚀 Blocket Bot
+# 🚀 Blocket Bot 2.0
 
-Monitor Blocket listings effortlessly and get instant notifications for new ads—right in Discord or your inbox!
+Monitor Blocket listings effortlessly with a beautiful UI and get instant notifications for new ads—right in Discord!
 
 ## 🌟 Features
 
-- **Automated Listing Monitoring**: Track new Blocket ads with custom queries.
-- **Flexible Search Filters**: Customize ad searches precisely to your needs.
-- **Instant Notifications**:
-  - Discord webhook notifications ✅
-- **Docker & Kubernetes Ready**: Easy deployment with containerization support.
+- **Modern Web Dashboard**: Manage your watchers with an intuitive web interface.
+- **Customizable Watchers**: Create multiple independent watchers with different queries.
+- **Real-time Notifications**:
+  - Discord webhook notifications with rich embeds ✅
+  - Detailed listing information with prices and images
+  - Search query information included in notifications
+- **Flexible Scheduling**: Set custom cron schedules for each watcher.
+- **Price Range Filtering**: Filter listings by minimum and maximum price.
+- **Manual Trigger**: Run watchers on-demand without waiting for scheduled times.
+- **Configurable Settings**: Customize notification appearance and behavior.
+- **Docker Ready**: Easy deployment with containerization support.
 
-## 🔜 Upcoming Features
+## 📸 Screenshots
 
-- **Telegram Notifications**: Get notified via Telegram.
-- **Email Notifications**: Send email alerts for new listings.
-- **Price Monitoring**: Track price changes and get notified.
-- **Batch Notifications**: Group notifications for better organization.
+_Coming soon_
 
 ## ⚙️ Getting Started
 
 ### 🚧 Installation
+
+#### Option 1: Using Docker (Recommended)
+
+Pull and run the Docker image:
+
+```sh
+docker run -d \
+  -p 3000:3000 -p 8080:8080 \
+  -v blocket-bot-data:/app/server/src/db \
+  --name blocket-bot \
+  rutbergphilip/blocket-bot:2.0.0
+```
+
+Then access the web UI at `http://localhost:3000`
+
+#### Option 2: Manual Installation
 
 Clone the repository and install dependencies:
 
 ```sh
 git clone https://github.com/rutbergphilip/blocket-bot
 cd blocket-bot
+
+# Install backend dependencies
+cd server
+npm install
+
+# Install frontend dependencies
+cd ../ui
 npm install
 ```
 
-### 🔑 Configuration
+### 🚀 Running the Application
 
-Create a `.env` file in the project root and add your configuration:
+#### Using Docker:
 
-```env
-BLOCKET_AD_QUERIES=<your-query-1>,<your-query-2>
-NOTIFICATION_DISCORD_ENABLED=true
-NOTIFICATION_DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/your-webhook-url
+The Docker container starts both the backend (port 8080) and frontend (port 3000) automatically.
+
+#### Manual Start:
+
+1. Start the backend (from the server directory):
+
+```sh
+npm run start
 ```
 
-See the full list of configuration options below.
+2. Start the frontend (from the ui directory):
 
-### 🛠️ Configuration Options
+```sh
+npm run dev
+```
 
-#### Required
+3. Access the web UI at `http://localhost:3000`
 
-- `BLOCKET_AD_QUERIES`: Comma-separated Blocket search queries.
+## 🧩 Core Features
 
-#### Optional
+### Watchers
 
-##### General
+- Create multiple watchers with different search queries
+- Set custom cron schedules for each watcher
+- Filter by price range (min & max)
+- Configure multiple notification targets per watcher
+- Pause, start, or manually trigger watchers as needed
 
-- `PORT` (default: 8080): Health check server port.
+### Notifications
 
-##### Blocket Query
+- **Discord Integration**:
+  - Customizable bot username and avatar
+  - Configurable retry settings
+  - Detailed listing information with thumbnail images
+  - Includes information about which query matched
+- **Email Notifications** (Coming soon)
 
-| Variable                  | Default              | Description                 |
-| ------------------------- | -------------------- | --------------------------- |
-| `BLOCKET_AD_LIMIT`        | 60                   | Max ads fetched per query   |
-| `BLOCKET_AD_SORT`         | rel                  | Sort order                  |
-| `BLOCKET_AD_LISTING_TYPE` | s                    | Type of listing             |
-| `BLOCKET_AD_STATUS`       | active               | Status filter               |
-| `BLOCKET_AD_GL`           | 3                    | Geolocation filter          |
-| `BLOCKET_AD_INCLUDE`      | extend_with_shipping | Additional query parameters |
+### Settings Management
 
-##### Notifications
+- Configure global notification settings
+- Manage batching preferences
+- Set appearance options for notifications
 
-###### Discord
+## 🔜 Upcoming Features
 
-| Variable                           | Default     | Description                  |
-| ---------------------------------- | ----------- | ---------------------------- |
-| `NOTIFICATION_DISCORD_ENABLED`     | false       | Enable Discord notifications |
-| `NOTIFICATION_DISCORD_WEBHOOK_URL` |             | Discord webhook URL          |
-| `NOTIFICATION_DISCORD_USERNAME`    | Blocket Bot | Discord bot username         |
-| `NOTIFICATION_DISCORD_AVATAR_URL`  |             | Optional bot avatar URL      |
-| `NOTIFICATION_DISCORD_MAX_RETRIES` | 3           | Retry attempts for webhook   |
-| `NOTIFICATION_DISCORD_RETRY_DELAY` | 1000ms      | Retry delay (ms)             |
+- **Email Notifications**: Send email alerts for new listings.
+- **Telegram Integration**: Get notified via Telegram.
+- **Enhanced Filters**: More advanced search filtering options.
 
-<!-- ###### Email (Upcoming)
+## 📝 Configuration Details
 
-| Variable                       | Default              | Description                |
-| ------------------------------ | -------------------- | -------------------------- |
-| `NOTIFICATION_EMAIL_ENABLED`   | false                | Enable email notifications |
-| `NOTIFICATION_EMAIL_FROM`      |                      | Sender email               |
-| `NOTIFICATION_EMAIL_TO`        |                      | Recipient email            |
-| `NOTIFICATION_EMAIL_SUBJECT`   | New Blocket Listings | Email subject              |
-| `NOTIFICATION_EMAIL_SMTP_HOST` |                      | SMTP server                |
-| `NOTIFICATION_EMAIL_SMTP_PORT` | 587                  | SMTP port                  |
-| `NOTIFICATION_EMAIL_SMTP_USER` |                      | SMTP username              |
-| `NOTIFICATION_EMAIL_SMTP_PASS` |                      | SMTP password              |
-| `NOTIFICATION_EMAIL_USE_TLS`   | true                 | Use TLS for SMTP           | -->
+The application now uses a database to store settings, which can be configured through the UI. Some settings that might be useful for advanced users:
 
-##### Batching
+### Environment Variables
 
-- `NOTIFICATION_ENABLE_BATCHING`: Enable batching (default: true)
-- `NOTIFICATION_BATCH_SIZE`: Max notifications per batch (default: 10)
+For convenience, a `.env.example` file is included in the repository with default values and documentation. You can copy this file to create your own `.env` file:
 
-##### Cron Job
+```sh
+cp .env.example .env
+```
 
-- `BLOCKET_CRON_TIME`: Cron schedule (default: _/5 _ \* \* \*)
-- `BLOCKET_TIMEZONE`: Job timezone (default: Europe/Stockholm)
-- `BLOCKET_RUN_ON_INIT`: Run immediately on startup (default: true)
+Key environment variables:
 
-##### Monitoring
+- `SERVER_PORT` (default: 8080): Backend API server port
+- `UI_PORT` (default: 3000): Frontend web UI port
+- `API_BASE_URL` (default: http://localhost:8080): URL where the API is accessible
+- `DB_PATH` (default: db.sqlite): Path to SQLite database file
 
-- `OPT_PRICE_CHANGES`: Enable price change alerts (default: false)
-- `OPT_PRICE_MIN`: Min price (default: null)
-- `OPT_PRICE_MAX`: Max price (default: null)
-- `OPT_PRICE_CURRENCY`: Currency (default: SEK)
+### Discord Notification Settings
+
+Discord notification settings, such as the bot username, avatar URL, and retry behavior, are managed through the UI. Default values are used during initial setup, and users can customize these settings via the web interface.
 
 ## 🐳 Docker Deployment
 
-Build Docker image:
-
-```sh
-docker build -t blocket-bot .
-```
-
-Run Docker container:
+Run with persistent storage:
 
 ```sh
 docker run -d \
- -e BLOCKET_AD_QUERIES=<your-queries> \
- -e NOTIFICATION_DISCORD_ENABLED=true \
- -e NOTIFICATION_DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/your-webhook-url \
- -p 8080:8080 \
- blocket-bot
+  -p 3000:3000 -p 8080:8080 \
+  -v blocket-bot-data:/app/server/src/db \
+  --name blocket-bot \
+  rutbergphilip/blocket-bot:2.0.0
 ```
 
-## 💻 Running Locally
-
-Start the bot with:
+For custom UI port:
 
 ```sh
-npm start
+docker run -d \
+  -p 4000:3000 -p 8080:8080 \
+  -v blocket-bot-data:/app/server/src/db \
+  -e UI_PORT=3000 \
+  --name blocket-bot \
+  rutbergphilip/blocket-bot:2.0.0
 ```
 
 ## 📜 License

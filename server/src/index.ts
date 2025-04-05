@@ -21,7 +21,7 @@ app.use((_, res) => {
   res.status(404).end();
 });
 
-const PORT = process.env.PORT ? parseInt(process.env.PORT) : 8080;
+const PORT = process.env.SERVER_PORT ? parseInt(process.env.SERVER_PORT) : 8080;
 const server = app.listen(PORT, () => {
   logger.info(`Express server running on port ${PORT}`);
 

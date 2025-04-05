@@ -20,11 +20,15 @@ RUN npm install && npm run build
 WORKDIR /app/server
 RUN npm install && npm run build
 
-# Expose port
+# Expose ports
 EXPOSE 3000
+EXPOSE 8080
 
-# Set environment variable for SQLite DB path
+# Set environment variables
 ENV DB_PATH=/data/db.sqlite
+ENV SERVER_PORT=8080
+ENV UI_PORT=3000
+ENV API_BASE_URL=http://localhost:8080
 
 # Start supervisor to run both processes
 CMD ["/usr/bin/supervisord", "-n"]
