@@ -84,7 +84,13 @@ function createWatcherJobFunction(watcher: Watcher): () => Promise<void> {
       const newAds = filteredAds.filter((ad) => !cache.has(ad.ad_id));
 
       if (newAds.length > 0) {
-        await notifyAboutAds(newAds, watcher.notifications);
+        // Pass watcher info when sending notifications
+        const watcherInfo = {
+          query: watcher.query,
+          id: watcher.id!,
+        };
+
+        await notifyAboutAds(newAds, watcher.notifications, watcherInfo);
 
         for (const ad of newAds) {
           cache.set(ad.ad_id, ad);

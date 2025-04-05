@@ -63,11 +63,12 @@ async function withRetry<T>(
  * Sends a notification to Discord via webhook with retry capability
  * @param ads List of Blocket ads to notify about
  * @param webhookUrl Custom webhook URL or undefined to use default
- * @param enabled Whether this notification should be sent (defaults to true for explicit webhooks)
+ * @param watcherInfo Optional information about the watcher that triggered this notification
  */
 export async function sendDiscordNotification(
   ads: BlocketAd[],
   webhookUrl?: string,
+  watcherInfo?: { query: string; id?: string },
 ): Promise<void> {
   const { username, avatarUrl, maxRetries, retryDelay } =
     NOTIFICATION_CONFIG.discord;
@@ -90,6 +91,8 @@ export async function sendDiscordNotification(
           batchSize: batch.length,
           batchNumber: Math.floor(i / batchSize) + 1,
           totalBatches: Math.ceil(ads.length / batchSize),
+          watcherQuery: watcherInfo?.query,
+          watcherId: watcherInfo?.id,
         });
 
         await sendDiscordBatch(
@@ -99,6 +102,7 @@ export async function sendDiscordNotification(
           avatarUrl,
           maxRetries,
           retryDelay,
+          watcherInfo,
         );
 
         // Wait a bit between batches
@@ -111,6 +115,8 @@ export async function sendDiscordNotification(
       logger.info({
         message: 'Sending individual Discord notifications',
         count: ads.length,
+        watcherQuery: watcherInfo?.query,
+        watcherId: watcherInfo?.id,
       });
 
       for (const ad of ads) {
@@ -121,6 +127,7 @@ export async function sendDiscordNotification(
           avatarUrl,
           maxRetries,
           retryDelay,
+          watcherInfo,
         );
 
         // Wait a bit between requests to avoid rate limits
@@ -134,6 +141,7 @@ export async function sendDiscordNotification(
       error: error as Error,
       message: 'Error sending Discord notification',
       adsCount: ads.length,
+      watcherQuery: watcherInfo?.query,
     });
   }
 }
@@ -148,6 +156,7 @@ async function sendDiscordBatch(
   avatarUrl: string,
   maxRetries: number,
   retryDelay: number,
+  watcherInfo?: { query: string; id?: string },
 ): Promise<void> {
   if (ads.length === 0) return;
 
@@ -156,23 +165,45 @@ async function sendDiscordBatch(
 
   const embeds = ads.map((ad) => {
     const adInfo = formatAdInfo(ad);
+
+    const fields = [
+      {
+        name: 'Price',
+        value: adInfo.price,
+        inline: true,
+      },
+    ];
+
+    if (watcherInfo?.query) {
+      fields.push({
+        name: 'Search Query',
+        value: watcherInfo.query,
+        inline: true,
+      });
+    }
+
+    if (watcherInfo?.id) {
+      fields.push({
+        name: 'Watcher ID',
+        value: watcherInfo.id,
+        inline: true,
+      });
+    }
+
     return {
       title: adInfo.title,
       url: adInfo.url,
       description:
         adInfo.description?.substring(0, 200) +
         (adInfo.description?.length > 200 ? '...' : ''),
-      fields: [
-        {
-          name: 'Price',
-          value: adInfo.price,
-          inline: true,
-        },
-      ],
+      fields: fields,
       thumbnail: adInfo.image ? { url: adInfo.image } : undefined,
       timestamp: new Date().toISOString(),
     };
   });
+
+  // Create message content that mentions this is a batch
+  const contentMessage = `Found ${ads.length} new listings!`;
 
   await withRetry(
     async () => {
@@ -182,13 +213,15 @@ async function sendDiscordBatch(
         body: JSON.stringify({
           username: defaultUsername,
           avatar_url: defaultAvatarUrl,
-          content: `Found ${ads.length} new listings!`,
+          content: contentMessage,
           embeds: embeds.slice(0, 10),
         }),
       });
       logger.debug({
         message: 'Batch Discord notification sent successfully',
         count: ads.length,
+        watcherQuery: watcherInfo?.query,
+        watcherId: watcherInfo?.id,
       });
     },
     maxRetries,
@@ -206,11 +239,30 @@ async function sendDiscordSingle(
   avatarUrl: string,
   maxRetries: number,
   retryDelay: number,
+  watcherInfo?: { query: string; id?: string },
 ): Promise<void> {
   const adInfo = formatAdInfo(ad);
 
   const defaultUsername = username || 'Blocket Bot';
   const defaultAvatarUrl = avatarUrl || ad.images?.[0]?.url || undefined;
+
+  // Create embed fields including the watcher information
+  const fields = [
+    {
+      name: 'Price',
+      value: adInfo.price,
+      inline: true,
+    },
+  ];
+
+  // Add watcher info as a field if available
+  if (watcherInfo?.query) {
+    fields.push({
+      name: 'Search Query',
+      value: watcherInfo.query,
+      inline: true,
+    });
+  }
 
   await withRetry(
     async () => {
@@ -227,13 +279,7 @@ async function sendDiscordSingle(
               description:
                 adInfo.description?.substring(0, 200) +
                 (adInfo.description?.length > 200 ? '...' : ''),
-              fields: [
-                {
-                  name: 'Price',
-                  value: adInfo.price,
-                  inline: true,
-                },
-              ],
+              fields: fields,
               thumbnail: adInfo.image ? { url: adInfo.image } : undefined,
               timestamp: new Date().toISOString(),
             },
@@ -243,6 +289,8 @@ async function sendDiscordSingle(
       logger.debug({
         message: 'Single Discord notification sent successfully',
         ad: adInfo.title,
+        watcherQuery: watcherInfo?.query,
+        watcherId: watcherInfo?.id,
       });
     },
     maxRetries,
@@ -271,10 +319,12 @@ async function sendEmailNotification(
  * Sends notifications about new ads through configured channels
  * @param ads List of new Blocket ads
  * @param notifications Optional specific notification configurations
+ * @param watcherInfo Optional information about the watcher that triggered the notification
  */
 export async function notifyAboutAds(
   ads: BlocketAd[],
   notifications?: Notification[],
+  watcherInfo?: { query: string; id?: string },
 ): Promise<void> {
   if (!ads || !ads.length) {
     logger.debug('No ads to notify about');
@@ -285,6 +335,8 @@ export async function notifyAboutAds(
     message: 'Sending notifications for new ads',
     count: ads.length,
     customNotifications: notifications ? notifications.length : 0,
+    watcherQuery: watcherInfo?.query,
+    watcherId: watcherInfo?.id,
   });
 
   const notificationPromises: Promise<void>[] = [];
@@ -294,7 +346,7 @@ export async function notifyAboutAds(
     for (const notification of notifications) {
       if (notification.kind === 'DISCORD') {
         notificationPromises.push(
-          sendDiscordNotification(ads, notification.webhook_url),
+          sendDiscordNotification(ads, notification.webhook_url, watcherInfo),
         );
       } else if (notification.kind === 'EMAIL') {
         notificationPromises.push(
