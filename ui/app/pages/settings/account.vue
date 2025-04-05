@@ -6,6 +6,9 @@ definePageMeta({
   layout: 'default',
 });
 
+const settingsStore = useSettingsStore();
+const toast = useToast();
+
 type ProfileRef = {
   profileState: {
     displayName: string;
@@ -24,32 +27,89 @@ type SecurityRef = {
 const profileRef = ref<ProfileRef | null>(null);
 const securityRef = ref<SecurityRef | null>(null);
 
-const _isLoading = ref(false);
+const isLoading = ref(true);
 const isSaving = ref(false);
 
-function saveProfileInformation() {
-  isSaving.value = true;
+const settingsMap = {
+  'account.profile.display_name': (value: string) => {
+    if (profileRef.value) profileRef.value.profileState.displayName = value;
+  },
+  'account.profile.email': (value: string) => {
+    if (profileRef.value) profileRef.value.profileState.email = value;
+  },
+};
 
-  setTimeout(() => {
-    isSaving.value = false;
-    useToast().add({
+await settingsStore.fetchSettings();
+isLoading.value = false;
+
+watch(
+  () => settingsStore.settings,
+  () => {
+    settingsStore.settings.forEach((setting) => {
+      const mapFn = settingsMap[setting.key as keyof typeof settingsMap];
+      if (mapFn) {
+        mapFn(setting.value);
+      }
+    });
+  },
+  { immediate: true }
+);
+
+async function updateSettings(
+  settings: Array<{ key: string; value: string }>
+): Promise<void> {
+  for (const setting of settings) {
+    await settingsStore.updateSetting(setting.key, setting.value);
+  }
+}
+
+async function saveProfileInformation() {
+  if (!profileRef.value) return;
+
+  isSaving.value = true;
+  try {
+    const profileSettings = [
+      {
+        key: 'account.profile.display_name',
+        value: profileRef.value.profileState.displayName,
+      },
+      {
+        key: 'account.profile.email',
+        value: profileRef.value.profileState.email,
+      },
+    ];
+
+    await updateSettings(profileSettings);
+
+    toast.add({
       title: 'Success',
       description: 'Profile information saved',
       color: 'success',
     });
-  }, 1000);
+  } catch (error) {
+    toast.add({
+      title: 'Error',
+      description: 'Failed to save profile information',
+      color: 'error',
+    });
+    console.error('Failed to save profile information:', error);
+  } finally {
+    isSaving.value = false;
+  }
 }
 
-function changePassword() {
+async function changePassword() {
   if (!securityRef.value) return;
 
   isSaving.value = true;
 
   const securityRefValue = securityRef.value;
 
-  setTimeout(() => {
-    isSaving.value = false;
-    useToast().add({
+  try {
+    // Simulate password change API call
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    toast.add({
       title: 'Success',
       description: 'Password changed successfully',
       color: 'success',
@@ -60,7 +120,16 @@ function changePassword() {
       securityRefValue.securityState.newPassword = '';
       securityRefValue.securityState.confirmPassword = '';
     }
-  }, 1000);
+  } catch (error) {
+    toast.add({
+      title: 'Error',
+      description: 'Failed to change password',
+      color: 'error',
+    });
+    console.error('Failed to change password:', error);
+  } finally {
+    isSaving.value = false;
+  }
 }
 </script>
 
@@ -74,7 +143,11 @@ function changePassword() {
         </p>
       </header>
 
-      <div class="space-y-6">
+      <div v-if="isLoading" class="flex justify-center my-10">
+        <UIcon name="i-lucide-loader-2" class="animate-spin text-4xl" />
+      </div>
+
+      <div v-else class="space-y-6">
         <ProfileInformation
           ref="profileRef"
           :is-saving="isSaving"

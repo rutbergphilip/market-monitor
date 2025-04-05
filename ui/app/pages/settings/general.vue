@@ -8,6 +8,8 @@ definePageMeta({
 const settingsStore = useSettingsStore();
 const toast = useToast();
 
+const { settings } = storeToRefs(settingsStore);
+
 type BlocketQueryRef = {
   blocketQueryState: {
     limit: number;
@@ -53,29 +55,21 @@ const settingsMap = {
   },
 };
 
-// Load settings from the store
-onMounted(async () => {
-  isLoading.value = true;
-  try {
-    await settingsStore.fetchSettings();
+await settingsStore.fetchSettings();
+isLoading.value = false;
 
-    settingsStore.settings.forEach((setting) => {
+watch(
+  () => settingsStore.settings,
+  () => {
+    settings.value.forEach((setting) => {
       const mapFn = settingsMap[setting.key as keyof typeof settingsMap];
       if (mapFn) {
         mapFn(setting.value);
       }
     });
-  } catch (error) {
-    toast.add({
-      title: 'Error',
-      description: 'Failed to load settings',
-      color: 'error',
-    });
-    console.error('Failed to load settings:', error);
-  } finally {
-    isLoading.value = false;
-  }
-});
+  },
+  { immediate: true }
+);
 
 async function updateSettings(
   settings: Array<{ key: string; value: string }>
