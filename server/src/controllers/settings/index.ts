@@ -1,6 +1,7 @@
 import { SettingRepository } from '@/db/repositories';
 import { DEFAULT_SETTINGS, SettingKey } from '@/types/settings';
 import logger from '@/integrations/logger';
+import emitter, { SettingsEvents } from '@/events';
 
 import type { Request, Response } from 'express';
 
@@ -80,6 +81,13 @@ export async function update(req: Request, res: Response) {
       return;
     }
 
+    // Emit event that settings have been updated
+    emitter.emit(SettingsEvents.UPDATED, { key, value });
+    logger.debug({
+      message: 'Settings updated event emitted',
+      key,
+    });
+
     res.json(updatedSetting);
   } catch (error) {
     logger.error({
@@ -115,6 +123,12 @@ export async function resetAllToDefaults(req: Request, res: Response) {
         );
       }
     }
+
+    // Emit event that all settings have been reset
+    emitter.emit(SettingsEvents.UPDATED, { key: 'all', value: 'reset' });
+    logger.debug({
+      message: 'All settings reset event emitted',
+    });
 
     res.json({
       message: 'All settings reset to default values',

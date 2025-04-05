@@ -10,7 +10,7 @@ import logger from './integrations/logger';
 import { initializeDb } from './db';
 import { SettingRepository } from './db/repositories';
 import { initializeCronSystem } from './services/cron/initialize';
-import { initWatcherEvents } from './events/watcher-events';
+import { initEvents } from './events';
 
 const app = express();
 
@@ -29,7 +29,7 @@ const server = app.listen(PORT, () => {
   initializeDb();
 
   // Initialize event listeners
-  initWatcherEvents();
+  initEvents();
   logger.info('Event listeners initialized');
 
   // Initialize settings with default values
