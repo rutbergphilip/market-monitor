@@ -64,6 +64,7 @@ export async function create(user: {
   password: string;
   email?: string;
   role?: string;
+  avatarUrl?: string;
 }): Promise<Omit<UserType, 'password'>> {
   try {
     // Check if user already exists by username
@@ -87,8 +88,8 @@ export async function create(user: {
     const now = new Date().toISOString();
 
     const stmt = db.prepare(`
-      INSERT INTO users (username, email, password, role, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO users (username, email, password, role, avatarUrl, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `);
 
     const info = stmt.run(
@@ -96,6 +97,7 @@ export async function create(user: {
       user.email || null,
       hashedPassword,
       user.role || 'user',
+      user.avatarUrl || null,
       now,
       now,
     );
@@ -110,6 +112,7 @@ export async function create(user: {
       id: String(info.lastInsertRowid),
       username: user.username,
       email: user.email,
+      avatarUrl: user.avatarUrl,
       role: user.role || 'user',
       created_at: now,
       updated_at: now,
@@ -166,5 +169,44 @@ export function getUserCount(): number {
       message: 'Error counting users',
     });
     return 0;
+  }
+}
+
+export function updateAvatarUrl(
+  userId: string,
+  avatarUrl: string,
+): UserType | null {
+  try {
+    const now = new Date().toISOString();
+
+    const stmt = db.prepare(`
+      UPDATE users
+      SET avatarUrl = ?, updated_at = ?
+      WHERE id = ?
+    `);
+
+    const result = stmt.run(avatarUrl, now, userId);
+
+    if (result.changes === 0) {
+      logger.warn({
+        message: 'No user found to update avatar URL',
+        userId,
+      });
+      return null;
+    }
+
+    logger.info({
+      message: 'User avatar URL updated',
+      userId,
+    });
+
+    return getById(userId);
+  } catch (error) {
+    logger.error({
+      error: error as Error,
+      message: 'Error updating user avatar URL',
+      userId,
+    });
+    throw error;
   }
 }

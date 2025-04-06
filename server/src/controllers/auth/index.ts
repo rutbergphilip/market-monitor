@@ -144,3 +144,57 @@ export function logout(req: Request, res: Response) {
     res.status(500).json({ error: 'An error occurred during logout' });
   }
 }
+
+// Update user profile
+export async function updateProfile(req: Request, res: Response) {
+  try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
+    }
+
+    const { avatarUrl } = req.body;
+
+    if (avatarUrl !== undefined) {
+      // Validate URL format if provided
+      if (avatarUrl && !isValidUrl(avatarUrl)) {
+        res.status(400).json({ error: 'Invalid avatar URL format' });
+        return;
+      }
+
+      const updatedUser = UserRepository.updateAvatarUrl(userId, avatarUrl);
+
+      if (!updatedUser) {
+        res.status(404).json({ error: 'User not found' });
+        return;
+      }
+
+      // Remove password from response
+      const { password, ...userWithoutPassword } = updatedUser;
+
+      res.json(userWithoutPassword);
+      return;
+    }
+
+    res.status(400).json({ error: 'No profile data to update' });
+    return;
+  } catch (error) {
+    logger.error({
+      error: error as Error,
+      message: 'Error updating user profile',
+    });
+    res.status(500).json({ error: 'An error occurred while updating profile' });
+  }
+}
+
+// Helper function to validate URL
+function isValidUrl(url: string): boolean {
+  try {
+    new URL(url);
+    return true;
+  } catch (error) {
+    return false;
+  }
+}

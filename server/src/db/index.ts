@@ -35,25 +35,36 @@ export async function initializeDb() {
       email TEXT,
       password TEXT NOT NULL,
       role TEXT NOT NULL DEFAULT 'user',
+      avatarUrl TEXT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
 
   try {
+    // Check if the avatarUrl column exists in the users table
+    const { count: hasAvatarUrlColumn } = db
+      .prepare(
+        `SELECT COUNT(*) as count FROM pragma_table_info('users') WHERE name='avatarUrl'`,
+      )
+      .get() as { count: number };
+
+    // Add avatarUrl column if it doesn't exist
+    if (hasAvatarUrlColumn === 0) {
+      logger.info('Adding avatarUrl column to users table');
+      db.exec(`ALTER TABLE users ADD COLUMN avatarUrl TEXT`);
+    }
+
+    // Check for min_price and max_price columns
     const { count: hasMinPriceColumn } = db
       .prepare(
-        `
-      SELECT COUNT(*) as count FROM pragma_table_info('watchers') WHERE name='min_price'
-    `,
+        `SELECT COUNT(*) as count FROM pragma_table_info('watchers') WHERE name='min_price'`,
       )
       .get() as { count: number };
 
     const { count: hasMaxPriceColumn } = db
       .prepare(
-        `
-      SELECT COUNT(*) as count FROM pragma_table_info('watchers') WHERE name='max_price'
-    `,
+        `SELECT COUNT(*) as count FROM pragma_table_info('watchers') WHERE name='max_price'`,
       )
       .get() as { count: number };
 
@@ -68,7 +79,7 @@ export async function initializeDb() {
     }
   } catch (error) {
     logger.error({
-      message: 'Error adding price range columns to watchers table',
+      message: 'Error updating database schema',
       error,
     });
   }
