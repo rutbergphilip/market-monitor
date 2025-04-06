@@ -4,8 +4,8 @@ export const useSettingsStore = defineStore('settings', () => {
   const settings = ref<Setting[]>([]);
   const isLoading = ref(false);
   const error = ref<string | null>(null);
+  const authStore = useAuthStore();
 
-  // Group settings by category for easier display
   const groupedSettings = computed(() => {
     const groups: Record<string, Setting[]> = {};
 
@@ -20,13 +20,11 @@ export const useSettingsStore = defineStore('settings', () => {
     return groups;
   });
 
-  // Helper to get a setting value by key
   const getSettingValue = (key: string): string => {
     const setting = settings.value.find((s) => s.key === key);
     return setting ? setting.value : '';
   };
 
-  // Get all settings
   const fetchSettings = async () => {
     isLoading.value = true;
     error.value = null;
@@ -35,6 +33,10 @@ export const useSettingsStore = defineStore('settings', () => {
       const { data } = await useFetch<Setting[]>('/api/settings', {
         method: 'GET',
         baseURL: useRuntimeConfig().public.apiBaseUrl,
+        headers: {
+          Authorization: authStore.token ? `Bearer ${authStore.token}` : '',
+        },
+        credentials: 'include',
       });
 
       if (!data.value) {
@@ -52,7 +54,6 @@ export const useSettingsStore = defineStore('settings', () => {
     }
   };
 
-  // Get default settings
   const fetchDefaultSettings = async () => {
     isLoading.value = true;
     error.value = null;
@@ -61,6 +62,10 @@ export const useSettingsStore = defineStore('settings', () => {
       const { data } = await useFetch<Setting[]>('/api/settings/defaults', {
         method: 'GET',
         baseURL: useRuntimeConfig().public.apiBaseUrl,
+        headers: {
+          Authorization: authStore.token ? `Bearer ${authStore.token}` : '',
+        },
+        credentials: 'include',
       });
 
       if (!data.value) {
@@ -77,7 +82,6 @@ export const useSettingsStore = defineStore('settings', () => {
     }
   };
 
-  // Update a setting
   const updateSetting = async (key: string, value: string) => {
     isLoading.value = true;
     error.value = null;
@@ -87,6 +91,10 @@ export const useSettingsStore = defineStore('settings', () => {
         method: 'PUT',
         baseURL: useRuntimeConfig().public.apiBaseUrl,
         body: { value },
+        headers: {
+          Authorization: authStore.token ? `Bearer ${authStore.token}` : '',
+        },
+        credentials: 'include',
       });
 
       if (!data.value) {
@@ -109,7 +117,6 @@ export const useSettingsStore = defineStore('settings', () => {
     }
   };
 
-  // Reset all settings to defaults
   const resetToDefaults = async () => {
     isLoading.value = true;
     error.value = null;
@@ -118,13 +125,16 @@ export const useSettingsStore = defineStore('settings', () => {
       const { data } = await useFetch('/api/settings/reset', {
         method: 'POST',
         baseURL: useRuntimeConfig().public.apiBaseUrl,
+        headers: {
+          Authorization: authStore.token ? `Bearer ${authStore.token}` : '',
+        },
+        credentials: 'include',
       });
 
       if (!data.value) {
         throw new Error('Failed to reset settings');
       }
 
-      // Refresh settings after reset
       await fetchSettings();
 
       return data.value;
