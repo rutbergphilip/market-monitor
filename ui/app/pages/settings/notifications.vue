@@ -360,7 +360,7 @@ async function testDiscordNotification() {
       ],
     };
 
-    await useFetch('/notifications/test/discord', {
+    await useFetch('/api/notifications/test/discord', {
       method: 'POST',
       baseURL: useRuntimeConfig().public.apiBaseUrl,
       body: [testMessage],
