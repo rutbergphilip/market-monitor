@@ -5,9 +5,9 @@ import logger from '@/integrations/logger';
 export function healthCheckHandler(req: Request, res: Response) {
   logger.debug({
     message: 'Health check requested',
-    clientIp: req.ip
+    clientIp: req.ip,
   });
-  
+
   res.status(200).json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
@@ -16,6 +16,6 @@ export function healthCheckHandler(req: Request, res: Response) {
 
 const router = Router();
 
-router.get('/health', healthCheckHandler);
+router.get('/', healthCheckHandler);
 
 export default router;

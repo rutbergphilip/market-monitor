@@ -8,17 +8,17 @@ export async function testDiscordHandler(req: Request, res: Response) {
     const ads = req.body;
     logger.info({
       message: 'Testing Discord notification',
-      adsCount: ads?.length || 0
+      adsCount: ads?.length || 0,
     });
-    
+
     await sendDiscordNotification(ads);
     res.sendStatus(204);
   } catch (error) {
     logger.error({
       error: error as Error,
-      message: 'Error sending test Discord notification'
+      message: 'Error sending test Discord notification',
     });
-    
+
     res.status(500).json({
       status: 'error',
       message: (error as Error).message,
@@ -28,6 +28,6 @@ export async function testDiscordHandler(req: Request, res: Response) {
 
 const router = Router();
 
-router.post('/notifications/test/discord', testDiscordHandler);
+router.post('/test/discord', testDiscordHandler);
 
 export default router;

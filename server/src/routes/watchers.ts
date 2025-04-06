@@ -14,17 +14,17 @@ import {
 const router = Router();
 
 // CRUD operations for watchers
-router.get('/watchers', getAll);
-router.post('/watchers', create);
-router.patch('/watchers/:id', update);
-router.delete('/watchers/:id', remove);
-router.get('/watchers/:id', getById);
+router.get('/', getAll);
+router.post('/', create);
+router.patch('/:id', update);
+router.delete('/:id', remove);
+router.get('/:id', getById);
 
 // Start or stop a watcher
-router.post('/watchers/:id/start', start);
-router.post('/watchers/:id/stop', stop);
+router.post('/:id/start', start);
+router.post('/:id/stop', stop);
 
 // Manually trigger a watcher
-router.post('/watchers/:id/trigger', triggerWatcher);
+router.post('/:id/trigger', triggerWatcher);
 
 export default router;
