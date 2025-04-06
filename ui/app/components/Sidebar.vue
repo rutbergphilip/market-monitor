@@ -2,8 +2,12 @@
 import type { NavigationMenuItem } from '@nuxt/ui';
 
 const watcherStore = useWatcherStore();
+const authStore = useAuthStore();
+const router = useRouter();
+const toast = useToast();
 
 const { activeWatchers } = storeToRefs(watcherStore);
+const { user, isAuthenticated } = storeToRefs(authStore);
 
 const items = ref<NavigationMenuItem[][]>([
   [
@@ -44,6 +48,27 @@ provide('sidebarCollapsed', isCollapsed);
 
 function toggleSidebar() {
   isCollapsed.value = !isCollapsed.value;
+}
+
+async function handleLogout() {
+  const success = await authStore.logout();
+
+  if (success) {
+    toast.add({
+      title: 'Success',
+      description: 'You have been logged out successfully',
+      color: 'success',
+    });
+
+    // Redirect to sign-in page
+    router.push('/sign-in');
+  } else {
+    toast.add({
+      title: 'Error',
+      description: 'Failed to log out. Please try again.',
+      color: 'error',
+    });
+  }
 }
 </script>
 
@@ -109,8 +134,42 @@ function toggleSidebar() {
       }"
     />
 
-    <footer v-if="!isCollapsed" class="mt-auto">
-      <p>Signed in</p>
+    <footer class="mt-auto px-2">
+      <div v-if="!isCollapsed && isAuthenticated" class="flex flex-col gap-2">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="font-medium">{{ user?.username }}</p>
+            <p class="text-xs text-gray-400">{{ user?.email }}</p>
+          </div>
+          <UButton
+            variant="ghost"
+            color="neutral"
+            icon="i-lucide-log-out"
+            size="sm"
+            @click="handleLogout"
+          />
+        </div>
+      </div>
+      <div
+        v-else-if="isCollapsed && isAuthenticated"
+        class="flex justify-center"
+      >
+        <UTooltip
+          :text="user?.email || ''"
+          :delay-duration="250"
+          :content="{
+            side: 'right',
+          }"
+        >
+          <UButton
+            variant="ghost"
+            color="neutral"
+            icon="i-lucide-log-out"
+            size="sm"
+            @click="handleLogout"
+          />
+        </UTooltip>
+      </div>
     </footer>
   </UContainer>
 </template>

@@ -12,13 +12,13 @@ import type { TableColumn } from '@nuxt/ui';
 import type { Watcher, NotificationKind, Notification } from '~/types';
 
 const UButton = resolveComponent('UButton');
-// const UCheckbox = resolveComponent('UCheckbox');
 const UBadge = resolveComponent('UBadge');
 const UDropdownMenu = resolveComponent('UDropdownMenu');
 const UIcon = resolveComponent('UIcon');
 const UTooltip = resolveComponent('UTooltip');
 
 const watcherStore = useWatcherStore();
+const authStore = useAuthStore();
 const toast = useToast();
 const overlay = useOverlay();
 
@@ -57,16 +57,25 @@ async function openConfirmationModal(watcherId: string) {
   }
 }
 
-await watcherStore.refresh();
 const { watchers } = storeToRefs(watcherStore);
 
 const refreshing = ref(false);
+const isLoading = ref(true);
+const hasError = ref(false);
+
 async function refresh() {
+  if (!authStore.isAuthenticated) {
+    console.log('Not authenticated, skipping refresh');
+    return;
+  }
+
   try {
     refreshing.value = true;
+    hasError.value = false;
 
     await watcherStore.refresh();
   } catch (error) {
+    hasError.value = true;
     toast.add({
       title: 'Failed to refresh watchers',
       color: 'error',
@@ -75,8 +84,26 @@ async function refresh() {
     console.error('Failed to refresh watchers:', error);
   } finally {
     refreshing.value = false;
+    isLoading.value = false;
   }
 }
+
+// Only fetch watchers once we know user is authenticated
+onMounted(async () => {
+  if (authStore.isAuthenticated) {
+    await refresh();
+  }
+});
+
+// Watch for authentication state changes
+watch(
+  () => authStore.isAuthenticated,
+  async (isAuthenticated) => {
+    if (isAuthenticated) {
+      await refresh();
+    }
+  }
+);
 
 async function start(watcherId: string) {
   try {
@@ -159,27 +186,6 @@ async function trigger(watcherId: string) {
 }
 
 const columns: ComputedRef<TableColumn<Watcher>[]> = computed(() => [
-  // {
-  //   id: 'select',
-  //   header: ({ table }) =>
-  //     h(UCheckbox, {
-  //       modelValue: table.getIsSomePageRowsSelected()
-  //         ? 'indeterminate'
-  //         : table.getIsAllPageRowsSelected(),
-  //       'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
-  //         table.toggleAllPageRowsSelected(!!value),
-  //       'aria-label': 'Select all',
-  //     }),
-  //   cell: ({ row }) =>
-  //     h(UCheckbox, {
-  //       modelValue: row.getIsSelected(),
-  //       'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
-  //         row.toggleSelected(!!value),
-  //       'aria-label': 'Select row',
-  //     }),
-  //   enableSorting: false,
-  //   enableHiding: false,
-  // },
   {
     accessorKey: 'id',
     header: '#',
@@ -475,6 +481,12 @@ const table = useTemplateRef('table');
 
 <template>
   <div class="flex-1 divide-y divide-(--ui-border-accented) w-full">
+    <!-- Error message when authentication fails -->
+    <div v-if="hasError" class="p-4 text-center">
+      <p class="text-red-500 mb-2">Failed to load watchers</p>
+      <UButton @click="refresh" label="Try again" />
+    </div>
+
     <div class="flex items-center gap-2 px-4 py-3.5 overflow-x-auto">
       <UInput
         :model-value="(table?.tableApi?.getColumn('query')?.getFilterValue() as string)"
