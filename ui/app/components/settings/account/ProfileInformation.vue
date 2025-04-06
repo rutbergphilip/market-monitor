@@ -7,6 +7,7 @@ const props = defineProps<{
   settings?: {
     email?: string;
     username?: string;
+    avatarUrl?: string;
   };
 }>();
 
@@ -17,11 +18,13 @@ const emit = defineEmits<{
 const _profileSchema = z.object({
   email: z.string().email('Invalid email address'),
   username: z.string().min(1, 'Username is required'),
+  avatarUrl: z.string().url('Invalid URL format').or(z.literal('')),
 });
 
 const profileState = reactive({
   email: props.settings?.email || '',
   username: props.settings?.username || '',
+  avatarUrl: props.settings?.avatarUrl || '',
 });
 
 defineExpose({
@@ -70,6 +73,21 @@ function saveProfileSettings() {
         <p class="text-xs text-neutral-500 mt-1">
           Used for sign in and display in the app
         </p>
+      </div>
+
+      <div class="mb-4">
+        <div class="mb-1">
+          <label for="avatar-url" class="block font-medium text-sm"
+            >Avatar URL</label
+          >
+        </div>
+        <UInput
+          id="avatar-url"
+          v-model="profileState.avatarUrl"
+          type="url"
+          placeholder="https://example.com/avatar.png"
+        />
+        <p class="text-xs text-neutral-500 mt-1">URL of your avatar image</p>
       </div>
 
       <div class="flex justify-end">

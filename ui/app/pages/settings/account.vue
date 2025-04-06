@@ -16,6 +16,7 @@ type ProfileRef = {
   profileState: {
     username: string;
     email: string;
+    avatarUrl: string;
   };
 };
 
@@ -74,6 +75,7 @@ async function saveProfileInformation() {
 
   isSaving.value = true;
   try {
+    // Update settings first
     const profileSettings = [
       {
         key: 'account.profile.username',
@@ -86,6 +88,15 @@ async function saveProfileInformation() {
     ];
 
     await updateSettings(profileSettings);
+
+    // Update avatar URL through the auth store
+    const avatarUpdateResult = await authStore.updateProfile({
+      avatarUrl: profileRef.value.profileState.avatarUrl,
+    });
+
+    if (!avatarUpdateResult) {
+      throw new Error('Failed to update avatar URL');
+    }
 
     toast.add({
       title: 'Success',
@@ -160,6 +171,7 @@ async function changePassword() {
           :settings="{
             email: user?.email || '',
             username: user?.username || '',
+            avatarUrl: user?.avatarUrl || '',
           }"
           @save="saveProfileInformation"
         />

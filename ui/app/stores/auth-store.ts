@@ -3,6 +3,7 @@ export interface User {
   username: string;
   email?: string;
   role: string;
+  avatarUrl?: string;
   created_at: string;
   updated_at: string;
 }
@@ -170,6 +171,47 @@ export const useAuthStore = defineStore(
       }
     }
 
+    async function updateProfile({ avatarUrl }: { avatarUrl?: string }) {
+      if (!token.value || !user.value) return false;
+
+      loading.value = true;
+      error.value = null;
+
+      try {
+        const { data, error: fetchError } = await useFetch(
+          '/api/auth/profile',
+          {
+            method: 'PUT',
+            baseURL: useRuntimeConfig().public.apiBaseUrl,
+            body: { avatarUrl },
+            credentials: 'include',
+            headers: {
+              Authorization: `Bearer ${token.value}`,
+            },
+          }
+        );
+
+        if (fetchError.value) {
+          error.value =
+            fetchError.value.data?.error || 'Failed to update profile';
+          return false;
+        }
+
+        if (data.value) {
+          user.value = data.value as User;
+          return true;
+        }
+
+        return false;
+      } catch (err) {
+        console.error('Update profile error:', err);
+        error.value = 'An unexpected error occurred';
+        return false;
+      } finally {
+        loading.value = false;
+      }
+    }
+
     function setToken(newToken: string) {
       token.value = newToken;
     }
@@ -191,6 +233,7 @@ export const useAuthStore = defineStore(
       register,
       logout,
       fetchCurrentUser,
+      updateProfile,
       setToken,
     };
   },
