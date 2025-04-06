@@ -39,9 +39,12 @@ async function handleSignOut() {
       <UTooltip text="Sign out" :delay-duration="250">
         <UButton
           variant="link"
-          icon="i-heroicons-arrow-right-on-rectangle"
+          icon="material-symbols:logout"
           size="xl"
           title="Sign out"
+          :ui="{
+            leadingIcon: 'scale-125',
+          }"
           @click="handleSignOut"
         />
       </UTooltip>
