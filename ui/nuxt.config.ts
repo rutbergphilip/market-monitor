@@ -23,6 +23,7 @@ export default defineNuxtConfig({
     '@nuxt/ui',
     'nuxt-auth-utils',
     '@pinia/nuxt',
+    'pinia-plugin-persistedstate/nuxt',
     '@vueuse/nuxt',
   ],
 
@@ -31,4 +32,14 @@ export default defineNuxtConfig({
   pinia: {
     storesDirs: ['./app/stores/**'],
   },
+
+  // app: {
+  //   pageTransition: { name: 'page', mode: 'out-in' },
+  // },
+
+  // Apply auth middleware globally
+  // routeRules: {
+  //   '/': { middleware: ['auth'] },
+  //   '/settings/**': { middleware: ['auth'] },
+  // },
 });
