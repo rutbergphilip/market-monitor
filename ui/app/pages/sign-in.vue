@@ -12,7 +12,8 @@ const authStore = useAuthStore();
 const router = useRouter();
 
 // If user is already authenticated, redirect to dashboard
-onMounted(() => {
+onMounted(async () => {
+  await nextTick();
   if (authStore.isAuthenticated) {
     router.push('/');
   }

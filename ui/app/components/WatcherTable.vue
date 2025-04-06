@@ -90,17 +90,23 @@ async function refresh() {
 
 // Only fetch watchers once we know user is authenticated
 onMounted(async () => {
+  isLoading.value = true;
+  await nextTick();
   if (authStore.isAuthenticated) {
     await refresh();
   }
+  isLoading.value = false;
 });
 
 // Watch for authentication state changes
 watch(
   () => authStore.isAuthenticated,
   async (isAuthenticated) => {
+    await nextTick();
     if (isAuthenticated) {
+      isLoading.value = true;
       await refresh();
+      isLoading.value = false;
     }
   }
 );
@@ -481,10 +487,9 @@ const table = useTemplateRef('table');
 
 <template>
   <div class="flex-1 divide-y divide-(--ui-border-accented) w-full">
-    <!-- Error message when authentication fails -->
     <div v-if="hasError" class="p-4 text-center">
       <p class="text-red-500 mb-2">Failed to load watchers</p>
-      <UButton @click="refresh" label="Try again" />
+      <UButton label="Try again" @click="refresh" />
     </div>
 
     <div class="flex items-center gap-2 px-4 py-3.5 overflow-x-auto">
@@ -526,7 +531,7 @@ const table = useTemplateRef('table');
       ref="table"
       :data="watchers ?? []"
       :columns="columns"
-      :loading="refreshing"
+      :loading="refreshing || isLoading"
       sticky
       class="h-96"
       aria-label="Watcher table"
