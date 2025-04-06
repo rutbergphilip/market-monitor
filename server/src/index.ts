@@ -2,6 +2,7 @@ import 'tsconfig-paths/register';
 
 import express from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
@@ -15,7 +16,13 @@ import { initEvents } from './events';
 const app = express();
 
 app.use(express.json());
-app.use(cors());
+app.use(cookieParser());
+app.use(
+  cors({
+    origin: process.env.UI_ORIGIN || 'http://localhost:3000',
+    credentials: true,
+  }),
+);
 app.use(routes);
 app.use((_, res) => {
   res.status(404).end();
