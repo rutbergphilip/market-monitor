@@ -36,6 +36,10 @@ export enum SettingKey {
   BLOCKET_QUERY_STATUS = 'blocket.query.status',
   BLOCKET_QUERY_GEOLOCATION = 'blocket.query.geolocation',
   BLOCKET_QUERY_INCLUDE = 'blocket.query.include',
+
+  // Account profile settings
+  ACCOUNT_PROFILE_USERNAME = 'account.profile.username',
+  ACCOUNT_PROFILE_EMAIL = 'account.profile.email',
 }
 
 // Settings defaults
@@ -130,5 +134,15 @@ export const DEFAULT_SETTINGS: Record<
   [SettingKey.BLOCKET_QUERY_INCLUDE]: {
     value: 'extend_with_shipping',
     description: 'Additional data to include in results',
+  },
+
+  // Account profile settings
+  [SettingKey.ACCOUNT_PROFILE_USERNAME]: {
+    value: '',
+    description: 'Username for account profile',
+  },
+  [SettingKey.ACCOUNT_PROFILE_EMAIL]: {
+    value: '',
+    description: 'Email address for account profile',
   },
 };
