@@ -4,6 +4,10 @@ import * as z from 'zod';
 const props = defineProps<{
   isLoading?: boolean;
   isSaving?: boolean;
+  settings?: {
+    email?: string;
+    username?: string;
+  };
 }>();
 
 const emit = defineEmits<{
@@ -11,13 +15,13 @@ const emit = defineEmits<{
 }>();
 
 const _profileSchema = z.object({
-  displayName: z.string().min(1, 'Display name is required'),
   email: z.string().email('Invalid email address'),
+  username: z.string().min(1, 'Username is required'),
 });
 
 const profileState = reactive({
-  displayName: '',
-  email: '',
+  email: props.settings?.email || '',
+  username: props.settings?.username || '',
 });
 
 defineExpose({
@@ -55,16 +59,16 @@ function saveProfileSettings() {
       <div class="mb-4">
         <div class="mb-1">
           <label for="display-name" class="block font-medium text-sm"
-            >Display Name</label
+            >Username</label
           >
         </div>
         <UInput
           id="display-name"
-          v-model="profileState.displayName"
-          placeholder="Your name"
+          v-model="profileState.username"
+          placeholder="Your username"
         />
         <p class="text-xs text-neutral-500 mt-1">
-          Your name as displayed in the application
+          Used for sign in and display in the app
         </p>
       </div>
 

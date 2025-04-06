@@ -33,8 +33,6 @@ export const useAuthStore = defineStore(
           credentials: 'include',
         });
 
-        console.log('Login response:', data.value, fetchError.value);
-
         if (fetchError.value) {
           const errorData = fetchError.value.data;
           error.value =

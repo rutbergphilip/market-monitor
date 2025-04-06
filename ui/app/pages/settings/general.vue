@@ -206,6 +206,24 @@ async function resetSettings() {
           ref="blocketQueryRef"
           :is-loading="isLoading"
           :is-saving="isSaving"
+          :settings="{
+            limit:
+              parseInt(settingsStore.getSettingValue('blocket.query.limit')) ||
+              60,
+            sort: settingsStore.getSettingValue('blocket.query.sort') || 'rel',
+            listingType:
+              settingsStore.getSettingValue('blocket.query.listing_type') ||
+              's',
+            status:
+              settingsStore.getSettingValue('blocket.query.status') || 'active',
+            geolocation:
+              parseInt(
+                settingsStore.getSettingValue('blocket.query.geolocation')
+              ) || 3,
+            include:
+              settingsStore.getSettingValue('blocket.query.include') ||
+              'extend_with_shipping',
+          }"
           @save="saveBlocketQuerySettings"
         />
       </div>

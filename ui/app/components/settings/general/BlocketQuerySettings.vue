@@ -4,6 +4,14 @@ import * as z from 'zod';
 const props = defineProps<{
   isLoading: boolean;
   isSaving: boolean;
+  settings?: {
+    limit?: number;
+    sort?: string;
+    listingType?: string;
+    status?: string;
+    geolocation?: number;
+    include?: string;
+  };
 }>();
 
 const emit = defineEmits<{
@@ -20,12 +28,12 @@ const blocketQuerySchema = z.object({
 });
 
 const blocketQueryState = reactive({
-  limit: 60,
-  sort: 'rel',
-  listingType: 's',
-  status: 'active',
-  geolocation: 3,
-  include: 'extend_with_shipping',
+  limit: props.settings?.limit || 60,
+  sort: props.settings?.sort || 'rel',
+  listingType: props.settings?.listingType || 's',
+  status: props.settings?.status || 'active',
+  geolocation: props.settings?.geolocation || 3,
+  include: props.settings?.include || 'extend_with_shipping',
 });
 
 defineExpose({

@@ -12,11 +12,10 @@ export async function getAll(req: Request, res: Response) {
   try {
     const settings = SettingRepository.getAll();
 
-    // If no settings found, initialize them with defaults first
     if (settings.length === 0) {
       logger.info('No settings found, initializing with defaults');
       SettingRepository.initializeSettings();
-      // Fetch again after initialization
+
       const initializedSettings = SettingRepository.getAll();
       res.json(initializedSettings);
       return;

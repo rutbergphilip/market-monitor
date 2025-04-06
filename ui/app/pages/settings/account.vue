@@ -7,11 +7,14 @@ definePageMeta({
 });
 
 const settingsStore = useSettingsStore();
+const authStore = useAuthStore();
 const toast = useToast();
+
+const { user } = storeToRefs(authStore);
 
 type ProfileRef = {
   profileState: {
-    displayName: string;
+    username: string;
     email: string;
   };
 };
@@ -31,16 +34,19 @@ const isLoading = ref(true);
 const isSaving = ref(false);
 
 const settingsMap = {
-  'account.profile.display_name': (value: string) => {
-    if (profileRef.value) profileRef.value.profileState.displayName = value;
+  'account.profile.username': (value: string) => {
+    if (profileRef.value) profileRef.value.profileState.username = value;
   },
   'account.profile.email': (value: string) => {
     if (profileRef.value) profileRef.value.profileState.email = value;
   },
 };
 
-await settingsStore.fetchSettings();
-isLoading.value = false;
+onMounted(async () => {
+  await nextTick();
+  await settingsStore.fetchSettings();
+  isLoading.value = false;
+});
 
 watch(
   () => settingsStore.settings,
@@ -70,8 +76,8 @@ async function saveProfileInformation() {
   try {
     const profileSettings = [
       {
-        key: 'account.profile.display_name',
-        value: profileRef.value.profileState.displayName,
+        key: 'account.profile.username',
+        value: profileRef.value.profileState.username,
       },
       {
         key: 'account.profile.email',
@@ -151,6 +157,10 @@ async function changePassword() {
         <ProfileInformation
           ref="profileRef"
           :is-saving="isSaving"
+          :settings="{
+            email: user?.email || '',
+            username: user?.username || '',
+          }"
           @save="saveProfileInformation"
         />
 

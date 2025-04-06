@@ -7,7 +7,6 @@ import logger from '@/integrations/logger';
 export async function login(req: Request, res: Response) {
   try {
     const { username, password } = req.body;
-    console.log('Login request:', req.body);
 
     if (!username || !password) {
       res.status(400).json({ error: 'Username and password are required' });
@@ -15,7 +14,6 @@ export async function login(req: Request, res: Response) {
     }
 
     const user = await UserRepository.validateUser(username, password);
-    console.log('User found:', user);
 
     if (!user) {
       res.status(401).json({ error: 'Invalid username or password' });
@@ -24,7 +22,6 @@ export async function login(req: Request, res: Response) {
 
     // Generate JWT token
     const token = generateToken(user.id);
-    console.log('Generated token:', token);
 
     // Set cookie for browser clients
     res.cookie('auth_token', token, {

@@ -1,10 +1,23 @@
 import 'tsconfig-paths/register';
 
-import express from 'express';
+import express, { Request } from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import * as dotenv from 'dotenv';
 dotenv.config();
+
+// Extend the Express Request interface to include the user property
+declare global {
+  namespace Express {
+    interface Request {
+      user?: {
+        id: string;
+        username: string;
+        role: string;
+      };
+    }
+  }
+}
 
 import routes from './routes';
 import logger from './integrations/logger';

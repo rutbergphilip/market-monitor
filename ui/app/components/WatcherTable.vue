@@ -65,7 +65,6 @@ const hasError = ref(false);
 
 async function refresh() {
   if (!authStore.isAuthenticated) {
-    console.log('Not authenticated, skipping refresh');
     return;
   }
 

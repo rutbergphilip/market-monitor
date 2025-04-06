@@ -41,7 +41,6 @@ export const useWatcherStore = defineStore('watcher', () => {
         },
         credentials: 'include',
       });
-      console.log('refresh', data.value);
 
       if (!data.value) {
         throw new Error('Failed to refresh watchers');
