@@ -7,8 +7,8 @@ const props = defineProps<{
   settings?: {
     username?: string;
     avatarUrl?: string;
-    maxRetries?: number;
-    retryDelay?: number;
+    maxRetries?: string | number;
+    retryDelay?: string | number;
   };
 }>();
 
@@ -30,8 +30,14 @@ const discordSchema = z.object({
 const discordState = reactive({
   username: props.settings?.username || 'Blocket Bot',
   avatarUrl: props.settings?.avatarUrl || '',
-  maxRetries: props.settings?.maxRetries || 3,
-  retryDelay: props.settings?.retryDelay || 1000,
+  maxRetries:
+    props.settings?.maxRetries !== undefined
+      ? Number(props.settings.maxRetries)
+      : 3,
+  retryDelay:
+    props.settings?.retryDelay !== undefined
+      ? Number(props.settings.retryDelay)
+      : 1000,
 });
 
 defineExpose({

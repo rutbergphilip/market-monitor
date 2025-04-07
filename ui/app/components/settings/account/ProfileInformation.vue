@@ -53,9 +53,10 @@ function saveProfileSettings() {
           v-model="profileState.email"
           type="email"
           placeholder="your.email@example.com"
+          class="w-3/4"
         />
         <p class="text-xs text-neutral-500 mt-1">
-          Your email address for notifications and account recovery
+          Your email address for notifications
         </p>
       </div>
 
@@ -69,6 +70,7 @@ function saveProfileSettings() {
           id="display-name"
           v-model="profileState.username"
           placeholder="Your username"
+          class="w-3/4"
         />
         <p class="text-xs text-neutral-500 mt-1">
           Used for sign in and display in the app
@@ -86,6 +88,7 @@ function saveProfileSettings() {
           v-model="profileState.avatarUrl"
           type="url"
           placeholder="https://example.com/avatar.png"
+          class="w-3/4"
         />
         <p class="text-xs text-neutral-500 mt-1">URL of your avatar image</p>
       </div>

@@ -88,7 +88,7 @@ export const useSettingsStore = defineStore('settings', () => {
 
     try {
       const { data } = await useFetch<Setting>(`/api/settings/${key}`, {
-        method: 'PUT',
+        method: 'PATCH',
         baseURL: useRuntimeConfig().public.apiBaseUrl,
         body: { value },
         headers: {

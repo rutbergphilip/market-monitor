@@ -41,11 +41,36 @@ const settingsMap = {
   'account.profile.email': (value: string) => {
     if (profileRef.value) profileRef.value.profileState.email = value;
   },
+  'account.profile.avatarUrl': (value: string) => {
+    if (profileRef.value) profileRef.value.profileState.avatarUrl = value;
+  },
 };
 
 onMounted(async () => {
   await nextTick();
   await settingsStore.fetchSettings();
+
+  // Initialize profile form with existing settings data if available,
+  // falling back to user data from auth store when needed
+  if (profileRef.value) {
+    const username =
+      settingsStore.getSettingValue('account.profile.username') ||
+      user.value?.username ||
+      '';
+    const email =
+      settingsStore.getSettingValue('account.profile.email') ||
+      user.value?.email ||
+      '';
+    const avatarUrl =
+      settingsStore.getSettingValue('account.profile.avatarUrl') ||
+      user.value?.avatarUrl ||
+      '';
+
+    profileRef.value.profileState.username = username;
+    profileRef.value.profileState.email = email;
+    profileRef.value.profileState.avatarUrl = avatarUrl;
+  }
+
   isLoading.value = false;
 });
 
@@ -75,27 +100,36 @@ async function saveProfileInformation() {
 
   isSaving.value = true;
   try {
+    // Get values from form
+    const { username, email, avatarUrl } = profileRef.value.profileState;
+
     // Update settings first
     const profileSettings = [
       {
         key: 'account.profile.username',
-        value: profileRef.value.profileState.username,
+        value: username,
       },
       {
         key: 'account.profile.email',
-        value: profileRef.value.profileState.email,
+        value: email,
+      },
+      {
+        key: 'account.profile.avatarUrl',
+        value: avatarUrl,
       },
     ];
 
     await updateSettings(profileSettings);
 
-    // Update avatar URL through the auth store
-    const avatarUpdateResult = await authStore.updateProfile({
-      avatarUrl: profileRef.value.profileState.avatarUrl,
+    // Update user information in auth store
+    const profileUpdateResult = await authStore.updateProfile({
+      username,
+      email,
+      avatarUrl,
     });
 
-    if (!avatarUpdateResult) {
-      throw new Error('Failed to update avatar URL');
+    if (!profileUpdateResult) {
+      throw new Error('Failed to update user profile');
     }
 
     toast.add({
@@ -169,9 +203,12 @@ async function changePassword() {
           ref="profileRef"
           :is-saving="isSaving"
           :settings="{
-            email: user?.email || '',
-            username: user?.username || '',
-            avatarUrl: user?.avatarUrl || '',
+            email: settingsStore.getSettingValue('account.profile.email'),
+            username: settingsStore.getSettingValue('account.profile.username'),
+            avatarUrl:
+              settingsStore.getSettingValue('account.profile.avatarUrl') ||
+              user?.avatarUrl ||
+              '',
           }"
           @save="saveProfileInformation"
         />

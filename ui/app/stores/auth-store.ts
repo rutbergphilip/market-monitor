@@ -171,7 +171,15 @@ export const useAuthStore = defineStore(
       }
     }
 
-    async function updateProfile({ avatarUrl }: { avatarUrl?: string }) {
+    async function updateProfile({
+      username,
+      email,
+      avatarUrl,
+    }: {
+      username?: string;
+      email?: string;
+      avatarUrl?: string;
+    }) {
       if (!token.value || !user.value) return false;
 
       loading.value = true;
@@ -181,9 +189,13 @@ export const useAuthStore = defineStore(
         const { data, error: fetchError } = await useFetch(
           '/api/auth/profile',
           {
-            method: 'PUT',
+            method: 'PATCH',
             baseURL: useRuntimeConfig().public.apiBaseUrl,
-            body: { avatarUrl },
+            body: {
+              username: username !== undefined ? username : user.value.username,
+              email: email !== undefined ? email : user.value.email,
+              avatarUrl,
+            },
             credentials: 'include',
             headers: {
               Authorization: `Bearer ${token.value}`,
