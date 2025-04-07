@@ -9,19 +9,33 @@ import { refreshNotificationConfig } from '@/constants/notifications';
  */
 export function initSettingsEvents(): void {
   emitter.on(SettingsEvents.UPDATED, (data: { key: string; value: any }) => {
-    try {
-      logger.debug({
-        message: 'Refreshing notification config due to settings update',
-        updatedSetting: data.key,
-      });
+    // Only refresh notification config for notification-related settings
+    const notificationPrefixes = ['notification.', 'blocket.'];
+    const isNotificationSetting = notificationPrefixes.some((prefix) =>
+      data.key.startsWith(prefix),
+    );
 
-      // Refresh notification configuration
-      refreshNotificationConfig();
-    } catch (error) {
-      logger.error({
-        error: error as Error,
-        message: 'Failed to refresh notification config',
-        settingKey: data.key,
+    if (isNotificationSetting || data.key === 'all') {
+      try {
+        logger.debug({
+          message: 'Refreshing notification config due to settings update',
+          updatedSetting: data.key,
+        });
+
+        // Refresh notification configuration
+        refreshNotificationConfig();
+      } catch (error) {
+        logger.error({
+          error: error as Error,
+          message: 'Failed to refresh notification config',
+          settingKey: data.key,
+        });
+      }
+    } else {
+      logger.debug({
+        message:
+          'Skipping notification config refresh for non-notification setting',
+        updatedSetting: data.key,
       });
     }
   });
