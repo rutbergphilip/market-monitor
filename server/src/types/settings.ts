@@ -40,6 +40,7 @@ export enum SettingKey {
   // Account profile settings
   ACCOUNT_PROFILE_USERNAME = 'account.profile.username',
   ACCOUNT_PROFILE_EMAIL = 'account.profile.email',
+  ACCOUNT_PROFILE_AVATAR_URL = 'account.profile.avatarUrl',
 }
 
 // Settings defaults
@@ -144,5 +145,9 @@ export const DEFAULT_SETTINGS: Record<
   [SettingKey.ACCOUNT_PROFILE_EMAIL]: {
     value: '',
     description: 'Email address for account profile',
+  },
+  [SettingKey.ACCOUNT_PROFILE_AVATAR_URL]: {
+    value: '',
+    description: 'Avatar URL for user profile',
   },
 };

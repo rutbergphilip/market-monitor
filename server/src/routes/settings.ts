@@ -22,8 +22,8 @@ router.get('/defaults', getDefaults);
 // GET /api/settings/:key - Get setting by key
 router.get('/:key', getByKey);
 
-// PUT /api/settings/:key - Update setting by key
-router.put('/:key', update);
+// PATCH /api/settings/:key - Update setting by key
+router.patch('/:key', update);
 
 // POST /api/settings/reset - Reset all settings to default values
 router.post('/reset', resetAllToDefaults);
