@@ -3,20 +3,43 @@ import jwt from 'jsonwebtoken';
 import logger from '@/integrations/logger';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'blocket-bot-secret-key';
+const REFRESH_TOKEN_SECRET =
+  process.env.REFRESH_TOKEN_SECRET || 'blocket-bot-refresh-secret-key';
 const TOKEN_EXPIRY = '24h';
+const REFRESH_TOKEN_EXPIRY = '30d';
 
-// Generate a JWT token for a user
+// Generate a JWT access token for a user
 export function generateToken(userId: string): string {
   return jwt.sign({ userId }, JWT_SECRET, { expiresIn: TOKEN_EXPIRY });
 }
 
-// Verify a JWT token
+// Generate a refresh token for a user
+export function generateRefreshToken(userId: string): string {
+  return jwt.sign({ userId }, REFRESH_TOKEN_SECRET, {
+    expiresIn: REFRESH_TOKEN_EXPIRY,
+  });
+}
+
+// Verify a JWT access token
 export function verifyToken(token: string): { userId: string } | null {
   try {
     return jwt.verify(token, JWT_SECRET) as { userId: string };
   } catch (error) {
     logger.warn({
       message: 'Invalid JWT token',
+      error: error as Error,
+    });
+    return null;
+  }
+}
+
+// Verify a refresh token
+export function verifyRefreshToken(token: string): { userId: string } | null {
+  try {
+    return jwt.verify(token, REFRESH_TOKEN_SECRET) as { userId: string };
+  } catch (error) {
+    logger.warn({
+      message: 'Invalid refresh token',
       error: error as Error,
     });
     return null;
