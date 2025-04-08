@@ -13,15 +13,54 @@ export const useAuthStore = defineStore(
   () => {
     const user = ref<User | null>(null);
     const token = ref<string | null>(null);
+    const refreshToken = ref<string | null>(null);
     const loading = ref(false);
     const error = ref<string | null>(null);
 
-    // Getters
     const isAuthenticated = computed(() => !!token.value);
     const isAdmin = computed(() => user.value?.role === 'admin');
     const userName = computed(() => user.value?.username || '');
 
-    // Actions
+    async function refreshAccessToken() {
+      if (!refreshToken.value) {
+        // If no refresh token is available, clear auth state
+        user.value = null;
+        token.value = null;
+        return false;
+      }
+
+      try {
+        const { data, error: fetchError } = await useFetch(
+          '/api/auth/refresh-token',
+          {
+            method: 'POST',
+            baseURL: useRuntimeConfig().public.apiBaseUrl,
+            body: { refreshToken: refreshToken.value },
+            credentials: 'include',
+          }
+        );
+
+        if (fetchError.value || !data.value) {
+          user.value = null;
+          token.value = null;
+          refreshToken.value = null;
+          return false;
+        }
+
+        const response = data.value as { token: string; refreshToken: string };
+        token.value = response.token;
+        refreshToken.value = response.refreshToken;
+
+        return true;
+      } catch (err) {
+        console.error('Token refresh error:', err);
+        user.value = null;
+        token.value = null;
+        refreshToken.value = null;
+        return false;
+      }
+    }
+
     async function login(username: string, password: string) {
       loading.value = true;
       error.value = null;
@@ -46,9 +85,14 @@ export const useAuthStore = defineStore(
           return false;
         }
 
-        const response = data.value as { user: User; token: string };
+        const response = data.value as {
+          user: User;
+          token: string;
+          refreshToken: string;
+        };
         user.value = response.user;
         token.value = response.token;
+        refreshToken.value = response.refreshToken;
 
         return true;
       } catch (err) {
@@ -91,9 +135,14 @@ export const useAuthStore = defineStore(
           return false;
         }
 
-        const response = data.value as { user: User; token: string };
+        const response = data.value as {
+          user: User;
+          token: string;
+          refreshToken: string;
+        };
         user.value = response.user;
         token.value = response.token;
+        refreshToken.value = response.refreshToken;
 
         return true;
       } catch (err) {
@@ -119,9 +168,9 @@ export const useAuthStore = defineStore(
           },
         });
 
-        // Clear user data regardless of server response
         user.value = null;
         token.value = null;
+        refreshToken.value = null;
 
         return true;
       } catch (err) {
@@ -149,10 +198,11 @@ export const useAuthStore = defineStore(
         });
 
         if (fetchError.value) {
-          // Clear user if unauthorized
           if (fetchError.value.status === 401) {
-            user.value = null;
-            token.value = null;
+            const refreshed = await refreshAccessToken();
+            if (refreshed) {
+              return fetchCurrentUser();
+            }
           }
           return false;
         }
@@ -204,6 +254,13 @@ export const useAuthStore = defineStore(
         );
 
         if (fetchError.value) {
+          if (fetchError.value.status === 401) {
+            const refreshed = await refreshAccessToken();
+            if (refreshed) {
+              return updateProfile({ username, email, avatarUrl });
+            }
+          }
+
           error.value =
             fetchError.value.data?.error || 'Failed to update profile';
           return false;
@@ -228,25 +285,57 @@ export const useAuthStore = defineStore(
       token.value = newToken;
     }
 
+    function setRefreshToken(newRefreshToken: string) {
+      refreshToken.value = newRefreshToken;
+    }
+
+    async function fetchWithAuth<T>(
+      url: string,
+      options: Record<string, unknown>
+    ) {
+      if (!token.value) {
+        throw new Error('No authentication token available');
+      }
+
+      const authOptions = {
+        ...options,
+        headers: {
+          ...((options.headers as Record<string, unknown>) || {}),
+          Authorization: `Bearer ${token.value}`,
+        },
+      };
+
+      let result = await useFetch<T>(url, authOptions);
+
+      if (result.error.value?.status === 401) {
+        const refreshed = await refreshAccessToken();
+        if (refreshed) {
+          authOptions.headers.Authorization = `Bearer ${token.value}`;
+          result = await useFetch<T>(url, authOptions);
+        }
+      }
+
+      return result;
+    }
+
     return {
-      // State
       user,
       token,
+      refreshToken,
       loading,
       error,
-
-      // Getters
       isAuthenticated,
       isAdmin,
       userName,
-
-      // Actions
       login,
       register,
       logout,
       fetchCurrentUser,
       updateProfile,
       setToken,
+      setRefreshToken,
+      refreshAccessToken,
+      fetchWithAuth,
     };
   },
   {
