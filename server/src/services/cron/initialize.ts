@@ -1,5 +1,6 @@
 import { WatcherRepository } from '@/db/repositories';
 import { initializeWatcherJobs } from './watchers';
+import { refreshTokenCleanupJob } from './auth';
 import logger from '@/integrations/logger';
 
 /**
@@ -8,12 +9,15 @@ import logger from '@/integrations/logger';
  */
 export function initializeCronSystem(): void {
   try {
+    // Initialize watcher jobs
     const watchers = WatcherRepository.getAll();
-
     initializeWatcherJobs(watchers);
 
+    // Start the refresh token cleanup job
+    refreshTokenCleanupJob.start();
+
     logger.info({
-      message: `Cron system initialized with ${watchers.filter((w) => w.status === 'active').length} active watchers`,
+      message: `Cron system initialized with ${watchers.filter((w) => w.status === 'active').length} active watchers and token cleanup job`,
     });
   } catch (error) {
     logger.error({
