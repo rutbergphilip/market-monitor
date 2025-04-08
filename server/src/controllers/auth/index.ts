@@ -1,6 +1,11 @@
 import { Request, Response } from 'express';
 import * as UserRepository from '@/db/repositories/users';
-import { generateToken } from '@/middlewares/security';
+import { RefreshTokenRepository } from '@/db/repositories';
+import {
+  generateToken,
+  generateRefreshToken,
+  verifyRefreshToken,
+} from '@/middlewares/security';
 import logger from '@/integrations/logger';
 import { db } from '@/db';
 import { UserType } from '@/types/users';
@@ -25,11 +30,37 @@ export async function login(req: Request, res: Response) {
     // Generate JWT token
     const token = generateToken(user.id);
 
-    // Set cookie for browser clients
+    // Generate refresh token
+    const refreshTokenValue = generateRefreshToken(user.id);
+
+    // Store refresh token in database
+    const storedToken = RefreshTokenRepository.createRefreshToken(
+      user.id,
+      refreshTokenValue,
+    );
+
+    if (!storedToken) {
+      logger.error({
+        message: 'Failed to store refresh token',
+        userId: user.id,
+      });
+      res
+        .status(500)
+        .json({ error: 'Failed to create authentication session' });
+      return;
+    }
+
+    // Set cookies for browser clients
     res.cookie('auth_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    });
+
+    res.cookie('refresh_token', refreshTokenValue, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     });
 
     // Remove password from response
@@ -38,6 +69,7 @@ export async function login(req: Request, res: Response) {
     res.json({
       user: userWithoutPassword,
       token,
+      refreshToken: refreshTokenValue,
     });
   } catch (error) {
     logger.error({
@@ -70,16 +102,43 @@ export async function register(req: Request, res: Response) {
       // Generate token for new user
       const token = generateToken(newUser.id);
 
-      // Set cookie for browser clients
+      // Generate refresh token
+      const refreshTokenValue = generateRefreshToken(newUser.id);
+
+      // Store refresh token in database
+      const storedToken = RefreshTokenRepository.createRefreshToken(
+        newUser.id,
+        refreshTokenValue,
+      );
+
+      if (!storedToken) {
+        logger.error({
+          message: 'Failed to store refresh token for new user',
+          userId: newUser.id,
+        });
+        res
+          .status(500)
+          .json({ error: 'Failed to create authentication session' });
+        return;
+      }
+
+      // Set cookies for browser clients
       res.cookie('auth_token', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
       });
 
+      res.cookie('refresh_token', refreshTokenValue, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      });
+
       res.status(201).json({
         user: newUser,
         token,
+        refreshToken: refreshTokenValue,
       });
     } catch (error) {
       // Handle duplicate username or email
@@ -134,8 +193,17 @@ export function me(req: Request, res: Response) {
 // Logout controller
 export function logout(req: Request, res: Response) {
   try {
-    // Clear the auth cookie
+    // Get the refresh token from request or cookie
+    const refreshToken = req.body.refreshToken || req.cookies?.refresh_token;
+
+    // If we have a refresh token, revoke it in the database
+    if (refreshToken) {
+      RefreshTokenRepository.revokeToken(refreshToken);
+    }
+
+    // Clear the auth cookies
     res.clearCookie('auth_token');
+    res.clearCookie('refresh_token');
 
     res.json({ message: 'Logged out successfully' });
   } catch (error) {
@@ -144,6 +212,83 @@ export function logout(req: Request, res: Response) {
       message: 'Logout error',
     });
     res.status(500).json({ error: 'An error occurred during logout' });
+  }
+}
+
+// Refresh token controller
+export function refreshToken(req: Request, res: Response) {
+  try {
+    const { refreshToken } = req.body;
+
+    // Check if refresh token is provided
+    if (!refreshToken) {
+      // Try to get from cookie
+      const cookieRefreshToken = req.cookies?.refresh_token;
+      if (!cookieRefreshToken) {
+        res.status(400).json({ error: 'Refresh token is required' });
+        return;
+      }
+    }
+
+    // Get the token from request or cookie
+    const tokenToVerify = refreshToken || req.cookies?.refresh_token;
+
+    // First verify the JWT signature validity
+    const decoded = verifyRefreshToken(tokenToVerify);
+
+    if (!decoded) {
+      res.status(401).json({ error: 'Invalid or expired refresh token' });
+      return;
+    }
+
+    // Then check in the database if it's still valid (not revoked)
+    const storedToken = RefreshTokenRepository.findValidToken(tokenToVerify);
+
+    if (!storedToken) {
+      res.status(401).json({ error: 'Invalid or revoked refresh token' });
+      return;
+    }
+
+    // Revoke the current refresh token for security
+    RefreshTokenRepository.revokeToken(tokenToVerify);
+
+    // Generate new access token
+    const newToken = generateToken(decoded.userId);
+
+    // Generate new refresh token (rotate refresh tokens for better security)
+    const newRefreshTokenValue = generateRefreshToken(decoded.userId);
+
+    // Store the new refresh token
+    RefreshTokenRepository.createRefreshToken(
+      decoded.userId,
+      newRefreshTokenValue,
+    );
+
+    // Set new cookies
+    res.cookie('auth_token', newToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    });
+
+    res.cookie('refresh_token', newRefreshTokenValue, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+    });
+
+    res.json({
+      token: newToken,
+      refreshToken: newRefreshTokenValue,
+    });
+  } catch (error) {
+    logger.error({
+      error: error as Error,
+      message: 'Token refresh error',
+    });
+    res
+      .status(500)
+      .json({ error: 'An error occurred while refreshing the token' });
   }
 }
 
