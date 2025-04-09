@@ -19,7 +19,6 @@ export async function create(req: Request, res: Response) {
 
   const watcher = WatcherRepository.create(newWatcher);
 
-  // Start the cron job for this new watcher since it's created as active
   if (watcher.id && watcher.status === 'active') {
     startWatcherJob(watcher);
   }
