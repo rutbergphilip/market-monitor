@@ -5,6 +5,8 @@ Monitor Blocket listings effortlessly with a beautiful UI and get instant notifi
 ## 🌟 Features
 
 - **Modern Web Dashboard**: Manage your watchers with an intuitive web interface.
+- **User Authentication**: Secure login system with JWT tokens and refresh token functionality.
+- **Multi-User Support**: Create accounts for multiple users with their own watchers and settings.
 - **Customizable Watchers**: Create multiple independent watchers with different queries.
 - **Real-time Notifications**:
   - Discord webhook notifications with rich embeds ✅
@@ -79,6 +81,13 @@ npm run dev
 
 ## 🧩 Core Features
 
+### Authentication
+
+- Secure user accounts with JWT authentication
+- Persistent sessions with refresh tokens
+- Token rotation for enhanced security
+- Session management with the ability to revoke tokens
+
 ### Watchers
 
 - Create multiple watchers with different search queries
@@ -101,12 +110,15 @@ npm run dev
 - Configure global notification settings
 - Manage batching preferences
 - Set appearance options for notifications
+- User profile and security settings
+- Account-specific preferences
 
 ## 🔜 Upcoming Features
 
 - **Email Notifications**: Send email alerts for new listings.
 - **Telegram Integration**: Get notified via Telegram.
 - **Enhanced Filters**: More advanced search filtering options.
+- **Two-Factor Authentication**: Additional security layer for user accounts.
 
 ## 📝 Configuration Details
 
@@ -126,10 +138,19 @@ Key environment variables:
 - `UI_PORT` (default: 3000): Frontend web UI port
 - `API_BASE_URL` (default: http://localhost:8080): URL where the API is accessible
 - `DB_PATH` (default: db.sqlite): Path to SQLite database file
+- `JWT_SECRET`: Secret key for JWT token generation (important to set in production)
+- `REFRESH_TOKEN_SECRET`: Secret key for refresh tokens (important to set in production)
 
 ### Discord Notification Settings
 
 Discord notification settings, such as the bot username, avatar URL, and retry behavior, are managed through the UI. Default values are used during initial setup, and users can customize these settings via the web interface.
+
+## 🔒 Security Considerations
+
+- JWT tokens expire after 24 hours for enhanced security
+- Refresh tokens provide convenient persistent login for up to 30 days
+- All sensitive routes are protected by authentication middleware
+- Production deployments should use custom JWT secrets via environment variables
 
 ## 🐳 Docker Deployment
 
