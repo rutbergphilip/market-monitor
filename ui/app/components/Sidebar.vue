@@ -8,7 +8,7 @@ const router = useRouter();
 const { activeWatchers } = storeToRefs(watcherStore);
 const { isAuthenticated } = storeToRefs(authStore);
 
-const items = ref<NavigationMenuItem[][]>([
+const items = computed<NavigationMenuItem[][]>(() => [
   [
     {
       label: 'Watchers',
