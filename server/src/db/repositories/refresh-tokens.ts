@@ -11,20 +11,15 @@ export interface RefreshToken {
   created_at: string;
 }
 
-/**
- * Creates a new refresh token for a user
- */
 export function createRefreshToken(
   userId: string | number,
   token: string,
   expiresInDays = 30,
 ): RefreshToken | null {
   try {
-    // Calculate expiration date
     const expiresAt = addDays(new Date(), expiresInDays).toISOString();
     const now = new Date().toISOString();
 
-    // Insert the token
     const stmt = db.prepare(`
       INSERT INTO refresh_tokens (user_id, token, expires_at, created_at)
       VALUES (?, ?, ?, ?)
@@ -60,9 +55,6 @@ export function createRefreshToken(
   }
 }
 
-/**
- * Find a valid (not expired, not revoked) refresh token
- */
 export function findValidToken(token: string): RefreshToken | null {
   try {
     const now = new Date().toISOString();
@@ -85,9 +77,6 @@ export function findValidToken(token: string): RefreshToken | null {
   }
 }
 
-/**
- * Revoke a specific refresh token
- */
 export function revokeToken(token: string): boolean {
   try {
     const stmt = db.prepare(`
@@ -116,9 +105,6 @@ export function revokeToken(token: string): boolean {
   }
 }
 
-/**
- * Revoke all refresh tokens for a user
- */
 export function revokeAllUserTokens(userId: string | number): boolean {
   try {
     const stmt = db.prepare(`
@@ -146,40 +132,28 @@ export function revokeAllUserTokens(userId: string | number): boolean {
   }
 }
 
-/**
- * Clean up expired and revoked tokens
- * 
- * Removes all tokens that are either:
- * 1. Expired (past their expiration date)
- * 2. Revoked (manually invalidated)
- * 
- * Returns the number of tokens removed
- */
 export function cleanupTokens(): number {
   try {
     const now = new Date().toISOString();
 
-    // Delete expired tokens
     const expiredStmt = db.prepare(`
       DELETE FROM refresh_tokens
       WHERE expires_at < ?
     `);
-    
+
     const expiredResult = expiredStmt.run(now);
-    
-    // Delete revoked tokens that are older than 24 hours
-    // We keep revoked tokens for a short time for audit purposes
+
     const oneDayAgo = addDays(new Date(), -1).toISOString();
-    
+
     const revokedStmt = db.prepare(`
       DELETE FROM refresh_tokens
       WHERE revoked = 1 AND created_at < ?
     `);
-    
+
     const revokedResult = revokedStmt.run(oneDayAgo);
-    
+
     const totalDeleted = expiredResult.changes + revokedResult.changes;
-    
+
     if (totalDeleted > 0) {
       logger.info({
         message: 'Cleaned up refresh tokens',
@@ -188,7 +162,7 @@ export function cleanupTokens(): number {
         total: totalDeleted,
       });
     }
-    
+
     return totalDeleted;
   } catch (error) {
     logger.error({

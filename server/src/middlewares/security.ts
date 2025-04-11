@@ -9,19 +9,16 @@ const REFRESH_TOKEN_SECRET =
 const TOKEN_EXPIRY = '24h';
 const REFRESH_TOKEN_EXPIRY = '30d';
 
-// Generate a JWT access token for a user
 export function generateToken(userId: string): string {
   return jwt.sign({ userId }, JWT_SECRET, { expiresIn: TOKEN_EXPIRY });
 }
 
-// Generate a refresh token for a user
 export function generateRefreshToken(userId: string): string {
   return jwt.sign({ userId }, REFRESH_TOKEN_SECRET, {
     expiresIn: REFRESH_TOKEN_EXPIRY,
   });
 }
 
-// Verify a JWT access token
 export function verifyToken(token: string): { userId: string } | null {
   try {
     return jwt.verify(token, JWT_SECRET) as { userId: string };
@@ -34,7 +31,6 @@ export function verifyToken(token: string): { userId: string } | null {
   }
 }
 
-// Verify a refresh token
 export function verifyRefreshToken(token: string): { userId: string } | null {
   try {
     return jwt.verify(token, REFRESH_TOKEN_SECRET) as { userId: string };
@@ -47,18 +43,14 @@ export function verifyRefreshToken(token: string): { userId: string } | null {
   }
 }
 
-// Authentication middleware
 export function authenticateJWT(
   req: Request,
   res: Response,
   next: NextFunction,
 ) {
-  // Get the auth header
   const authHeader = req.headers.authorization;
 
-  // Check if token is provided in the auth header
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    // Check for token in cookie as fallback
     const token = req.cookies?.auth_token;
 
     if (!token) {
@@ -78,10 +70,8 @@ export function authenticateJWT(
     return;
   }
 
-  // Extract token from auth header
   const token = authHeader.split(' ')[1];
 
-  // Verify token
   const decoded = verifyToken(token);
 
   if (!decoded) {
@@ -89,11 +79,9 @@ export function authenticateJWT(
     if (refreshToken) {
       const refreshDecoded = verifyRefreshToken(refreshToken);
       if (refreshDecoded) {
-        // Generate new access and refresh tokens
         const newAccessToken = generateToken(refreshDecoded.userId);
         const newRefreshToken = generateRefreshToken(refreshDecoded.userId);
 
-        // Store refresh token in database
         const storedToken = RefreshTokenRepository.createRefreshToken(
           refreshDecoded.userId,
           newRefreshToken,
@@ -104,7 +92,6 @@ export function authenticateJWT(
           return;
         }
 
-        // Set new tokens in cookies
         res.cookie('auth_token', newAccessToken, {
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
