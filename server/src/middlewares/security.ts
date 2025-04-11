@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import logger from '@/integrations/logger';
+import { RefreshTokenRepository } from '@/db/repositories';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'blocket-bot-secret-key';
 const REFRESH_TOKEN_SECRET =
@@ -82,7 +83,45 @@ export function authenticateJWT(
 
   // Verify token
   const decoded = verifyToken(token);
+
   if (!decoded) {
+    const refreshToken = req.cookies?.refresh_token;
+    if (refreshToken) {
+      const refreshDecoded = verifyRefreshToken(refreshToken);
+      if (refreshDecoded) {
+        // Generate new access and refresh tokens
+        const newAccessToken = generateToken(refreshDecoded.userId);
+        const newRefreshToken = generateRefreshToken(refreshDecoded.userId);
+
+        // Store refresh token in database
+        const storedToken = RefreshTokenRepository.createRefreshToken(
+          refreshDecoded.userId,
+          newRefreshToken,
+        );
+
+        if (!storedToken) {
+          res.status(500).json({ error: 'Failed to store refresh token' });
+          return;
+        }
+
+        // Set new tokens in cookies
+        res.cookie('auth_token', newAccessToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        });
+        res.cookie('refresh_token', newRefreshToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+        });
+
+        // @ts-ignore - Add user ID to request for use in route handlers
+        req.userId = refreshDecoded.userId;
+        next();
+        return;
+      }
+    }
     res.status(401).json({ error: 'Invalid or expired token' });
     return;
   }
