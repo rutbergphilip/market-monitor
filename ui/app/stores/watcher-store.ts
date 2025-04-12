@@ -17,6 +17,7 @@ export const useWatcherStore = defineStore('watcher', () => {
           Authorization: authStore.token ? `Bearer ${authStore.token}` : '',
         },
         credentials: 'include',
+        onResponse: [refreshTokenInterceptor],
       });
 
       if (!data.value) {
@@ -40,6 +41,7 @@ export const useWatcherStore = defineStore('watcher', () => {
           Authorization: authStore.token ? `Bearer ${authStore.token}` : '',
         },
         credentials: 'include',
+        onResponse: [refreshTokenInterceptor],
       });
 
       if (!data.value) {
@@ -62,6 +64,7 @@ export const useWatcherStore = defineStore('watcher', () => {
         Authorization: authStore.token ? `Bearer ${authStore.token}` : '',
       },
       credentials: 'include',
+      onResponse: [refreshTokenInterceptor],
     });
 
     if (!data.value) {
@@ -81,6 +84,7 @@ export const useWatcherStore = defineStore('watcher', () => {
         Authorization: authStore.token ? `Bearer ${authStore.token}` : '',
       },
       credentials: 'include',
+      onResponse: [refreshTokenInterceptor],
     });
 
     if (!data.value) {
@@ -103,6 +107,7 @@ export const useWatcherStore = defineStore('watcher', () => {
         Authorization: authStore.token ? `Bearer ${authStore.token}` : '',
       },
       credentials: 'include',
+      onResponse: [refreshTokenInterceptor],
     });
 
     if (status.value !== 'success') {
@@ -124,6 +129,7 @@ export const useWatcherStore = defineStore('watcher', () => {
         Authorization: authStore.token ? `Bearer ${authStore.token}` : '',
       },
       credentials: 'include',
+      onResponse: [refreshTokenInterceptor],
     });
 
     const index = watchers.value.findIndex((w) => w.id === id);
@@ -140,6 +146,7 @@ export const useWatcherStore = defineStore('watcher', () => {
         Authorization: authStore.token ? `Bearer ${authStore.token}` : '',
       },
       credentials: 'include',
+      onResponse: [refreshTokenInterceptor],
     });
 
     const index = watchers.value.findIndex((w) => w.id === id);
@@ -156,6 +163,7 @@ export const useWatcherStore = defineStore('watcher', () => {
         Authorization: authStore.token ? `Bearer ${authStore.token}` : '',
       },
       credentials: 'include',
+      onResponse: [refreshTokenInterceptor],
     });
   };
 

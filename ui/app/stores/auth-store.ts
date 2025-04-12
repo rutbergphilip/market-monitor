@@ -12,8 +12,10 @@ export const useAuthStore = defineStore(
   'auth',
   () => {
     const user = ref<User | null>(null);
-    const token = ref<string | null>(null);
-    const refreshToken = ref<string | null>(null);
+    const token = ref<string | null | undefined>(useCookie('auth_token').value);
+    const refreshToken = ref<string | null | undefined>(
+      useCookie('refresh_token').value
+    );
     const loading = ref(false);
     const error = ref<string | null>(null);
 
@@ -23,7 +25,6 @@ export const useAuthStore = defineStore(
 
     async function refreshAccessToken() {
       if (!refreshToken.value) {
-        // If no refresh token is available, clear auth state
         user.value = null;
         token.value = null;
         return false;

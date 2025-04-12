@@ -37,6 +37,7 @@ export const useSettingsStore = defineStore('settings', () => {
           Authorization: authStore.token ? `Bearer ${authStore.token}` : '',
         },
         credentials: 'include',
+        onResponse: [refreshTokenInterceptor],
       });
 
       if (!data.value) {
@@ -66,6 +67,7 @@ export const useSettingsStore = defineStore('settings', () => {
           Authorization: authStore.token ? `Bearer ${authStore.token}` : '',
         },
         credentials: 'include',
+        onResponse: [refreshTokenInterceptor],
       });
 
       if (!data.value) {
@@ -95,6 +97,7 @@ export const useSettingsStore = defineStore('settings', () => {
           Authorization: authStore.token ? `Bearer ${authStore.token}` : '',
         },
         credentials: 'include',
+        onResponse: [refreshTokenInterceptor],
       });
 
       if (!data.value) {
@@ -129,6 +132,7 @@ export const useSettingsStore = defineStore('settings', () => {
           Authorization: authStore.token ? `Bearer ${authStore.token}` : '',
         },
         credentials: 'include',
+        onResponse: [refreshTokenInterceptor],
       });
 
       if (!data.value) {
