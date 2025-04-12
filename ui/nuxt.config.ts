@@ -33,13 +33,7 @@ export default defineNuxtConfig({
     storesDirs: ['./app/stores/**'],
   },
 
-  // app: {
-  //   pageTransition: { name: 'page', mode: 'out-in' },
-  // },
-
-  // Apply auth middleware globally
-  // routeRules: {
-  //   '/': { middleware: ['auth'] },
-  //   '/settings/**': { middleware: ['auth'] },
-  // },
+  imports: {
+    dirs: ['interceptors/**'],
+  },
 });
