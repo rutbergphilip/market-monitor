@@ -73,42 +73,7 @@ export function authenticateJWT(
   const token = authHeader.split(' ')[1];
 
   const decoded = verifyToken(token);
-
   if (!decoded) {
-    const refreshToken = req.cookies?.refresh_token;
-    if (refreshToken) {
-      const refreshDecoded = verifyRefreshToken(refreshToken);
-      if (refreshDecoded) {
-        const newAccessToken = generateToken(refreshDecoded.userId);
-        const newRefreshToken = generateRefreshToken(refreshDecoded.userId);
-
-        const storedToken = RefreshTokenRepository.createRefreshToken(
-          refreshDecoded.userId,
-          newRefreshToken,
-        );
-
-        if (!storedToken) {
-          res.status(500).json({ error: 'Failed to store refresh token' });
-          return;
-        }
-
-        res.cookie('auth_token', newAccessToken, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          maxAge: 24 * 60 * 60 * 1000, // 24 hours
-        });
-        res.cookie('refresh_token', newRefreshToken, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-        });
-
-        // @ts-ignore - Add user ID to request for use in route handlers
-        req.userId = refreshDecoded.userId;
-        next();
-        return;
-      }
-    }
     res.status(401).json({ error: 'Invalid or expired token' });
     return;
   }
