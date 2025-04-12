@@ -6,12 +6,8 @@ import {
   resetAllToDefaults,
   getDefaults,
 } from '@/controllers/settings';
-// import { securityMiddleware } from '@/middlewares/security';
 
 const router = express.Router();
-
-// Apply security middleware to all settings routes
-// router.use(securityMiddleware);
 
 // GET /api/settings - Get all settings
 router.get('/', getAll);
