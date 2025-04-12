@@ -160,8 +160,11 @@ const settingsMap = {
   },
 };
 
-await settingsStore.fetchSettings();
-isLoading.value = false;
+onMounted(async () => {
+  await nextTick();
+  await settingsStore.fetchSettings();
+  isLoading.value = false;
+});
 
 watch(
   () => settingsStore.settings,

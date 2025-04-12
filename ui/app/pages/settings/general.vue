@@ -55,8 +55,10 @@ const settingsMap = {
   },
 };
 
-await settingsStore.fetchSettings();
-isLoading.value = false;
+onMounted(async () => {
+  await settingsStore.fetchSettings();
+  isLoading.value = false;
+});
 
 watch(
   () => settingsStore.settings,
