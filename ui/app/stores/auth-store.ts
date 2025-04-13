@@ -74,7 +74,7 @@ export const useAuthStore = defineStore(
           return false;
         }
 
-        const response = data.value as LoginResponse;
+        const response = data.value;
         user.value = response.user;
         token.value = response.token;
         refreshToken.value = response.refreshToken;
