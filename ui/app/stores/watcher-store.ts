@@ -12,9 +12,8 @@ export const useWatcherStore = defineStore('watcher', () => {
     try {
       const { data } = await useFetch<Watcher[]>('/api/watchers', {
         method: 'GET',
-        baseURL: useRuntimeConfig().public.apiBaseUrl,
         headers: {
-          Authorization: authStore.token ? `Bearer ${authStore.token}` : '',
+          Authorization: `Bearer ${authStore.token}`,
         },
         credentials: 'include',
         onResponse: [refreshTokenInterceptor],
@@ -36,9 +35,8 @@ export const useWatcherStore = defineStore('watcher', () => {
     try {
       const { data } = await useFetch<Watcher[]>('/api/watchers', {
         method: 'GET',
-        baseURL: useRuntimeConfig().public.apiBaseUrl,
         headers: {
-          Authorization: authStore.token ? `Bearer ${authStore.token}` : '',
+          Authorization: `Bearer ${authStore.token}`,
         },
         credentials: 'include',
         onResponse: [refreshTokenInterceptor],
@@ -58,10 +56,9 @@ export const useWatcherStore = defineStore('watcher', () => {
   const create = async (watcher: Watcher) => {
     const { data } = await useFetch<Watcher>('/api/watchers', {
       method: 'POST',
-      baseURL: useRuntimeConfig().public.apiBaseUrl,
       body: watcher,
       headers: {
-        Authorization: authStore.token ? `Bearer ${authStore.token}` : '',
+        Authorization: `Bearer ${authStore.token}`,
       },
       credentials: 'include',
       onResponse: [refreshTokenInterceptor],
@@ -78,10 +75,9 @@ export const useWatcherStore = defineStore('watcher', () => {
   const update = async (watcher: Watcher) => {
     const { data } = await useFetch<Watcher>(`/api/watchers/${watcher.id}`, {
       method: 'PATCH',
-      baseURL: useRuntimeConfig().public.apiBaseUrl,
       body: watcher,
       headers: {
-        Authorization: authStore.token ? `Bearer ${authStore.token}` : '',
+        Authorization: `Bearer ${authStore.token}`,
       },
       credentials: 'include',
       onResponse: [refreshTokenInterceptor],
@@ -102,9 +98,8 @@ export const useWatcherStore = defineStore('watcher', () => {
   const remove = async (id: string) => {
     const { status } = await useFetch(`/api/watchers/${id}`, {
       method: 'DELETE',
-      baseURL: useRuntimeConfig().public.apiBaseUrl,
       headers: {
-        Authorization: authStore.token ? `Bearer ${authStore.token}` : '',
+        Authorization: `Bearer ${authStore.token}`,
       },
       credentials: 'include',
       onResponse: [refreshTokenInterceptor],
@@ -124,9 +119,8 @@ export const useWatcherStore = defineStore('watcher', () => {
   const stop = async (id: string) => {
     await useFetch(`/api/watchers/${id}/stop`, {
       method: 'POST',
-      baseURL: useRuntimeConfig().public.apiBaseUrl,
       headers: {
-        Authorization: authStore.token ? `Bearer ${authStore.token}` : '',
+        Authorization: `Bearer ${authStore.token}`,
       },
       credentials: 'include',
       onResponse: [refreshTokenInterceptor],
@@ -134,16 +128,15 @@ export const useWatcherStore = defineStore('watcher', () => {
 
     const index = watchers.value.findIndex((w) => w.id === id);
     if (index !== -1) {
-      watchers.value[index].status = 'stopped';
+      watchers.value[index]!.status = 'stopped';
     }
   };
 
   const start = async (id: string) => {
     await useFetch(`/api/watchers/${id}/start`, {
       method: 'POST',
-      baseURL: useRuntimeConfig().public.apiBaseUrl,
       headers: {
-        Authorization: authStore.token ? `Bearer ${authStore.token}` : '',
+        Authorization: `Bearer ${authStore.token}`,
       },
       credentials: 'include',
       onResponse: [refreshTokenInterceptor],
@@ -151,16 +144,15 @@ export const useWatcherStore = defineStore('watcher', () => {
 
     const index = watchers.value.findIndex((w) => w.id === id);
     if (index !== -1) {
-      watchers.value[index].status = 'active';
+      watchers.value[index]!.status = 'active';
     }
   };
 
   const trigger = async (id: string) => {
     await useFetch(`/api/watchers/${id}/trigger`, {
       method: 'POST',
-      baseURL: useRuntimeConfig().public.apiBaseUrl,
       headers: {
-        Authorization: authStore.token ? `Bearer ${authStore.token}` : '',
+        Authorization: `Bearer ${authStore.token}`,
       },
       credentials: 'include',
       onResponse: [refreshTokenInterceptor],

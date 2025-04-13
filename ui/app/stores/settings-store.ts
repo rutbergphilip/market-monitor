@@ -1,5 +1,3 @@
-import type { Setting } from '~/types';
-
 export const useSettingsStore = defineStore('settings', () => {
   const settings = ref<Setting[]>([]);
   const isLoading = ref(false);
@@ -30,11 +28,10 @@ export const useSettingsStore = defineStore('settings', () => {
     error.value = null;
 
     try {
-      const { data } = await useFetch<Setting[]>('/api/settings', {
+      const { data } = await useFetch('/api/settings', {
         method: 'GET',
-        baseURL: useRuntimeConfig().public.apiBaseUrl,
         headers: {
-          Authorization: authStore.token ? `Bearer ${authStore.token}` : '',
+          Authorization: `Bearer ${authStore.token}`,
         },
         credentials: 'include',
         onResponse: [refreshTokenInterceptor],
@@ -62,9 +59,8 @@ export const useSettingsStore = defineStore('settings', () => {
     try {
       const { data } = await useFetch<Setting[]>('/api/settings/defaults', {
         method: 'GET',
-        baseURL: useRuntimeConfig().public.apiBaseUrl,
         headers: {
-          Authorization: authStore.token ? `Bearer ${authStore.token}` : '',
+          Authorization: `Bearer ${authStore.token}`,
         },
         credentials: 'include',
         onResponse: [refreshTokenInterceptor],
@@ -89,12 +85,11 @@ export const useSettingsStore = defineStore('settings', () => {
     error.value = null;
 
     try {
-      const { data } = await useFetch<Setting>(`/api/settings/${key}`, {
+      const { data } = await useFetch(`/api/settings/${key}`, {
         method: 'PATCH',
-        baseURL: useRuntimeConfig().public.apiBaseUrl,
         body: { value },
         headers: {
-          Authorization: authStore.token ? `Bearer ${authStore.token}` : '',
+          Authorization: `Bearer ${authStore.token}`,
         },
         credentials: 'include',
         onResponse: [refreshTokenInterceptor],
@@ -107,7 +102,7 @@ export const useSettingsStore = defineStore('settings', () => {
       // Update the local state
       const index = settings.value.findIndex((s) => s.key === key);
       if (index !== -1) {
-        settings.value[index] = data.value;
+        settings.value[index] = data.value as Setting;
       }
 
       return data.value;
@@ -127,7 +122,6 @@ export const useSettingsStore = defineStore('settings', () => {
     try {
       const { data } = await useFetch('/api/settings/reset', {
         method: 'POST',
-        baseURL: useRuntimeConfig().public.apiBaseUrl,
         headers: {
           Authorization: authStore.token ? `Bearer ${authStore.token}` : '',
         },
