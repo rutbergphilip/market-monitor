@@ -34,7 +34,6 @@ RUN mkdir -p /data
 
 # Expose ports
 EXPOSE 3000
-EXPOSE 8080
 
 # Set environment variables
 ENV DB_PATH=/data/db.sqlite
