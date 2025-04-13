@@ -29,9 +29,6 @@ COPY ui/.output ./ui/.output
 # Copy supervisord configuration
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Create DB directory
-RUN mkdir -p /data
-
 # Expose ports
 EXPOSE 3000
 
