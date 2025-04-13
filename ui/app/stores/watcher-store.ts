@@ -1,5 +1,3 @@
-import type { Watcher } from '~/types';
-
 export const useWatcherStore = defineStore('watcher', () => {
   const watchers = ref<Watcher[]>([]);
   const activeWatchers = computed(() =>
