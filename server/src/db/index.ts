@@ -11,7 +11,6 @@ import bcrypt from 'bcrypt';
  */
 function determineDbPath(): string {
   if (process.env.NODE_ENV !== 'production') {
-    console.log('PATH:', path.join(__dirname, '.', 'db.sqlite'));
     return path.join(__dirname, '.', 'db.sqlite');
   }
 
