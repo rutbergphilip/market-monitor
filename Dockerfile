@@ -33,11 +33,12 @@ COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 EXPOSE 3000
 
 # Set environment variables
-ENV DB_PATH=/data/db.sqlite
+ENV DB_PATH=/data
 ENV SERVER_PORT=8080
 ENV UI_PORT=3000
 ENV API_BASE_URL=http://localhost:8080
 ENV HOST=0.0.0.0
+ENV NODE_ENV=production
 
 # Start supervisor
 CMD ["/usr/bin/supervisord", "-n"]
