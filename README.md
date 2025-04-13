@@ -136,7 +136,6 @@ Key environment variables:
 
 - `SERVER_PORT` (default: 8080): Backend API server port
 - `UI_PORT` (default: 3000): Frontend web UI port
-- `API_BASE_URL` (default: http://localhost:8080): URL where the API is accessible
 - `DB_PATH` (default: db.sqlite): Path to SQLite database file
 - `JWT_SECRET`: Secret key for JWT token generation (important to set in production)
 - `REFRESH_TOKEN_SECRET`: Secret key for refresh tokens (important to set in production)
