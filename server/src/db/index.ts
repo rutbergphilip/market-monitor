@@ -142,6 +142,24 @@ async function seedAdminUser() {
         now, // updated_at
       );
 
+      console.log(`
+┌───────────────────────────────────────────────┐
+│                                               │
+│            DEFAULT ADMIN CREATED              │
+│                                               │
+├───────────────────────────────────────────────┤
+│                                               │
+│  Username: admin                              │
+│  Password: admin                              │
+│  Email:    admin@admin.com                    │
+│                                               │
+│  User ID:  ${info.lastInsertRowid}            │
+│                                               │
+│  Role:     admin                              │
+│                                               │
+└───────────────────────────────────────────────┘
+      `);
+
       logger.info({
         message: 'Default admin account created',
         username: 'admin',
