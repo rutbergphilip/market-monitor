@@ -1,4 +1,4 @@
-# 🚀 Blocket Bot 2.0
+# 🚀 Blocket Bot
 
 Monitor Blocket listings effortlessly with a beautiful UI and get instant notifications for new ads—right in Discord!
 
@@ -6,16 +6,16 @@ Monitor Blocket listings effortlessly with a beautiful UI and get instant notifi
 
 - **Modern Web Dashboard**: Manage your watchers with an intuitive web interface.
 - **User Authentication**: Secure login system with JWT tokens and refresh token functionality.
-- **Multi-User Support**: Create accounts for multiple users with their own watchers and settings.
 - **Customizable Watchers**: Create multiple independent watchers with different queries.
 - **Real-time Notifications**:
   - Discord webhook notifications with rich embeds ✅
-  - Detailed listing information with prices and images
-  - Search query information included in notifications
+  - Detailed listing information with prices and images ✅
+  - Notification batching with configurable batch sizes ✅
+  - Automatic retry with exponential backoff for failed notifications ✅
 - **Flexible Scheduling**: Set custom cron schedules for each watcher.
-- **Price Range Filtering**: Filter listings by minimum and maximum price.
-- **Manual Trigger**: Run watchers on-demand without waiting for scheduled times.
-- **Configurable Settings**: Customize notification appearance and behavior.
+- **Price Range Filtering**: Filter listings by minimum and maximum price, ensuring you only get relevant notifications.
+- **Settings Management**: Global notification preferences and appearance options.
+- **Robust Error Handling**: Automatic retry mechanisms for network failures.
 - **Docker Ready**: Easy deployment with containerization support.
 
 ## 📸 Screenshots
@@ -34,6 +34,7 @@ Pull and run the Docker image:
 docker run -d \
   -p 3000:3000 -p 8080:8080 \
   -v blocket-bot-data:/app/server/src/db \
+  -e DB_PATH=/app/server/src/db \
   --name blocket-bot \
   rutbergphilip/blocket-bot:2.0.0
 ```
@@ -86,7 +87,6 @@ npm run dev
 - Secure user accounts with JWT authentication
 - Persistent sessions with refresh tokens
 - Token rotation for enhanced security
-- Session management with the ability to revoke tokens
 
 ### Watchers
 
@@ -99,50 +99,58 @@ npm run dev
 ### Notifications
 
 - **Discord Integration**:
-  - Customizable bot username and avatar
-  - Configurable retry settings
+  - Customizable bot username and avatar through settings UI
+  - Configurable retry settings with exponential backoff
+  - Smart batching system for multiple notifications
   - Detailed listing information with thumbnail images
   - Includes information about which query matched
-- **Email Notifications** (Coming soon)
+  - Resilient delivery with automatic retries on failures
 
 ### Settings Management
 
-- Configure global notification settings
-- Manage batching preferences
-- Set appearance options for notifications
-- User profile and security settings
+- Configure global notification settings through intuitive UI
+- Manage notification batching preferences and limits
+- Set appearance options for notifications (username, avatar)
+- User profile and security settings with password management
 - Account-specific preferences
+- Persistent settings stored in database
+- Default settings with ability to reset to factory defaults
 
 ## 🔜 Upcoming Features
 
-- **Email Notifications**: Send email alerts for new listings.
 - **Telegram Integration**: Get notified via Telegram.
-- **Enhanced Filters**: More advanced search filtering options.
-- **Two-Factor Authentication**: Additional security layer for user accounts.
+- **Email Notifications**: Receive notifications via email.
+- **Multi-User Support**: Create accounts for multiple users with their own watchers and settings.
+- **Enhanced Filters**: More advanced search filtering options (location, category, regex, etc.).
+- **Mobile Responsive Design**: Improved UI for mobile devices.
 
 ## 📝 Configuration Details
 
-The application now uses a database to store settings, which can be configured through the UI. Some settings that might be useful for advanced users:
+The application now uses a SQLite database to store all settings, watchers, and user accounts, which can be configured through the intuitive web UI. Here's a breakdown of available configuration options:
 
 ### Environment Variables
 
-For convenience, a `.env.example` file is included in the repository with default values and documentation. You can copy this file to create your own `.env` file:
-
-```sh
-cp .env.example .env
-```
-
-Key environment variables:
+Key environment variables that can be configured:
 
 - `SERVER_PORT` (default: 8080): Backend API server port
 - `UI_PORT` (default: 3000): Frontend web UI port
 - `DB_PATH` (default: db.sqlite): Path to SQLite database file
 - `JWT_SECRET`: Secret key for JWT token generation (important to set in production)
 - `REFRESH_TOKEN_SECRET`: Secret key for refresh tokens (important to set in production)
+- `LOG_LEVEL` (default: info): Logging verbosity (debug, info, warn, error)
+- `NODE_ENV`: Set to 'production' for optimized builds
 
-### Discord Notification Settings
+### Notification Settings
 
-Discord notification settings, such as the bot username, avatar URL, and retry behavior, are managed through the UI. Default values are used during initial setup, and users can customize these settings via the web interface.
+#### Discord Notification Settings
+
+Discord notification settings are fully customizable through the UI:
+
+- **Bot Username**: Change how the bot appears in Discord
+- **Avatar URL**: Customize the bot's profile picture
+- **Retry Settings**: Configure max retries and delay between attempts
+- **Webhook Management**: Add multiple webhooks to different watchers
+- **Batch Settings**: Control how many notifications are sent in a single batch
 
 ## 🔒 Security Considerations
 
@@ -159,6 +167,10 @@ Run with persistent storage:
 docker run -d \
   -p 3000:3000 -p 8080:8080 \
   -v blocket-bot-data:/app/server/src/db \
+  -e DB_PATH=/app/server/src/db \
+  -e JWT_SECRET=your_jwt_secret \
+  -e REFRESH_TOKEN_SECRET=your_refresh_token_secret \
+  -e LOG_LEVEL=info \
   --name blocket-bot \
   rutbergphilip/blocket-bot:2.0.0
 ```
@@ -169,6 +181,9 @@ For custom UI port:
 docker run -d \
   -p 4000:3000 -p 8080:8080 \
   -v blocket-bot-data:/app/server/src/db \
+  -e DB_PATH=/app/server/src/db \
+  -e JWT_SECRET=your_jwt_secret \
+  -e REFRESH_TOKEN_SECRET=your_refresh_token_secret \
   -e UI_PORT=3000 \
   --name blocket-bot \
   rutbergphilip/blocket-bot:2.0.0
@@ -178,6 +193,6 @@ docker run -d \
 
 This project is licensed under the MIT License.
 
-## ⭐ Star me!
+## ⭐ Star me
 
 If you like Blocket Bot, give it a ⭐!
