@@ -1,6 +1,6 @@
 import 'tsconfig-paths/register';
 
-import express, { Request } from 'express';
+import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import * as dotenv from 'dotenv';

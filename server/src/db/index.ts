@@ -1,12 +1,55 @@
 import Database from 'better-sqlite3';
 import path from 'path';
+import fs from 'fs';
 import logger from '@/integrations/logger';
 import bcrypt from 'bcrypt';
 
-const envDbPath = process.env.DB_PATH || 'db.sqlite';
-const dbPath = path.isAbsolute(envDbPath)
-  ? envDbPath
-  : path.join(__dirname, envDbPath);
+/**
+ * Determines the database path based on environment:
+ * - In non-production environments, it uses a local path.
+ * - In production, it requires the DB_PATH environment variable to be set.
+ */
+function determineDbPath(): string {
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('PATH:', path.join(__dirname, '.', 'db.sqlite'));
+    return path.join(__dirname, '.', 'db.sqlite');
+  }
+
+  if (!process.env.DB_PATH) {
+    throw new Error('DB_PATH environment variable is required in production.');
+  }
+
+  let dbPath = process.env.DB_PATH;
+
+  if (!dbPath.endsWith('db.sqlite')) {
+    if (dbPath.endsWith('/')) {
+      dbPath = `${dbPath}db.sqlite`;
+    } else {
+      dbPath = `${dbPath}/db.sqlite`;
+    }
+  }
+
+  dbPath = dbPath.replace(/\/\//g, '/');
+
+  return dbPath;
+}
+
+const dbPath = determineDbPath();
+
+const dbDir = path.dirname(dbPath);
+if (!fs.existsSync(dbDir)) {
+  logger.info({ message: `Creating database directory: ${dbDir}` });
+  try {
+    fs.mkdirSync(dbDir, { recursive: true });
+  } catch (error) {
+    logger.error({
+      message: `Failed to create database directory: ${dbDir}`,
+      error,
+    });
+  }
+}
+
+logger.info({ message: `Using database path: ${dbPath}` });
 const db = new Database(dbPath);
 
 export async function initializeDb() {
