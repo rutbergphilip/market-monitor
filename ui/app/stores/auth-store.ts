@@ -1,13 +1,3 @@
-export interface User {
-  id: string;
-  username: string;
-  email?: string;
-  role: string;
-  avatarUrl?: string;
-  created_at: string;
-  updated_at: string;
-}
-
 export const useAuthStore = defineStore(
   'auth',
   () => {
@@ -35,7 +25,6 @@ export const useAuthStore = defineStore(
           '/api/auth/refresh-token',
           {
             method: 'POST',
-            baseURL: useRuntimeConfig().public.apiBaseUrl,
             body: { refreshToken: refreshToken.value },
             credentials: 'include',
           }
@@ -48,7 +37,7 @@ export const useAuthStore = defineStore(
           return false;
         }
 
-        const response = data.value as { token: string; refreshToken: string };
+        const response = data.value;
         token.value = response.token;
         refreshToken.value = response.refreshToken;
 
@@ -69,13 +58,12 @@ export const useAuthStore = defineStore(
       try {
         const { data, error: fetchError } = await useFetch('/api/auth/login', {
           method: 'POST',
-          baseURL: useRuntimeConfig().public.apiBaseUrl,
           body: { username, password },
           credentials: 'include',
         });
 
         if (fetchError.value) {
-          const errorData = fetchError.value.data;
+          const errorData = fetchError.value.data?.data;
           error.value =
             errorData?.error || 'Failed to login. Please try again.';
           return false;
@@ -86,11 +74,7 @@ export const useAuthStore = defineStore(
           return false;
         }
 
-        const response = data.value as {
-          user: User;
-          token: string;
-          refreshToken: string;
-        };
+        const response = data.value as LoginResponse;
         user.value = response.user;
         token.value = response.token;
         refreshToken.value = response.refreshToken;
@@ -118,14 +102,13 @@ export const useAuthStore = defineStore(
           '/api/auth/register',
           {
             method: 'POST',
-            baseURL: useRuntimeConfig().public.apiBaseUrl,
             body: { username, password, email },
             credentials: 'include',
           }
         );
 
         if (fetchError.value) {
-          const errorData = fetchError.value.data;
+          const errorData = fetchError.value.data?.data;
           error.value =
             errorData?.error || 'Failed to register. Please try again.';
           return false;
@@ -136,11 +119,7 @@ export const useAuthStore = defineStore(
           return false;
         }
 
-        const response = data.value as {
-          user: User;
-          token: string;
-          refreshToken: string;
-        };
+        const response = data.value;
         user.value = response.user;
         token.value = response.token;
         refreshToken.value = response.refreshToken;
@@ -162,7 +141,6 @@ export const useAuthStore = defineStore(
       try {
         await useFetch('/api/auth/logout', {
           method: 'POST',
-          baseURL: useRuntimeConfig().public.apiBaseUrl,
           credentials: 'include',
           headers: {
             Authorization: `Bearer ${token.value}`,
@@ -191,7 +169,6 @@ export const useAuthStore = defineStore(
       try {
         const { data, error: fetchError } = await useFetch('/api/auth/me', {
           method: 'GET',
-          baseURL: useRuntimeConfig().public.apiBaseUrl,
           credentials: 'include',
           headers: {
             Authorization: `Bearer ${token.value}`,
@@ -209,7 +186,7 @@ export const useAuthStore = defineStore(
         }
 
         if (data.value) {
-          user.value = data.value as User;
+          user.value = data.value;
           return true;
         }
 
@@ -241,7 +218,6 @@ export const useAuthStore = defineStore(
           '/api/auth/profile',
           {
             method: 'PATCH',
-            baseURL: useRuntimeConfig().public.apiBaseUrl,
             body: {
               username: username !== undefined ? username : user.value.username,
               email: email !== undefined ? email : user.value.email,
@@ -268,7 +244,7 @@ export const useAuthStore = defineStore(
         }
 
         if (data.value) {
-          user.value = data.value as User;
+          user.value = data.value;
           return true;
         }
 
