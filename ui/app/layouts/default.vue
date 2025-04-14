@@ -3,18 +3,11 @@ const sidebarCollapsed = inject('sidebarCollapsed', ref(false));
 const isMobileMenuOpen = ref(false);
 const isMobile = ref(false);
 
-onMounted(() => {
-  checkMobile();
-  window.addEventListener('resize', checkMobile);
-});
+const { width } = useWindowSize();
 
-onUnmounted(() => {
-  window.removeEventListener('resize', checkMobile);
+watchEffect(() => {
+  isMobile.value = width.value < 1200;
 });
-
-function checkMobile() {
-  isMobile.value = window.innerWidth < 1024;
-}
 
 function openMobileMenu() {
   isMobileMenuOpen.value = true;

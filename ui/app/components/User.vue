@@ -3,7 +3,6 @@ const authStore = useAuthStore();
 const router = useRouter();
 
 const userName = computed(() => authStore.user?.username || 'User');
-// First character of username for avatar fallback
 const userInitial = computed(() =>
   (userName.value.charAt(0) || 'U').toUpperCase()
 );
@@ -15,7 +14,7 @@ async function handleSignOut() {
 </script>
 
 <template>
-  <div class="user-component py-2 mt-auto">
+  <div class="py-2 mt-auto">
     <div class="flex items-center justify-between">
       <div class="flex items-center">
         <UAvatar
@@ -51,9 +50,3 @@ async function handleSignOut() {
     </div>
   </div>
 </template>
-
-<style scoped>
-.user-component {
-  background-color: var(--color-background-soft, rgba(0, 0, 0, 0.02));
-}
-</style>
