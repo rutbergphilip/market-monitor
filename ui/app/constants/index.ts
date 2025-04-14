@@ -1,5 +1,3 @@
-import type { NotificationKind } from '~/types';
-
 export const NOTIFICATION_TARGETS: NotificationKind[] = ['DISCORD', 'EMAIL'];
 
 export const DISABLED_NOTIFICATION_TARGETS: NotificationKind[] = ['EMAIL'];
