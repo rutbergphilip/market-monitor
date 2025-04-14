@@ -23,9 +23,6 @@ COPY ui ./ui
 WORKDIR /app/ui
 RUN npm run build
 
-# Copy .output explicitly to make sure it's preserved
-COPY ui/.output ./ui/.output
-
 # Copy supervisord configuration
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
