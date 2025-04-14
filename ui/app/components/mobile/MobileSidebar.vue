@@ -45,31 +45,13 @@ const items = computed<NavigationMenuItem[][]>(() => [
 <template>
   <USlideover
     side="left"
+    title="Blocket Bot"
     :open="sidebarOpen"
     :close="{ onClick: statesStore.closeSidebar }"
     :dismissible="true"
   >
-    <template #content>
-      <div class="h-full flex flex-col w-full bg-white dark:bg-gray-900">
-        <div class="p-4 flex justify-end">
-          <UButton
-            class="w-min"
-            icon="i-heroicons-x-mark"
-            variant="ghost"
-            color="neutral"
-            aria-label="Close navigation menu"
-            @click="statesStore.closeSidebar"
-          />
-        </div>
-
-        <div class="flex-1 overflow-y-auto p-2 w-full">
-          <UNavigationMenu
-            orientation="vertical"
-            :items="items"
-            variant="pill"
-          />
-        </div>
-      </div>
+    <template #body>
+      <UNavigationMenu orientation="vertical" :items="items" variant="pill" />
     </template>
   </USlideover>
 </template>
