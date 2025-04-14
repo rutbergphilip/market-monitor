@@ -9,7 +9,6 @@ import WatcherModal from '~/components/modals/WatcherModal.vue';
 import ConfirmationModal from '~/components/modals/ConfirmationModal.vue';
 
 import type { TableColumn } from '@nuxt/ui';
-import type { Watcher, NotificationKind, Notification } from '~/types';
 
 const UButton = resolveComponent('UButton');
 const UBadge = resolveComponent('UBadge');
