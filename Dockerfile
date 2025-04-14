@@ -1,28 +1,43 @@
-FROM node:23-alpine AS builder
+FROM node:20-slim
 
+# Install supervisor
+RUN apt-get update && apt-get install -y supervisor && rm -rf /var/lib/apt/lists/*
+RUN mkdir -p /var/log/supervisor
+
+# Set working directory
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm ci
+# Copy package files separately for layer caching
+COPY server/package*.json ./server/
+COPY ui/package*.json ./ui/
 
-COPY . .
+# Install dependencies
+RUN cd server && npm install
+RUN cd ui && npm install
+
+# Copy application source code
+COPY server ./server
+COPY ui ./ui
+
+# Build UI
+WORKDIR /app/ui
 RUN npm run build
 
-FROM node:23-alpine
+# Copy .output explicitly to make sure it's preserved
+COPY ui/.output ./ui/.output
 
-WORKDIR /app
+# Copy supervisord configuration
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/tsconfig.json ./tsconfig.json
+# Expose ports
+EXPOSE 3000
 
-RUN apk add --no-cache curl
+# Set environment variables
+ENV DB_PATH=/data
+ENV SERVER_PORT=8080
+ENV UI_PORT=3000
+ENV HOST=0.0.0.0
+ENV NODE_ENV=production
 
-ENV PORT="8080"
-
-EXPOSE ${PORT}
-
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:${PORT}/health || exit 1
-
-  CMD ["node", "dist/index.js"]
+# Start supervisor
+CMD ["/usr/bin/supervisord", "-n"]
