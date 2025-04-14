@@ -19,7 +19,9 @@ async function openWatcherModal() {
 
 <template>
   <div class="flex flex-col gap-4">
-    <div class="flex justify-between items-center">
+    <div
+      class="flex md:flex-col flex-row justify-between md:items-start items-center"
+    >
       <div class="flex flex-col gap-2">
         <h1 class="text-3xl font-bold">Watchers</h1>
         <p class="text-lg">Manage your watchers.</p>
