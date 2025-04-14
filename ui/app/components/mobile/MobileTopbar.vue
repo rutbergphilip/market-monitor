@@ -13,7 +13,7 @@ const statesStore = useStatesStore();
     />
     <div class="ml-4 text-lg font-semibold">Blocket Bot</div>
     <div class="ml-auto">
-      <User />
+      <UserDropdown />
     </div>
   </div>
 </template>
