@@ -7,6 +7,23 @@ const userInitial = computed(() =>
   (userName.value.charAt(0) || 'U').toUpperCase()
 );
 
+const items = [
+  [
+    {
+      label: userName.value,
+      slot: 'account',
+      disabled: true,
+    },
+  ],
+  [
+    {
+      label: 'Sign out',
+      icon: 'i-heroicons-arrow-right-on-rectangle',
+      click: handleSignOut,
+    },
+  ],
+];
+
 async function handleSignOut() {
   await authStore.logout();
   router.push('/sign-in');
@@ -14,40 +31,35 @@ async function handleSignOut() {
 </script>
 
 <template>
-  <UPopover>
-    <UAvatar
-      :src="authStore.user?.avatarUrl"
-      :alt="userName"
-      :text="userInitial"
-      size="lg"
-      class="mr-2 hover:*:cursor-pointer ring-2 ring-gray-200 hover:ring-primary-300 transition-all duration-200 ease-in-out"
-    />
+  <UDropdownMenu :items="items">
+    <UButton
+      variant="ghost"
+      color="neutral"
+      :padded="false"
+      class="!p-0 !bg-transparent hover:!bg-transparent focus:!bg-transparent group"
+      aria-label="User menu"
+    >
+      <UAvatar
+        :src="authStore.user?.avatarUrl"
+        :alt="userName"
+        :text="userInitial"
+        size="lg"
+        class="ring-2 ring-gray-200 hover:ring-primary-400 hover:shadow-lg hover:scale-105 group-hover:ring-primary-500 transition-all duration-300 ease-out transform"
+      />
+    </UButton>
 
-    <template #content>
-      <div class="p-4">
-        <div class="ml-2">
-          <p class="text-sm font-medium">{{ userName }}</p>
-          <p
-            v-if="authStore.user?.email"
-            class="text-xs text-gray-500 truncate max-w-[100px]"
-          >
-            {{ authStore.user.email }}
-          </p>
-        </div>
-
-        <div class="flex items-center justify-between mt-2">
-          <UButton
-            variant="link"
-            icon="material-symbols:logout"
-            title="Sign out"
-            :ui="{
-              leadingIcon: 'scale-125',
-            }"
-            @click="handleSignOut"
-            >Sign out</UButton
-          >
-        </div>
+    <template #account>
+      <div class="text-left">
+        <p class="font-medium text-gray-900 dark:text-white">
+          {{ userName }}
+        </p>
+        <p
+          v-if="authStore.user?.email"
+          class="text-sm text-gray-500 dark:text-gray-400"
+        >
+          {{ authStore.user.email }}
+        </p>
       </div>
     </template>
-  </UPopover>
+  </UDropdownMenu>
 </template>
