@@ -3,7 +3,6 @@ import type { NavigationMenuItem } from '@nuxt/ui';
 
 const watcherStore = useWatcherStore();
 const authStore = useAuthStore();
-const router = useRouter();
 
 const { activeWatchers } = storeToRefs(watcherStore);
 const { isAuthenticated } = storeToRefs(authStore);
@@ -121,20 +120,7 @@ function toggleSidebar() {
         <User />
       </div>
       <div v-if="isAuthenticated && isCollapsed" class="self-center mt-auto">
-        <UTooltip
-          :text="authStore.user?.username || 'User'"
-          :delay-duration="250"
-          :content="{ side: 'right' }"
-        >
-          <UAvatar
-            :src="authStore.user?.avatarUrl"
-            :alt="authStore.user?.username || 'User'"
-            :text="(authStore.user?.username?.[0] || 'U').toUpperCase()"
-            size="sm"
-            class="cursor-pointer"
-            @click="router.push('/settings/account')"
-          />
-        </UTooltip>
+        <UserDropdown variant="compact" size="sm" />
       </div>
     </div>
   </UContainer>

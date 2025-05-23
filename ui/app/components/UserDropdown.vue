@@ -1,4 +1,16 @@
 <script lang="ts" setup>
+interface Props {
+  size?: 'sm' | 'md' | 'lg' | 'xl'
+  showName?: boolean
+  variant?: 'compact' | 'full'
+}
+
+const _props = withDefaults(defineProps<Props>(), {
+  size: 'lg',
+  showName: false,
+  variant: 'compact'
+})
+
 const authStore = useAuthStore();
 const router = useRouter();
 
@@ -17,6 +29,11 @@ const items = [
   ],
   [
     {
+      label: 'Settings',
+      icon: 'i-heroicons-cog-6-tooth',
+      to: '/settings/account'
+    },
+    {
       label: 'Sign out',
       icon: 'i-heroicons-arrow-right-on-rectangle',
       click: handleSignOut,
@@ -32,7 +49,9 @@ async function handleSignOut() {
 
 <template>
   <UDropdownMenu :items="items">
+    <!-- Compact variant (avatar only) -->
     <UButton
+      v-if="variant === 'compact'"
       variant="ghost"
       color="neutral"
       :padded="false"
@@ -43,9 +62,37 @@ async function handleSignOut() {
         :src="authStore.user?.avatarUrl"
         :alt="userName"
         :text="userInitial"
-        size="lg"
+        :size="size"
         class="ring-2 ring-gray-200 hover:ring-primary-400 hover:shadow-lg hover:scale-105 group-hover:ring-primary-500 transition-all duration-300 ease-out transform"
       />
+    </UButton>
+
+    <!-- Full variant (avatar + name) -->
+    <UButton
+      v-else
+      variant="ghost"
+      color="neutral"
+      :padded="true"
+      class="!bg-transparent hover:!bg-gray-100 dark:hover:!bg-gray-800 focus:!bg-transparent group justify-start w-full"
+      aria-label="User menu"
+    >
+      <div class="flex items-center space-x-3">
+        <UAvatar
+          :src="authStore.user?.avatarUrl"
+          :alt="userName"
+          :text="userInitial"
+          :size="size"
+          class="ring-2 ring-gray-200 group-hover:ring-primary-400 transition-all duration-300 ease-out"
+        />
+        <div v-if="showName || variant === 'full'" class="text-left">
+          <p class="text-sm font-medium text-gray-900 dark:text-white">
+            {{ userName }}
+          </p>
+          <p v-if="authStore.user?.email" class="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[120px]">
+            {{ authStore.user.email }}
+          </p>
+        </div>
+      </div>
     </UButton>
 
     <template #account>
