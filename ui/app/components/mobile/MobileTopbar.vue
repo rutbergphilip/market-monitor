@@ -12,7 +12,7 @@ const statesStore = useStatesStore();
       @click="statesStore.openSidebar"
     />
     <div class="ml-4 text-lg font-semibold">Blocket Bot</div>
-    <div class="ml-auto">
+    <div class="ml-auto flex items-center space-x-2">
       <UserDropdown />
     </div>
   </div>
