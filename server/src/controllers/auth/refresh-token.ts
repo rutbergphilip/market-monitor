@@ -28,7 +28,10 @@ export function refreshToken(req: Request, res: Response) {
     const decoded = verifyRefreshToken(tokenToVerify);
 
     if (!decoded) {
-      res.status(401).json({ error: 'Invalid or expired refresh token' });
+      res.status(401).json({
+        error: 'Invalid or expired refresh token',
+        code: 'INVALID_REFRESH_TOKEN',
+      });
       return;
     }
 
@@ -36,7 +39,10 @@ export function refreshToken(req: Request, res: Response) {
     const storedToken = RefreshTokenRepository.findValidToken(tokenToVerify);
 
     if (!storedToken) {
-      res.status(401).json({ error: 'Invalid or revoked refresh token' });
+      res.status(401).json({
+        error: 'Invalid or revoked refresh token',
+        code: 'REVOKED_REFRESH_TOKEN',
+      });
       return;
     }
 

@@ -21,24 +21,52 @@ export function generateRefreshToken(userId: string): string {
 
 export function verifyToken(token: string): { userId: string } | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as { userId: string };
+    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
+    return decoded;
   } catch (error) {
-    logger.warn({
-      message: 'Invalid JWT token',
-      error: error as Error,
-    });
+    if (error instanceof jwt.TokenExpiredError) {
+      logger.warn({
+        message: 'JWT token expired',
+        error: error.message,
+      });
+    } else if (error instanceof jwt.JsonWebTokenError) {
+      logger.warn({
+        message: 'Invalid JWT token',
+        error: error.message,
+      });
+    } else {
+      logger.warn({
+        message: 'JWT verification failed',
+        error: error as Error,
+      });
+    }
     return null;
   }
 }
 
 export function verifyRefreshToken(token: string): { userId: string } | null {
   try {
-    return jwt.verify(token, REFRESH_TOKEN_SECRET) as { userId: string };
+    const decoded = jwt.verify(token, REFRESH_TOKEN_SECRET) as {
+      userId: string;
+    };
+    return decoded;
   } catch (error) {
-    logger.warn({
-      message: 'Invalid refresh token',
-      error: error as Error,
-    });
+    if (error instanceof jwt.TokenExpiredError) {
+      logger.warn({
+        message: 'Refresh token expired',
+        error: error.message,
+      });
+    } else if (error instanceof jwt.JsonWebTokenError) {
+      logger.warn({
+        message: 'Invalid refresh token',
+        error: error.message,
+      });
+    } else {
+      logger.warn({
+        message: 'Refresh token verification failed',
+        error: error as Error,
+      });
+    }
     return null;
   }
 }
@@ -51,16 +79,23 @@ export function authenticateJWT(
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    // Fallback to cookie-based auth
     const token = req.cookies?.auth_token;
 
     if (!token) {
-      res.status(401).json({ error: 'Authentication required' });
+      res.status(401).json({
+        error: 'Authentication required',
+        code: 'NO_TOKEN',
+      });
       return;
     }
 
     const decoded = verifyToken(token);
     if (!decoded) {
-      res.status(401).json({ error: 'Invalid or expired token' });
+      res.status(401).json({
+        error: 'Invalid or expired token',
+        code: 'INVALID_TOKEN',
+      });
       return;
     }
 
@@ -72,9 +107,20 @@ export function authenticateJWT(
 
   const token = authHeader.split(' ')[1];
 
+  if (!token) {
+    res.status(401).json({
+      error: 'Bearer token is required',
+      code: 'NO_BEARER_TOKEN',
+    });
+    return;
+  }
+
   const decoded = verifyToken(token);
   if (!decoded) {
-    res.status(401).json({ error: 'Invalid or expired token' });
+    res.status(401).json({
+      error: 'Invalid or expired token',
+      code: 'INVALID_TOKEN',
+    });
     return;
   }
 
