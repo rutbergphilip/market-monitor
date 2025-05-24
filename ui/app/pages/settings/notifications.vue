@@ -2,6 +2,7 @@
 import DiscordNotifications from '~/components/settings/notifications/DiscordNotifications.vue';
 import EmailNotifications from '~/components/settings/notifications/EmailNotifications.vue';
 import BatchingSettings from '~/components/settings/notifications/BatchingSettings.vue';
+import type { Setting } from '../../../shared/types/settings';
 
 definePageMeta({
   layout: 'default',
@@ -169,7 +170,7 @@ onMounted(async () => {
 watch(
   () => settingsStore.settings,
   () => {
-    settingsStore.settings.forEach((setting) => {
+    settingsStore.settings.forEach((setting: Setting) => {
       const mapFn = settingsMap[setting.key as keyof typeof settingsMap];
       if (mapFn) {
         mapFn(setting.value);
@@ -365,8 +366,10 @@ async function testDiscordNotification() {
 
     await useFetch('/api/notifications/test/discord', {
       method: 'POST',
-      baseURL: useRuntimeConfig().public.apiBaseUrl,
-      body: [testMessage],
+      body: JSON.stringify([testMessage]),
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
 
     toast.add({

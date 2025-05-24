@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import BlocketQuerySettings from '~/components/settings/general/BlocketQuerySettings.vue';
+import type { Setting } from '../../../shared/types/settings';
 
 definePageMeta({
   layout: 'default',
@@ -63,7 +64,7 @@ onMounted(async () => {
 watch(
   () => settingsStore.settings,
   () => {
-    settings.value.forEach((setting) => {
+    settings.value.forEach((setting: Setting) => {
       const mapFn = settingsMap[setting.key as keyof typeof settingsMap];
       if (mapFn) {
         mapFn(setting.value);

@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import ProfileInformation from '~/components/settings/account/ProfileInformation.vue';
 import SecuritySettings from '~/components/settings/account/SecuritySettings.vue';
+import type { Setting } from '../../../shared/types/settings';
 
 definePageMeta({
   layout: 'default',
@@ -77,7 +78,7 @@ onMounted(async () => {
 watch(
   () => settingsStore.settings,
   () => {
-    settingsStore.settings.forEach((setting) => {
+    settingsStore.settings.forEach((setting: Setting) => {
       const mapFn = settingsMap[setting.key as keyof typeof settingsMap];
       if (mapFn) {
         mapFn(setting.value);
