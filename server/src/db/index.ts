@@ -195,10 +195,6 @@ async function seedAdminUser() {
 │  Password: admin                              │
 │  Email:    admin@admin.com                    │
 │                                               │
-│  User ID:  ${info.lastInsertRowid}            │
-│                                               │
-│  Role:     admin                              │
-│                                               │
 └───────────────────────────────────────────────┘
       `);
 
