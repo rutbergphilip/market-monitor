@@ -7,7 +7,7 @@ interface Props {
   variant?: 'compact' | 'full';
 }
 
-const _props = withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<Props>(), {
   size: 'lg',
   showName: false,
   variant: 'compact',
