@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import type { DropdownMenuItem } from '@nuxt/ui';
+
 interface Props {
   size?: 'sm' | 'md' | 'lg' | 'xl';
   showName?: boolean;
@@ -19,7 +21,7 @@ const userInitial = computed(() =>
   (userName.value.charAt(0) || 'U').toUpperCase()
 );
 
-const items = [
+const items: DropdownMenuItem[] | DropdownMenuItem[][] = [
   [
     {
       label: userName.value,
@@ -38,7 +40,8 @@ const items = [
     {
       label: 'Sign out',
       icon: 'i-heroicons-arrow-right-on-rectangle',
-      click: handleSignOut,
+      slot: 'sign-out',
+      disabled: true,
     },
   ],
 ];
@@ -115,6 +118,18 @@ async function handleSignOut() {
 
     <template #theme>
       <ColorModeToggle />
+    </template>
+
+    <template #sign-out>
+      <UButton
+        variant="ghost"
+        color="neutral"
+        class="w-full justify-start"
+        @click="handleSignOut"
+      >
+        <UIcon name="i-heroicons-arrow-right-on-rectangle" />
+        <span class="ml-2">Sign out</span>
+      </UButton>
     </template>
   </UDropdownMenu>
 </template>
