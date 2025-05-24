@@ -15,8 +15,7 @@ export const useAuthStore = defineStore(
 
     async function refreshAccessToken() {
       if (!refreshToken.value) {
-        user.value = null;
-        token.value = null;
+        await clearAuthData();
         return false;
       }
 
@@ -31,24 +30,45 @@ export const useAuthStore = defineStore(
         );
 
         if (fetchError.value || !data.value) {
-          user.value = null;
-          token.value = null;
-          refreshToken.value = null;
+          console.warn('Token refresh failed:', fetchError.value?.data?.error);
+          await clearAuthData();
           return false;
         }
 
         const response = data.value;
-        token.value = response.token;
-        refreshToken.value = response.refreshToken;
+
+        // Update tokens atomically
+        await updateTokens(response.token, response.refreshToken);
 
         return true;
       } catch (err) {
         console.error('Token refresh error:', err);
-        user.value = null;
-        token.value = null;
-        refreshToken.value = null;
+        await clearAuthData();
         return false;
       }
+    }
+
+    async function clearAuthData() {
+      user.value = null;
+      token.value = null;
+      refreshToken.value = null;
+
+      // Clear cookies as well
+      const authCookie = useCookie('auth_token');
+      const refreshCookie = useCookie('refresh_token');
+      authCookie.value = null;
+      refreshCookie.value = null;
+    }
+
+    async function updateTokens(newToken: string, newRefreshToken: string) {
+      token.value = newToken;
+      refreshToken.value = newRefreshToken;
+
+      // Update cookies to keep them in sync
+      const authCookie = useCookie('auth_token');
+      const refreshCookie = useCookie('refresh_token');
+      authCookie.value = newToken;
+      refreshCookie.value = newRefreshToken;
     }
 
     async function login(username: string, password: string) {
@@ -76,8 +96,7 @@ export const useAuthStore = defineStore(
 
         const response = data.value;
         user.value = response.user;
-        token.value = response.token;
-        refreshToken.value = response.refreshToken;
+        await updateTokens(response.token, response.refreshToken);
 
         return true;
       } catch (err) {
@@ -121,8 +140,7 @@ export const useAuthStore = defineStore(
 
         const response = data.value;
         user.value = response.user;
-        token.value = response.token;
-        refreshToken.value = response.refreshToken;
+        await updateTokens(response.token, response.refreshToken);
 
         return true;
       } catch (err) {
@@ -147,13 +165,12 @@ export const useAuthStore = defineStore(
           },
         });
 
-        user.value = null;
-        token.value = null;
-        refreshToken.value = null;
-
+        await clearAuthData();
         return true;
       } catch (err) {
         console.error('Logout error:', err);
+        // Clear data even if request fails
+        await clearAuthData();
         return false;
       } finally {
         loading.value = false;
@@ -280,19 +297,55 @@ export const useAuthStore = defineStore(
           ...((options.headers as Record<string, unknown>) || {}),
           Authorization: `Bearer ${token.value}`,
         },
+        credentials: 'include' as const,
       };
 
       let result = await useFetch<T>(url, authOptions);
 
+      // If we get a 401, try to refresh the token once and retry
       if (result.error.value?.status === 401) {
         const refreshed = await refreshAccessToken();
-        if (refreshed) {
+        if (refreshed && token.value) {
+          // Update auth header with new token and retry
           authOptions.headers.Authorization = `Bearer ${token.value}`;
           result = await useFetch<T>(url, authOptions);
+        } else {
+          // Refresh failed, redirect to login
+          await navigateTo('/sign-in');
+          throw new Error('Authentication failed');
         }
       }
 
       return result;
+    }
+
+    // Check if token is expired or will expire soon (within 5 minutes)
+    function isTokenExpired(token: string): boolean {
+      try {
+        const parts = token.split('.');
+        if (parts.length !== 3 || !parts[1]) return true;
+
+        const payload = JSON.parse(atob(parts[1]));
+        const expirationTime = payload.exp * 1000; // Convert to milliseconds
+        const currentTime = Date.now();
+        const fiveMinutes = 5 * 60 * 1000; // 5 minutes in milliseconds
+
+        return expirationTime - currentTime < fiveMinutes;
+      } catch (error) {
+        console.error('Error checking token expiration:', error);
+        return true; // Assume expired if we can't parse it
+      }
+    }
+
+    // Proactively refresh token if it's about to expire
+    async function checkAndRefreshToken(): Promise<boolean> {
+      if (!token.value) return false;
+
+      if (isTokenExpired(token.value)) {
+        return await refreshAccessToken();
+      }
+
+      return true;
     }
 
     return {
@@ -313,6 +366,7 @@ export const useAuthStore = defineStore(
       setRefreshToken,
       refreshAccessToken,
       fetchWithAuth,
+      checkAndRefreshToken,
     };
   },
   {
