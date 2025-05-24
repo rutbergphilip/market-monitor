@@ -23,11 +23,25 @@ export default defineNuxtConfig({
     '@nuxt/icon',
     '@nuxt/scripts',
     '@nuxt/ui',
+    '@nuxtjs/color-mode',
     'nuxt-auth-utils',
     '@pinia/nuxt',
     'pinia-plugin-persistedstate/nuxt',
     '@vueuse/nuxt',
   ],
+
+  colorMode: {
+    preference: 'system',
+    fallback: 'light',
+    hid: 'nuxt-color-mode-script',
+    globalName: '__BLOCKET_BOT_COLOR_MODE__',
+    componentName: 'ColorScheme',
+    classPrefix: '',
+    classSuffix: '',
+    storageKey: 'blocket-bot-color-mode-v2',
+    dataValue: 'theme',
+    storage: 'localStorage',
+  },
 
   css: ['~/assets/css/main.css'],
 
