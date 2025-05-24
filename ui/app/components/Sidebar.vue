@@ -19,7 +19,6 @@ const items = computed<NavigationMenuItem[][]>(() => [
       label: 'Settings',
       icon: 'i-lucide-settings',
       defaultOpen: true,
-      disabled: true,
       children: [
         {
           label: 'General',
@@ -51,14 +50,38 @@ function toggleSidebar() {
 
 <template>
   <UContainer
-    class="flex flex-col h-dvh py-5 gap-5 bg-neutral-900 border-r-[1px] border-r-neutral-800 dark:border-r-neutral-700 fixed left-0 top-0 z-10"
+    class="flex flex-col h-dvh py-5 gap-5 bg-white dark:bg-neutral-900 border-r-[1px] border-r-neutral-200 dark:border-r-neutral-800 fixed left-0 top-0 z-10"
     :class="{ 'w-16': isCollapsed, 'w-60': !isCollapsed }"
   >
     <header
       class="flex items-center justify-between"
       :class="{ 'justify-center': isCollapsed }"
     >
-      <h1 v-if="!isCollapsed" class="font-bold text-xl">Blocket Bot</h1>
+      <h1
+        v-if="!isCollapsed"
+        class="font-bold text-xl text-neutral-900 dark:text-white"
+      >
+        Blocket Bot
+      </h1>
+      <div v-if="!isCollapsed" class="flex items-center space-x-2">
+        <UTooltip
+          text="Collapse sidebar"
+          :delay-duration="250"
+          :content="{
+            side: 'bottom',
+          }"
+        >
+          <UButton
+            :ui="{
+              leadingIcon: 'scale-125',
+            }"
+            size="xl"
+            variant="ghost"
+            icon="tabler:layout-sidebar-left-collapse"
+            @click="toggleSidebar"
+          />
+        </UTooltip>
+      </div>
       <UTooltip
         v-if="isCollapsed"
         text="Expand sidebar"
@@ -74,24 +97,6 @@ function toggleSidebar() {
           size="xl"
           variant="ghost"
           icon="tabler:layout-sidebar-left-expand"
-          @click="toggleSidebar"
-        />
-      </UTooltip>
-      <UTooltip
-        v-else
-        text="Collapse sidebar"
-        :delay-duration="250"
-        :content="{
-          side: 'bottom',
-        }"
-      >
-        <UButton
-          :ui="{
-            leadingIcon: 'scale-125',
-          }"
-          size="xl"
-          variant="ghost"
-          icon="tabler:layout-sidebar-left-collapse"
           @click="toggleSidebar"
         />
       </UTooltip>

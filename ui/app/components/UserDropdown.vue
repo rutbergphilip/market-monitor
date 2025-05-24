@@ -1,15 +1,15 @@
 <script lang="ts" setup>
 interface Props {
-  size?: 'sm' | 'md' | 'lg' | 'xl'
-  showName?: boolean
-  variant?: 'compact' | 'full'
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  showName?: boolean;
+  variant?: 'compact' | 'full';
 }
 
 const _props = withDefaults(defineProps<Props>(), {
   size: 'lg',
   showName: false,
-  variant: 'compact'
-})
+  variant: 'compact',
+});
 
 const authStore = useAuthStore();
 const router = useRouter();
@@ -29,10 +29,12 @@ const items = [
   ],
   [
     {
-      label: 'Settings',
-      icon: 'i-heroicons-cog-6-tooth',
-      to: '/settings/account'
+      label: 'Theme',
+      slot: 'theme',
+      disabled: true,
     },
+  ],
+  [
     {
       label: 'Sign out',
       icon: 'i-heroicons-arrow-right-on-rectangle',
@@ -49,7 +51,6 @@ async function handleSignOut() {
 
 <template>
   <UDropdownMenu :items="items">
-    <!-- Compact variant (avatar only) -->
     <UButton
       v-if="variant === 'compact'"
       variant="ghost"
@@ -88,7 +89,10 @@ async function handleSignOut() {
           <p class="text-sm font-medium text-gray-900 dark:text-white">
             {{ userName }}
           </p>
-          <p v-if="authStore.user?.email" class="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[120px]">
+          <p
+            v-if="authStore.user?.email"
+            class="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[120px]"
+          >
             {{ authStore.user.email }}
           </p>
         </div>
@@ -107,6 +111,10 @@ async function handleSignOut() {
           {{ authStore.user.email }}
         </p>
       </div>
+    </template>
+
+    <template #theme>
+      <ColorModeToggle />
     </template>
   </UDropdownMenu>
 </template>
