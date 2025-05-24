@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  blocket-bot-test:
+    build: .
+    ports:
+      - '3000:3000'
+      - '8080:8080'
+    volumes:
+      # Named volume for database persistence
+      - blocket-bot-data:/app/data
+    environment:
+      # Database configuration
+      - DB_PATH=/app/data
+
+      # Security configuration
+      - JWT_SECRET=${JWT_SECRET:-change_this_in_production}
+      - REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET:-change_this_in_production}
+
+      # Application configuration
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - NODE_ENV=production
+      - SERVER_PORT=8080
+      - UI_PORT=3000
+      - HOST=0.0.0.0
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'wget',
+          '--no-verbose',
+          '--tries=1',
+          '--spider',
+          'http://localhost:8080/api/health',
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  blocket-bot-data:
+    driver: local

@@ -5,32 +5,35 @@ import logger from '@/integrations/logger';
 import bcrypt from 'bcrypt';
 
 /**
- * Determines the database path based on environment:
- * - In non-production environments, it uses a local path.
- * - In production, it requires the DB_PATH environment variable to be set.
+ * Determines the database path with enhanced flexibility for different deployment scenarios:
+ * - Supports DB_PATH environment variable (directory or full file path)
+ * - Provides sensible defaults for development and production
+ * - Handles Kubernetes persistent volume scenarios
  */
 function determineDbPath(): string {
-  if (process.env.NODE_ENV !== 'production') {
-    return path.join(__dirname, '.', 'db.sqlite');
-  }
+  let dbPath: string;
 
-  if (!process.env.DB_PATH) {
-    throw new Error('DB_PATH environment variable is required in production.');
-  }
-
-  let dbPath = process.env.DB_PATH;
-
-  if (!dbPath.endsWith('db.sqlite')) {
-    if (dbPath.endsWith('/')) {
-      dbPath = `${dbPath}db.sqlite`;
+  // Priority 1: Use DB_PATH environment variable if provided
+  if (process.env.DB_PATH) {
+    dbPath = process.env.DB_PATH;
+    
+    // If DB_PATH points to a directory, append the database filename
+    if (!dbPath.includes('.sqlite') && !dbPath.includes('.db')) {
+      dbPath = path.join(dbPath, 'db.sqlite');
+    }
+  } else {
+    // Priority 2: Environment-based defaults
+    if (process.env.NODE_ENV === 'production') {
+      // Production default - suitable for Docker/K8s persistent volumes
+      dbPath = '/app/data/db.sqlite';
     } else {
-      dbPath = `${dbPath}/db.sqlite`;
+      // Development default - local directory
+      dbPath = path.join(__dirname, 'db.sqlite');
     }
   }
 
-  dbPath = dbPath.replace(/\/\//g, '/');
-
-  return dbPath;
+  // Normalize and resolve the path
+  return path.resolve(dbPath);
 }
 
 const dbPath = determineDbPath();

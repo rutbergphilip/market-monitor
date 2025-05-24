@@ -33,8 +33,22 @@ Pull and run the Docker image:
 ```sh
 docker run -d \
   -p 3000:3000 -p 8080:8080 \
-  -v blocket-bot-data:/app/server/src/db \
-  -e DB_PATH=/app/server/src/db \
+  -v blocket-bot-data:/app/data \
+  -e JWT_SECRET=your_secure_jwt_secret \
+  -e REFRESH_TOKEN_SECRET=your_secure_refresh_secret \
+  --name blocket-bot \
+  rutbergphilip/blocket-bot:2.0.0
+```
+
+For custom database path:
+
+```sh
+docker run -d \
+  -p 3000:3000 -p 8080:8080 \
+  -v /host/path/to/data:/app/data \
+  -e DB_PATH=/app/data \
+  -e JWT_SECRET=your_secure_jwt_secret \
+  -e REFRESH_TOKEN_SECRET=your_secure_refresh_secret \
   --name blocket-bot \
   rutbergphilip/blocket-bot:2.0.0
 ```
@@ -134,11 +148,16 @@ Key environment variables that can be configured:
 
 - `SERVER_PORT` (default: 8080): Backend API server port
 - `UI_PORT` (default: 3000): Frontend web UI port
-- `DB_PATH` (default: db.sqlite): Path to SQLite database file
-- `JWT_SECRET`: Secret key for JWT token generation (important to set in production)
-- `REFRESH_TOKEN_SECRET`: Secret key for refresh tokens (important to set in production)
+- `DB_PATH`: Path to SQLite database file or directory
+  - If directory: database file will be created as `{DB_PATH}/db.sqlite`
+  - If file path: used directly (must end with `.sqlite` or `.db`)
+  - Production default: `/app/data/db.sqlite`
+  - Development default: `./server/src/db.sqlite`
+- `JWT_SECRET`: Secret key for JWT token generation (required in production)
+- `REFRESH_TOKEN_SECRET`: Secret key for refresh tokens (required in production)
 - `LOG_LEVEL` (default: info): Logging verbosity (debug, info, warn, error)
 - `NODE_ENV`: Set to 'production' for optimized builds
+- `HOST` (default: 0.0.0.0): Host to bind the server to
 
 ### Notification Settings
 
@@ -161,32 +180,49 @@ Discord notification settings are fully customizable through the UI:
 
 ## 🐳 Docker Deployment
 
-Run with persistent storage:
+### Basic deployment with persistent storage:
 
 ```sh
 docker run -d \
   -p 3000:3000 -p 8080:8080 \
-  -v blocket-bot-data:/app/server/src/db \
-  -e DB_PATH=/app/server/src/db \
-  -e JWT_SECRET=your_jwt_secret \
-  -e REFRESH_TOKEN_SECRET=your_refresh_token_secret \
+  -v blocket-bot-data:/app/data \
+  -e JWT_SECRET=your_secure_jwt_secret \
+  -e REFRESH_TOKEN_SECRET=your_secure_refresh_secret \
   -e LOG_LEVEL=info \
   --name blocket-bot \
   rutbergphilip/blocket-bot:2.0.0
 ```
 
-For custom UI port:
+### Using Docker Compose:
 
 ```sh
-docker run -d \
-  -p 4000:3000 -p 8080:8080 \
-  -v blocket-bot-data:/app/server/src/db \
-  -e DB_PATH=/app/server/src/db \
-  -e JWT_SECRET=your_jwt_secret \
-  -e REFRESH_TOKEN_SECRET=your_refresh_token_secret \
-  -e UI_PORT=3000 \
-  --name blocket-bot \
-  rutbergphilip/blocket-bot:2.0.0
+# Production
+docker-compose up -d
+
+# Development with local bind mount
+docker-compose --profile dev up -d blocket-bot-dev
+```
+
+### Kubernetes Deployment
+
+For Kubernetes deployment, ensure you have:
+
+1. **Persistent Volume** for database storage mounted at `/app/data`
+2. **Environment variables** configured via ConfigMap/Secret:
+   - `DB_PATH=/app/data` (or custom path)
+   - `JWT_SECRET` and `REFRESH_TOKEN_SECRET` (via Secret)
+   - `LOG_LEVEL`, `NODE_ENV`, etc. (via ConfigMap)
+
+Example volume configuration:
+
+```yaml
+volumeMounts:
+  - name: data-storage
+    mountPath: /app/data
+volumes:
+  - name: data-storage
+    persistentVolumeClaim:
+      claimName: blocket-bot-pvc
 ```
 
 ## 📜 License

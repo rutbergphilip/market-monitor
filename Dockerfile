@@ -26,15 +26,21 @@ RUN npm run build
 # Copy supervisord configuration
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Expose ports
-EXPOSE 3000
+# Create data directory for database persistence
+RUN mkdir -p /app/data && chown -R node:node /app/data
 
-# Set environment variables
-ENV DB_PATH=/data
+# Expose ports
+EXPOSE 3000 8080
+
+# Set environment variables with K8s-friendly defaults
+ENV DB_PATH=/app/data
 ENV SERVER_PORT=8080
 ENV UI_PORT=3000
 ENV HOST=0.0.0.0
 ENV NODE_ENV=production
+
+# Define volume for database persistence
+VOLUME ["/app/data"]
 
 # Start supervisor
 CMD ["/usr/bin/supervisord", "-n"]
