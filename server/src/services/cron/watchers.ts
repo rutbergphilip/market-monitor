@@ -2,7 +2,7 @@ import { CronJob } from 'cron';
 import client, { type BlocketAd } from 'blocket.js';
 import logger from '@/integrations/logger';
 import { notifyAboutAds } from '@/services/notification';
-import { BLOCKET_QUERY } from '@/constants/cron';
+import { BLOCKET_QUERY, BLOCKET_PAGINATION_CONFIG } from '@/constants/cron';
 import { SettingRepository } from '@/db/repositories';
 import { SettingKey } from '@/types/settings';
 import type { Watcher } from '@/types/watchers';
@@ -112,7 +112,7 @@ async function withApiRetry<T>(
 }
 
 /**
- * Fetches Blocket data for a specific watcher with multiple queries support
+ * Fetches Blocket data for a specific watcher with multiple queries support and pagination
  * @param watcher - The watcher to fetch ads for
  * @returns {Promise<BlocketAd[]>}
  */
@@ -126,53 +126,106 @@ async function fetchAdsForWatcher(watcher: Watcher): Promise<BlocketAd[]> {
       ? watcher.queries.filter((q) => q.enabled !== false)
       : [{ query: watcher.query, enabled: true }]; // Fallback to main query
 
+  const maxPages = BLOCKET_PAGINATION_CONFIG.maxPages;
+
   for (const queryObj of queries) {
     try {
-      const queryConfig = { ...BLOCKET_QUERY, query: queryObj.query };
+      let currentPage = 1;
+      let hasMorePages = true;
 
-      // Use retry mechanism for API calls with enhanced timeout handling
-      const ads = await withApiRetry(async () => {
-        logger.debug({
-          message: `Fetching ads for query: ${queryObj.query}`,
-          watcherId: watcher.id,
-          query: queryObj.query,
-        });
-
-        // Configure timeout for this specific call
-        const apiTimeout = parseInt(
-          SettingRepository.getValue(SettingKey.BLOCKET_API_TIMEOUT) || '15000',
-        );
-
-        // Create a timeout promise that will reject after the configured timeout
-        const timeoutPromise = new Promise<never>((_, reject) => {
-          setTimeout(() => {
-            reject(
-              new Error(
-                `Blocket API request timed out after ${apiTimeout}ms for query: ${queryObj.query}`,
-              ),
-            );
-          }, apiTimeout);
-        });
-
-        // Race between the API call and timeout
-        const apiCallPromise = client.find(queryConfig);
-
-        return await Promise.race([apiCallPromise, timeoutPromise]);
+      logger.debug({
+        message: `Starting paginated fetch for query: ${queryObj.query}`,
+        watcherId: watcher.id,
+        query: queryObj.query,
+        maxPages,
       });
 
-      if (ads && Array.isArray(ads)) {
-        // Add to map to avoid duplicates
-        for (const ad of ads) {
-          if (!adMap.has(ad.ad_id)) {
-            adMap.set(ad.ad_id, ad);
-          }
-        }
+      while (hasMorePages && currentPage <= maxPages) {
+        const queryConfig = {
+          ...BLOCKET_QUERY,
+          query: queryObj.query,
+          page: currentPage,
+        };
 
-        logger.debug({
-          message: `Successfully fetched ${ads.length} ads for query`,
+        // Use retry mechanism for API calls with enhanced timeout handling
+        const ads = await withApiRetry(async () => {
+          logger.debug({
+            message: `Fetching ads for query page ${currentPage}/${maxPages}: ${queryObj.query}`,
+            watcherId: watcher.id,
+            query: queryObj.query,
+            page: currentPage,
+          });
+
+          // Configure timeout for this specific call
+          const apiTimeout = parseInt(
+            SettingRepository.getValue(SettingKey.BLOCKET_API_TIMEOUT) ||
+              '15000',
+          );
+
+          // Create a timeout promise that will reject after the configured timeout
+          const timeoutPromise = new Promise<never>((_, reject) => {
+            setTimeout(() => {
+              reject(
+                new Error(
+                  `Blocket API request timed out after ${apiTimeout}ms for query: ${queryObj.query} (page ${currentPage})`,
+                ),
+              );
+            }, apiTimeout);
+          });
+
+          // Race between the API call and timeout
+          const apiCallPromise = client.find(queryConfig);
+
+          return await Promise.race([apiCallPromise, timeoutPromise]);
+        });
+
+        if (ads && Array.isArray(ads)) {
+          // Add to map to avoid duplicates
+          for (const ad of ads) {
+            if (!adMap.has(ad.ad_id)) {
+              adMap.set(ad.ad_id, ad);
+            }
+          }
+
+          logger.debug({
+            message: `Successfully fetched ${ads.length} ads for query page ${currentPage}`,
+            watcherId: watcher.id,
+            query: queryObj.query,
+            page: currentPage,
+            adsCount: ads.length,
+          });
+
+          // Check if we should continue to next page
+          // If we got fewer results than the limit, we've reached the end
+          const currentLimit = BLOCKET_QUERY.limit || 60;
+          if (ads.length < currentLimit) {
+            hasMorePages = false;
+            logger.debug({
+              message: `Reached end of results for query (got ${ads.length} < ${currentLimit})`,
+              watcherId: watcher.id,
+              query: queryObj.query,
+              page: currentPage,
+            });
+          } else {
+            currentPage++;
+          }
+        } else {
+          hasMorePages = false;
+          logger.debug({
+            message: `No results for query page ${currentPage}`,
+            watcherId: watcher.id,
+            query: queryObj.query,
+            page: currentPage,
+          });
+        }
+      }
+
+      if (currentPage > maxPages) {
+        logger.warn({
+          message: `Reached maximum pages limit (${maxPages}) for query`,
           watcherId: watcher.id,
           query: queryObj.query,
-          adsCount: ads.length,
+          maxPages,
         });
       }
     } catch (error) {
@@ -192,6 +245,7 @@ async function fetchAdsForWatcher(watcher: Watcher): Promise<BlocketAd[]> {
     watcherId: watcher.id,
     queriesCount: queries.length,
     totalAds: totalAds.length,
+    maxPagesPerQuery: maxPages,
   });
 
   return totalAds;
