@@ -6,7 +6,7 @@ import { RefreshTokenRepository } from '@/db/repositories';
 const JWT_SECRET = process.env.JWT_SECRET || 'blocket-bot-secret-key';
 const REFRESH_TOKEN_SECRET =
   process.env.REFRESH_TOKEN_SECRET || 'blocket-bot-refresh-secret-key';
-const TOKEN_EXPIRY = '24h';
+const TOKEN_EXPIRY = '48h';
 const REFRESH_TOKEN_EXPIRY = '30d';
 
 export function generateToken(userId: string): string {
