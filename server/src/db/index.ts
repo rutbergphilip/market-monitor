@@ -6,29 +6,25 @@ import bcrypt from 'bcrypt';
 
 /**
  * Determines the database path with enhanced flexibility for different deployment scenarios:
- * - Supports DB_PATH environment variable (directory or full file path)
- * - Provides sensible defaults for development and production
+ * - In non-production environments, always uses local directory
+ * - In production, supports DB_PATH environment variable (directory or full file path)
  * - Handles Kubernetes persistent volume scenarios
  */
 function determineDbPath(): string {
   let dbPath: string;
 
-  // Priority 1: Use DB_PATH environment variable if provided
-  if (process.env.DB_PATH) {
-    dbPath = process.env.DB_PATH;
-    
-    // If DB_PATH points to a directory, append the database filename
-    if (!dbPath.includes('.sqlite') && !dbPath.includes('.db')) {
-      dbPath = path.join(dbPath, 'db.sqlite');
-    }
+  // In non-production environments, always use local directory
+  if (process.env.NODE_ENV !== 'production') {
+    dbPath = path.join(__dirname, 'db.sqlite');
   } else {
-    // Priority 2: Environment-based defaults
-    if (process.env.NODE_ENV === 'production') {
-      // Production default - suitable for Docker/K8s persistent volumes
-      dbPath = '/app/data/db.sqlite';
+    if (process.env.DB_PATH) {
+      dbPath = process.env.DB_PATH;
+
+      if (!dbPath.includes('.sqlite') && !dbPath.includes('.db')) {
+        dbPath = path.join(dbPath, 'db.sqlite');
+      }
     } else {
-      // Development default - local directory
-      dbPath = path.join(__dirname, 'db.sqlite');
+      dbPath = '/app/data/db.sqlite';
     }
   }
 
@@ -43,15 +39,27 @@ if (!fs.existsSync(dbDir)) {
   logger.info({ message: `Creating database directory: ${dbDir}` });
   try {
     fs.mkdirSync(dbDir, { recursive: true });
+    logger.info({
+      message: `Successfully created database directory: ${dbDir}`,
+    });
   } catch (error) {
     logger.error({
       message: `Failed to create database directory: ${dbDir}`,
       error,
     });
+    throw new Error(
+      `Cannot create database directory: ${dbDir}. Error: ${(error as Error).message}`,
+    );
   }
 }
 
 logger.info({ message: `Using database path: ${dbPath}` });
+
+// Verify the directory exists before creating the database
+if (!fs.existsSync(dbDir)) {
+  throw new Error(`Database directory does not exist: ${dbDir}`);
+}
+
 const db = new Database(dbPath);
 
 export async function initializeDb() {
