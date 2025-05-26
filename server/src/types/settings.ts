@@ -41,6 +41,9 @@ export enum SettingKey {
   ACCOUNT_PROFILE_USERNAME = 'account.profile.username',
   ACCOUNT_PROFILE_EMAIL = 'account.profile.email',
   ACCOUNT_PROFILE_AVATAR_URL = 'account.profile.avatarUrl',
+
+  // Security settings
+  SECURITY_TOKEN_EXPIRY = 'security.token.expiry',
 }
 
 // Settings defaults
@@ -149,5 +152,11 @@ export const DEFAULT_SETTINGS: Record<
   [SettingKey.ACCOUNT_PROFILE_AVATAR_URL]: {
     value: '',
     description: 'Avatar URL for user profile',
+  },
+
+  // Security settings
+  [SettingKey.SECURITY_TOKEN_EXPIRY]: {
+    value: '48h',
+    description: 'JWT token expiration time (e.g., 1h, 24h, 48h, 7d, or "never" for no expiry)',
   },
 };
