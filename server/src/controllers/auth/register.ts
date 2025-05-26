@@ -5,10 +5,28 @@ import { generateToken, generateRefreshToken } from '@/middlewares/security';
 import logger from '@/integrations/logger';
 
 export async function register(req: Request, res: Response) {
+  const userAgent = req.headers['user-agent'] || 'Unknown';
+  const clientIp = req.ip || req.connection.remoteAddress || 'Unknown';
+
   try {
     const { username, email, password } = req.body;
 
+    logger.info({
+      message: 'Registration attempt started',
+      username,
+      email,
+      userAgent,
+      clientIp,
+    });
+
     if (!username || !password) {
+      logger.warn({
+        message: 'Registration failed: Missing required fields',
+        username,
+        email,
+        userAgent,
+        clientIp,
+      });
       res.status(400).json({
         error: 'Username and password are required',
       });
@@ -36,14 +54,28 @@ export async function register(req: Request, res: Response) {
 
       if (!storedToken) {
         logger.error({
-          message: 'Failed to store refresh token for new user',
+          message:
+            'Registration failed: Failed to store refresh token for new user',
           userId: newUser.id,
+          username,
+          userAgent,
+          clientIp,
         });
         res
           .status(500)
           .json({ error: 'Failed to create authentication session' });
         return;
       }
+
+      logger.info({
+        message: 'Registration successful',
+        userId: newUser.id,
+        username,
+        email,
+        refreshTokenId: storedToken.id,
+        userAgent,
+        clientIp,
+      });
 
       // Set cookies for browser clients
       res.cookie('auth_token', token, {
@@ -66,6 +98,14 @@ export async function register(req: Request, res: Response) {
     } catch (error) {
       // Handle duplicate username or email
       if ((error as Error).message.includes('already exists')) {
+        logger.warn({
+          message: 'Registration failed: Username or email already exists',
+          username,
+          email,
+          error: (error as Error).message,
+          userAgent,
+          clientIp,
+        });
         res.status(409).json({ error: (error as Error).message });
         return;
       }
@@ -75,6 +115,10 @@ export async function register(req: Request, res: Response) {
     logger.error({
       error: error as Error,
       message: 'Register error',
+      username: req.body?.username,
+      email: req.body?.email,
+      userAgent,
+      clientIp,
     });
     res.status(500).json({ error: 'An error occurred during registration' });
   }
