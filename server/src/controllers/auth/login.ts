@@ -5,10 +5,26 @@ import { generateToken, generateRefreshToken } from '@/middlewares/security';
 import logger from '@/integrations/logger';
 
 export async function login(req: Request, res: Response) {
+  const userAgent = req.headers['user-agent'] || 'Unknown';
+  const clientIp = req.ip || req.connection.remoteAddress || 'Unknown';
+
   try {
     const { username, password } = req.body;
 
+    logger.info({
+      message: 'Login attempt started',
+      username,
+      userAgent,
+      clientIp,
+    });
+
     if (!username || !password) {
+      logger.warn({
+        message: 'Login failed: Missing credentials',
+        username,
+        userAgent,
+        clientIp,
+      });
       res.status(400).json({ error: 'Username and password are required' });
       return;
     }
@@ -16,6 +32,12 @@ export async function login(req: Request, res: Response) {
     const user = await UserRepository.validateUser(username, password);
 
     if (!user) {
+      logger.warn({
+        message: 'Login failed: Invalid credentials',
+        username,
+        userAgent,
+        clientIp,
+      });
       res.status(401).json({ error: 'Invalid username or password' });
       return;
     }
@@ -34,14 +56,26 @@ export async function login(req: Request, res: Response) {
 
     if (!storedToken) {
       logger.error({
-        message: 'Failed to store refresh token',
+        message: 'Login failed: Failed to store refresh token',
         userId: user.id,
+        username,
+        userAgent,
+        clientIp,
       });
       res
         .status(500)
         .json({ error: 'Failed to create authentication session' });
       return;
     }
+
+    logger.info({
+      message: 'Login successful',
+      userId: user.id,
+      username,
+      refreshTokenId: storedToken.id,
+      userAgent,
+      clientIp,
+    });
 
     // Set cookies for browser clients
     res.cookie('auth_token', token, {
@@ -68,6 +102,9 @@ export async function login(req: Request, res: Response) {
     logger.error({
       error: error as Error,
       message: 'Login error',
+      username: req.body?.username,
+      userAgent,
+      clientIp,
     });
     res.status(500).json({ error: 'An error occurred during login' });
   }
