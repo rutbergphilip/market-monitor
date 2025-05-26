@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import BlocketQuerySettings from '~/components/settings/general/BlocketQuerySettings.vue';
+import BlocketApiSettings from '~/components/settings/general/BlocketApiSettings.vue';
 import type { Setting } from '../../../shared/types/settings';
 
 definePageMeta({
@@ -22,7 +23,16 @@ type BlocketQueryRef = {
   };
 };
 
+type BlocketApiRef = {
+  blocketApiState: {
+    maxRetries: number;
+    retryDelay: number;
+    timeout: number;
+  };
+};
+
 const blocketQueryRef = ref<BlocketQueryRef | null>(null);
+const blocketApiRef = ref<BlocketApiRef | null>(null);
 
 const isLoading = ref(true);
 const isSaving = ref(false);
@@ -53,6 +63,18 @@ const settingsMap = {
   'blocket.query.include': (value: string) => {
     if (blocketQueryRef.value)
       blocketQueryRef.value.blocketQueryState.include = value;
+  },
+  'blocket.api.max_retries': (value: string) => {
+    if (blocketApiRef.value)
+      blocketApiRef.value.blocketApiState.maxRetries = parseInt(value) || 5;
+  },
+  'blocket.api.retry_delay': (value: string) => {
+    if (blocketApiRef.value)
+      blocketApiRef.value.blocketApiState.retryDelay = parseInt(value) || 3000;
+  },
+  'blocket.api.timeout': (value: string) => {
+    if (blocketApiRef.value)
+      blocketApiRef.value.blocketApiState.timeout = parseInt(value) || 15000;
   },
 };
 
@@ -128,6 +150,45 @@ async function saveBlocketQuerySettings() {
       color: 'error',
     });
     console.error('Failed to save Blocket query settings:', error);
+  } finally {
+    isSaving.value = false;
+  }
+}
+
+async function saveBlocketApiSettings() {
+  if (!blocketApiRef.value) return;
+
+  isSaving.value = true;
+  try {
+    const apiSettings = [
+      {
+        key: 'blocket.api.max_retries',
+        value: blocketApiRef.value.blocketApiState.maxRetries.toString(),
+      },
+      {
+        key: 'blocket.api.retry_delay',
+        value: blocketApiRef.value.blocketApiState.retryDelay.toString(),
+      },
+      {
+        key: 'blocket.api.timeout',
+        value: blocketApiRef.value.blocketApiState.timeout.toString(),
+      },
+    ];
+
+    await updateSettings(apiSettings);
+
+    toast.add({
+      title: 'Success',
+      description: 'Blocket API settings saved',
+      color: 'success',
+    });
+  } catch (error) {
+    toast.add({
+      title: 'Error',
+      description: 'Failed to save Blocket API settings',
+      color: 'error',
+    });
+    console.error('Failed to save Blocket API settings:', error);
   } finally {
     isSaving.value = false;
   }
@@ -228,6 +289,26 @@ async function resetSettings() {
               'extend_with_shipping',
           }"
           @save="saveBlocketQuerySettings"
+        />
+
+        <BlocketApiSettings
+          ref="blocketApiRef"
+          :is-loading="isLoading"
+          :is-saving="isSaving"
+          :settings="{
+            maxRetries:
+              parseInt(
+                settingsStore.getSettingValue('blocket.api.max_retries')
+              ) || 5,
+            retryDelay:
+              parseInt(
+                settingsStore.getSettingValue('blocket.api.retry_delay')
+              ) || 3000,
+            timeout:
+              parseInt(settingsStore.getSettingValue('blocket.api.timeout')) ||
+              15000,
+          }"
+          @save="saveBlocketApiSettings"
         />
       </div>
     </div>

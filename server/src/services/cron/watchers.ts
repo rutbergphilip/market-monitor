@@ -3,6 +3,8 @@ import client, { type BlocketAd } from 'blocket.js';
 import logger from '@/integrations/logger';
 import { notifyAboutAds } from '@/services/notification';
 import { BLOCKET_QUERY } from '@/constants/cron';
+import { SettingRepository } from '@/db/repositories';
+import { SettingKey } from '@/types/settings';
 import type { Watcher } from '@/types/watchers';
 import eventEmitter, { WatcherEvents } from '@/events';
 
@@ -10,13 +12,189 @@ const watcherJobs = new Map<string, CronJob>();
 const watcherCaches = new Map<string, Map<string, BlocketAd>>();
 
 /**
- * Fetches Blocket data for a specific watcher
+ * Retry a function with exponential backoff specifically for API calls
+ * @param fn Function to retry
+ * @param maxRetries Maximum number of retries
+ * @param baseDelay Base delay between retries in milliseconds
+ * @returns Result of the function or throws error after max retries
+ */
+async function withApiRetry<T>(
+  fn: () => Promise<T>,
+  maxRetries?: number,
+  baseDelay?: number,
+): Promise<T> {
+  // Get retry settings from database
+  const configuredMaxRetries = parseInt(
+    SettingRepository.getValue(SettingKey.BLOCKET_API_MAX_RETRIES) || '5',
+  );
+  const configuredRetryDelay = parseInt(
+    SettingRepository.getValue(SettingKey.BLOCKET_API_RETRY_DELAY) || '3000',
+  );
+
+  const finalMaxRetries = maxRetries ?? configuredMaxRetries;
+  const finalBaseDelay = baseDelay ?? configuredRetryDelay;
+
+  let lastError: Error | undefined;
+
+  for (let attempt = 0; attempt < finalMaxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+
+      // Enhanced error pattern matching for retryable errors
+      const errorMessage = lastError.message.toLowerCase();
+      const errorCause =
+        (lastError as any)?.cause?.message?.toLowerCase() || '';
+
+      const isRetryableError =
+        errorMessage.includes('fetch failed') ||
+        errorMessage.includes('timeout') ||
+        errorMessage.includes('connection timeout') ||
+        errorMessage.includes('connect timeout') ||
+        errorMessage.includes('econnreset') ||
+        errorMessage.includes('enotfound') ||
+        errorMessage.includes('econnrefused') ||
+        errorMessage.includes('network error') ||
+        errorMessage.includes('und_err_connect_timeout') ||
+        errorMessage.includes('connecttimeouterror') ||
+        errorCause.includes('timeout') ||
+        errorCause.includes('connection') ||
+        lastError.name === 'FetchError' ||
+        lastError.name === 'ConnectTimeoutError' ||
+        (lastError as any)?.code === 'UND_ERR_CONNECT_TIMEOUT';
+
+      if (!isRetryableError || attempt === finalMaxRetries - 1) {
+        logger.error({
+          message: `Blocket API call failed permanently after ${attempt + 1} attempts`,
+          error: lastError.message,
+          errorType: lastError.constructor.name,
+          errorName: lastError.name,
+          errorCode: (lastError as any)?.code,
+          errorCause: (lastError as any)?.cause?.message,
+          stack: lastError.stack,
+          attempt: attempt + 1,
+          maxRetries: finalMaxRetries,
+          isRetryableError,
+        });
+        throw lastError;
+      }
+
+      // Calculate progressive delay with jitter
+      const baseDelayMultiplier = Math.pow(1.8, attempt); // Slower exponential growth
+      const jitter = 0.8 + Math.random() * 0.4; // 20% jitter
+      const delay = Math.min(
+        finalBaseDelay * baseDelayMultiplier * jitter,
+        30000,
+      ); // Cap at 30 seconds
+
+      logger.warn({
+        message: `Blocket API retry attempt ${attempt + 1}/${finalMaxRetries} failed, retrying in ${Math.round(delay)}ms`,
+        error: lastError.message,
+        errorType: lastError.constructor.name,
+        errorName: lastError.name,
+        errorCode: (lastError as any)?.code,
+        errorCause: (lastError as any)?.cause?.message,
+        attempt: attempt + 1,
+        maxRetries: finalMaxRetries,
+        retryDelayMs: Math.round(delay),
+        isRetryableError,
+      });
+
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+
+  throw (
+    lastError ||
+    new Error('Blocket API operation failed after multiple retries')
+  );
+}
+
+/**
+ * Fetches Blocket data for a specific watcher with multiple queries support
  * @param watcher - The watcher to fetch ads for
  * @returns {Promise<BlocketAd[]>}
  */
 async function fetchAdsForWatcher(watcher: Watcher): Promise<BlocketAd[]> {
-  const queryConfig = { ...BLOCKET_QUERY, query: watcher.query };
-  return client.find(queryConfig);
+  const allAds: BlocketAd[] = [];
+  const adMap = new Map<string, BlocketAd>(); // To avoid duplicates
+
+  // Get all queries for this watcher
+  const queries =
+    watcher.queries && watcher.queries.length > 0
+      ? watcher.queries.filter((q) => q.enabled !== false)
+      : [{ query: watcher.query, enabled: true }]; // Fallback to main query
+
+  for (const queryObj of queries) {
+    try {
+      const queryConfig = { ...BLOCKET_QUERY, query: queryObj.query };
+
+      // Use retry mechanism for API calls with enhanced timeout handling
+      const ads = await withApiRetry(async () => {
+        logger.debug({
+          message: `Fetching ads for query: ${queryObj.query}`,
+          watcherId: watcher.id,
+          query: queryObj.query,
+        });
+
+        // Configure timeout for this specific call
+        const apiTimeout = parseInt(
+          SettingRepository.getValue(SettingKey.BLOCKET_API_TIMEOUT) || '15000',
+        );
+
+        // Create a timeout promise that will reject after the configured timeout
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => {
+            reject(
+              new Error(
+                `Blocket API request timed out after ${apiTimeout}ms for query: ${queryObj.query}`,
+              ),
+            );
+          }, apiTimeout);
+        });
+
+        // Race between the API call and timeout
+        const apiCallPromise = client.find(queryConfig);
+
+        return await Promise.race([apiCallPromise, timeoutPromise]);
+      });
+
+      if (ads && Array.isArray(ads)) {
+        // Add to map to avoid duplicates
+        for (const ad of ads) {
+          if (!adMap.has(ad.ad_id)) {
+            adMap.set(ad.ad_id, ad);
+          }
+        }
+
+        logger.debug({
+          message: `Successfully fetched ${ads.length} ads for query`,
+          watcherId: watcher.id,
+          query: queryObj.query,
+          adsCount: ads.length,
+        });
+      }
+    } catch (error) {
+      logger.error({
+        error: error as Error,
+        message: `Failed to fetch ads for query after retries`,
+        watcherId: watcher.id,
+        query: queryObj.query,
+      });
+      // Continue with other queries even if one fails
+    }
+  }
+
+  const totalAds = Array.from(adMap.values());
+  logger.info({
+    message: `Fetched total ${totalAds.length} unique ads for watcher`,
+    watcherId: watcher.id,
+    queriesCount: queries.length,
+    totalAds: totalAds.length,
+  });
+
+  return totalAds;
 }
 
 /**
@@ -39,10 +217,14 @@ function createWatcherJobFunction(watcher: Watcher): () => Promise<void> {
       const ads = await fetchAdsForWatcher(watcher);
 
       if (!ads || !Array.isArray(ads)) {
+        const queries =
+          watcher.queries && watcher.queries.length > 0
+            ? watcher.queries.map((q) => q.query)
+            : [watcher.query];
         logger.warn({
-          message: `No results for watcher query`,
+          message: `No results for watcher queries`,
           watcherId: watcher.id,
-          query: watcher.query,
+          queries: queries,
         });
         return;
       }
@@ -69,10 +251,16 @@ function createWatcherJobFunction(watcher: Watcher): () => Promise<void> {
           cache.set(ad.ad_id, ad);
         }
         isFirstRun = false;
+        const queries =
+          watcher.queries && watcher.queries.length > 0
+            ? watcher.queries.map((q) => q.query)
+            : [watcher.query];
         logger.info({
           message: `First run for watcher: cached ${filteredAds.length} existing ads (${ads.length - filteredAds.length} excluded by price range)`,
           watcherId: watcher.id,
-          query: watcher.query,
+          queries: queries,
+          enabledQueries:
+            watcher.queries?.filter((q) => q.enabled !== false).length || 1,
           priceRange: {
             min: watcher.min_price,
             max: watcher.max_price,
@@ -85,8 +273,13 @@ function createWatcherJobFunction(watcher: Watcher): () => Promise<void> {
 
       if (newAds.length > 0) {
         // Pass watcher info when sending notifications
+        const queries =
+          watcher.queries && watcher.queries.length > 0
+            ? watcher.queries.map((q) => q.query)
+            : [watcher.query];
         const watcherInfo = {
-          query: watcher.query,
+          query: watcher.query, // Keep main query for backward compatibility
+          queries: queries,
           id: watcher.id!,
         };
 
@@ -97,10 +290,16 @@ function createWatcherJobFunction(watcher: Watcher): () => Promise<void> {
         }
       }
 
+      const queries =
+        watcher.queries && watcher.queries.length > 0
+          ? watcher.queries.map((q) => q.query)
+          : [watcher.query];
       logger.info({
         message: `Job completed for watcher: found ${newAds.length} new ads`,
         watcherId: watcher.id,
-        query: watcher.query,
+        queries: queries,
+        enabledQueries:
+          watcher.queries?.filter((q) => q.enabled !== false).length || 1,
         priceRange: {
           min: watcher.min_price,
           max: watcher.max_price,
@@ -108,11 +307,15 @@ function createWatcherJobFunction(watcher: Watcher): () => Promise<void> {
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
+      const queries =
+        watcher.queries && watcher.queries.length > 0
+          ? watcher.queries.map((q) => q.query)
+          : [watcher.query];
       logger.error({
         error: error as Error,
         message: `Error in watcher job`,
         watcherId: watcher.id,
-        query: watcher.query,
+        queries: queries,
         timestamp: new Date().toISOString(),
       });
     }

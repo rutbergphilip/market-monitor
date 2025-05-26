@@ -81,6 +81,19 @@ export async function initializeDb() {
     )
   `);
 
+  // Create the new queries table for multiple queries per watcher
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS watcher_queries (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      watcher_id INTEGER NOT NULL,
+      query TEXT NOT NULL,
+      enabled BOOLEAN DEFAULT 1,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (watcher_id) REFERENCES watchers(id) ON DELETE CASCADE
+    )
+  `);
+
   db.exec(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

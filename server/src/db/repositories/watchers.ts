@@ -3,10 +3,11 @@ import path from 'path';
 import fs from 'fs';
 import logger from '@/integrations/logger';
 
-import type { Watcher } from '@/types/watchers';
+import type { Watcher, WatcherQuery } from '@/types/watchers';
 
 type CreateWatcherInput = {
   query: string;
+  queries?: WatcherQuery[];
   schedule: string;
   notifications: Watcher['notifications'];
   min_price?: number | null;
@@ -15,6 +16,7 @@ type CreateWatcherInput = {
 
 type UpdateWatcherInput = {
   query?: string;
+  queries?: WatcherQuery[];
   schedule?: string;
   notifications?: Watcher['notifications'];
   min_price?: number | null;
@@ -71,6 +73,104 @@ logger.info({
 const db = new Database(dbPath);
 
 /**
+ * Get queries for a specific watcher
+ * @param watcherId - The watcher ID
+ * @returns Array of queries for the watcher
+ */
+function getWatcherQueries(watcherId: string): WatcherQuery[] {
+  try {
+    const stmt = db.prepare(`
+      SELECT id, query, enabled FROM watcher_queries 
+      WHERE watcher_id = ? 
+      ORDER BY created_at ASC
+    `);
+    const rows = stmt.all(watcherId) as {
+      id: string;
+      query: string;
+      enabled: number;
+    }[];
+
+    return rows.map((row) => ({
+      id: row.id,
+      query: row.query,
+      enabled: Boolean(row.enabled),
+    }));
+  } catch (error) {
+    logger.error({
+      error: error as Error,
+      message: 'Error fetching watcher queries',
+      watcherId,
+    });
+    return [];
+  }
+}
+
+/**
+ * Create queries for a watcher
+ * @param watcherId - The watcher ID
+ * @param queries - Array of queries to create
+ */
+function createWatcherQueries(
+  watcherId: string,
+  queries: WatcherQuery[],
+): void {
+  try {
+    const stmt = db.prepare(`
+      INSERT INTO watcher_queries (watcher_id, query, enabled, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?)
+    `);
+
+    const now = new Date().toISOString();
+    for (const query of queries) {
+      stmt.run(
+        watcherId,
+        query.query,
+        query.enabled !== false ? 1 : 0,
+        now,
+        now,
+      );
+    }
+  } catch (error) {
+    logger.error({
+      error: error as Error,
+      message: 'Error creating watcher queries',
+      watcherId,
+    });
+    throw error;
+  }
+}
+
+/**
+ * Update queries for a watcher
+ * @param watcherId - The watcher ID
+ * @param queries - Array of queries to update
+ */
+function updateWatcherQueries(
+  watcherId: string,
+  queries: WatcherQuery[],
+): void {
+  try {
+    // Delete existing queries
+    const deleteStmt = db.prepare(
+      `DELETE FROM watcher_queries WHERE watcher_id = ?`,
+    );
+    deleteStmt.run(watcherId);
+
+    // Create new queries
+    if (queries && queries.length > 0) {
+      createWatcherQueries(watcherId, queries);
+    }
+  } catch (error) {
+    logger.error({
+      error: error as Error,
+      message: 'Error updating watcher queries',
+      watcherId,
+    });
+    throw error;
+  }
+}
+
+/**
  * Get all watchers
  * @returns {Watcher[]} List of all watchers
  */
@@ -79,18 +179,22 @@ export function getAll(): Watcher[] {
     const stmt = db.prepare(`SELECT * FROM watchers`);
     const rows = stmt.all() as WatcherRow[];
 
-    return rows.map((row) => ({
-      id: row.id,
-      query: row.query,
-      schedule: row.schedule,
-      notifications: JSON.parse(row.notifications),
-      status: row.status,
-      last_run: row.last_run,
-      created_at: row.created_at,
-      updated_at: row.updated_at,
-      min_price: row.min_price,
-      max_price: row.max_price,
-    }));
+    return rows.map((row) => {
+      const queries = getWatcherQueries(row.id);
+      return {
+        id: row.id,
+        query: row.query,
+        queries: queries.length > 0 ? queries : undefined,
+        schedule: row.schedule,
+        notifications: JSON.parse(row.notifications),
+        status: row.status,
+        last_run: row.last_run,
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+        min_price: row.min_price,
+        max_price: row.max_price,
+      };
+    });
   } catch (error) {
     logger.error({
       error: error as Error,
@@ -126,15 +230,29 @@ export function create(input: CreateWatcherInput): Watcher {
       input.max_price || null,
     );
 
+    const watcherId = String(info.lastInsertRowid);
+
+    // Create additional queries if provided
+    if (input.queries && input.queries.length > 0) {
+      createWatcherQueries(watcherId, input.queries);
+    }
+
     logger.info({
       message: 'Watcher created',
-      watcherId: info.lastInsertRowid,
+      watcherId: watcherId,
       query: input.query,
+      additionalQueries: input.queries?.length || 0,
     });
 
+    const queries =
+      input.queries && input.queries.length > 0
+        ? getWatcherQueries(watcherId)
+        : undefined;
+
     return {
-      id: String(info.lastInsertRowid),
+      id: watcherId,
       query: input.query,
+      queries: queries,
       schedule: input.schedule,
       notifications: input.notifications,
       status: 'active',
@@ -200,7 +318,7 @@ export function update(id: string, input: UpdateWatcherInput): Watcher | null {
       values.push(input.max_price);
     }
 
-    if (updates.length === 0) {
+    if (updates.length === 0 && !input.queries) {
       logger.warn({
         message: 'No updates provided',
         id,
@@ -209,26 +327,34 @@ export function update(id: string, input: UpdateWatcherInput): Watcher | null {
       return watcher;
     }
 
-    updates.push('updated_at = ?');
-    const now = new Date().toISOString();
-    values.push(now);
-    values.push(id);
+    // Update queries if provided
+    if (input.queries !== undefined) {
+      updateWatcherQueries(id, input.queries);
+    }
 
-    const stmt = db.prepare(`
-      UPDATE watchers
-      SET ${updates.join(', ')}
-      WHERE id = ?
-    `);
+    if (updates.length > 0) {
+      updates.push('updated_at = ?');
+      const now = new Date().toISOString();
+      values.push(now);
+      values.push(id);
 
-    const info = stmt.run(...values);
-    logger.info({
-      message: 'Watcher updated',
-      id,
-      changes: info.changes,
-    });
+      const stmt = db.prepare(`
+        UPDATE watchers
+        SET ${updates.join(', ')}
+        WHERE id = ?
+      `);
 
-    if (info.changes === 0) {
-      return watcher;
+      const info = stmt.run(...values);
+      logger.info({
+        message: 'Watcher updated',
+        id,
+        changes: info.changes,
+        queriesUpdated: input.queries !== undefined,
+      });
+
+      if (info.changes === 0) {
+        return watcher;
+      }
     }
 
     return getById(id);
@@ -299,9 +425,12 @@ export function getById(id: string): Watcher | null {
       return null;
     }
 
+    const queries = getWatcherQueries(row.id);
+
     return {
       id: row.id,
       query: row.query,
+      queries: queries.length > 0 ? queries : undefined,
       schedule: row.schedule,
       notifications: JSON.parse(row.notifications),
       status: row.status,

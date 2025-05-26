@@ -37,6 +37,11 @@ export enum SettingKey {
   BLOCKET_QUERY_GEOLOCATION = 'blocket.query.geolocation',
   BLOCKET_QUERY_INCLUDE = 'blocket.query.include',
 
+  // Blocket API settings
+  BLOCKET_API_MAX_RETRIES = 'blocket.api.max_retries',
+  BLOCKET_API_RETRY_DELAY = 'blocket.api.retry_delay',
+  BLOCKET_API_TIMEOUT = 'blocket.api.timeout',
+
   // Account profile settings
   ACCOUNT_PROFILE_USERNAME = 'account.profile.username',
   ACCOUNT_PROFILE_EMAIL = 'account.profile.email',
@@ -140,6 +145,20 @@ export const DEFAULT_SETTINGS: Record<
     description: 'Additional data to include in results',
   },
 
+  // Blocket API settings
+  [SettingKey.BLOCKET_API_MAX_RETRIES]: {
+    value: '5',
+    description: 'Maximum number of retries for Blocket API requests',
+  },
+  [SettingKey.BLOCKET_API_RETRY_DELAY]: {
+    value: '3000',
+    description: 'Base delay between retry attempts for Blocket API in ms',
+  },
+  [SettingKey.BLOCKET_API_TIMEOUT]: {
+    value: '15000',
+    description: 'Timeout for Blocket API requests in ms',
+  },
+
   // Account profile settings
   [SettingKey.ACCOUNT_PROFILE_USERNAME]: {
     value: '',
@@ -157,6 +176,7 @@ export const DEFAULT_SETTINGS: Record<
   // Security settings
   [SettingKey.SECURITY_TOKEN_EXPIRY]: {
     value: '48h',
-    description: 'JWT token expiration time (e.g., 1h, 24h, 48h, 7d, or "never" for no expiry)',
+    description:
+      'JWT token expiration time (e.g., 1h, 24h, 48h, 7d, or "never" for no expiry)',
   },
 };

@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import type { PropType } from 'vue';
 import cronstrue from 'cronstrue';
 import * as z from 'zod';
 
@@ -10,11 +11,50 @@ import {
 } from '~/constants';
 
 import type { FormError, FormSubmitEvent } from '@nuxt/ui';
-import type { NotificationKind, Notification, Watcher } from '~/types';
+
+// Local type definitions - these should match the backend types
+type NotificationKind = 'EMAIL' | 'DISCORD';
+
+type EmailNotification = {
+  kind: 'EMAIL';
+  email: string;
+};
+
+type DiscordNotification = {
+  kind: 'DISCORD';
+  webhook_url: string;
+};
+
+type Notification = EmailNotification | DiscordNotification;
+
+type WatcherQuery = {
+  id?: string;
+  query: string;
+  enabled?: boolean;
+};
+
+type Watcher = {
+  id?: string;
+  query: string;
+  queries?: WatcherQuery[];
+  notifications: Notification[];
+  schedule: string;
+  status?: 'active' | 'stopped';
+  number_of_runs?: number;
+  last_run?: string;
+  created_at?: string;
+  updated_at?: string;
+  min_price?: number | null;
+  max_price?: number | null;
+};
 
 const emit = defineEmits(['cancel', 'success']);
 const props = defineProps({
-  watcher: { type: Object as PropType<Watcher>, required: false },
+  watcher: {
+    type: Object as PropType<Watcher>,
+    required: false,
+    default: undefined,
+  },
 });
 
 const watcherStore = useWatcherStore();
@@ -34,11 +74,16 @@ const selectedNotificationType = ref<NotificationKind>('DISCORD');
 const notificationInput = ref('');
 const state = reactive<Watcher>({
   query: props.watcher?.query ?? '',
+  queries: props.watcher?.queries ?? [],
   schedule: props.watcher?.schedule ?? '',
   notifications: props.watcher?.notifications ?? [],
   min_price: props.watcher?.min_price ?? null,
   max_price: props.watcher?.max_price ?? null,
 });
+
+// Local state for managing the queries list
+const queriesInput = ref<string>('');
+const showMultipleQueries = ref(false);
 
 const schedule = computed(() =>
   cronstrue.toString(state.schedule, { throwExceptionOnParseError: false }) ===
@@ -58,6 +103,7 @@ const validate = (state: Partial<Watcher>): FormError[] => {
 onMounted(() => {
   if (props.watcher) {
     state.query = props.watcher.query;
+    state.queries = props.watcher.queries ?? [];
     state.schedule = props.watcher.schedule;
     state.notifications = [...props.watcher.notifications];
     state.min_price = props.watcher.min_price ?? null;
@@ -77,6 +123,7 @@ async function create(event: FormSubmitEvent<Schema>) {
   const { query, schedule } = event.data;
   const watcher: Watcher = {
     query,
+    queries: state.queries,
     schedule,
     notifications: state.notifications ? state.notifications : [],
     min_price: state.min_price,
@@ -84,7 +131,8 @@ async function create(event: FormSubmitEvent<Schema>) {
   };
 
   try {
-    await watcherStore.create(watcher);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await watcherStore.create(watcher as any);
     await watcherStore.refresh();
     toast.add({
       title: 'Success',
@@ -107,6 +155,7 @@ async function update(event: FormSubmitEvent<Schema>) {
   const watcher: Watcher = {
     id: props.watcher?.id,
     query,
+    queries: state.queries,
     schedule,
     notifications: state.notifications ? state.notifications : [],
     min_price: state.min_price || null,
@@ -114,7 +163,8 @@ async function update(event: FormSubmitEvent<Schema>) {
   };
 
   try {
-    await watcherStore.update(watcher);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await watcherStore.update(watcher as any);
     await watcherStore.refresh();
     toast.add({
       title: 'Success',
@@ -146,6 +196,40 @@ function selectPreset(preset: { cron: string; label: string }) {
       input.blur();
     }
   });
+}
+
+// Query management functions
+function addQuery() {
+  if (!queriesInput.value.trim()) return;
+
+  const newQuery: WatcherQuery = {
+    query: queriesInput.value.trim(),
+    enabled: true,
+  };
+
+  if (!state.queries) {
+    state.queries = [];
+  }
+
+  state.queries.push(newQuery);
+  queriesInput.value = '';
+}
+
+function removeQuery(index: number) {
+  if (state.queries && index >= 0 && index < state.queries.length) {
+    state.queries.splice(index, 1);
+  }
+}
+
+function toggleQueryEnabled(index: number) {
+  if (
+    state.queries &&
+    index >= 0 &&
+    index < state.queries.length &&
+    state.queries[index]
+  ) {
+    state.queries[index].enabled = !state.queries[index].enabled;
+  }
 }
 
 function addNotification() {
@@ -233,6 +317,89 @@ function getNotificationValue(notification: Notification): string {
             placeholder="Macbook Pro"
           />
         </UFormField>
+
+        <!-- Multiple Queries Section -->
+        <div class="flex flex-col gap-4 w-full">
+          <div class="flex items-center justify-between">
+            <p class="text-sm font-medium">Additional Search Queries</p>
+            <UButton
+              size="sm"
+              variant="outline"
+              icon="i-heroicons-plus"
+              @click="
+                () => {
+                  queriesInput = '';
+                  showMultipleQueries = !showMultipleQueries;
+                }
+              "
+            >
+              {{ showMultipleQueries ? 'Hide' : 'Add More' }}
+            </UButton>
+          </div>
+
+          <!-- Input for adding new queries -->
+          <div v-if="showMultipleQueries" class="flex gap-2 items-center">
+            <UInput
+              v-model="queriesInput"
+              class="w-full"
+              placeholder="Enter additional search term (e.g. iPhone 15)"
+              @keyup.enter="addQuery"
+            />
+            <UButton
+              color="primary"
+              icon="i-heroicons-plus"
+              :disabled="!queriesInput.trim()"
+              @click="addQuery"
+            >
+              Add
+            </UButton>
+          </div>
+
+          <!-- List of added queries -->
+          <div
+            v-if="state.queries && state.queries.length > 0"
+            class="flex flex-col gap-2 p-3 bg-gray-800 rounded-md"
+          >
+            <p class="text-xs text-neutral-400 mb-1 font-medium">
+              Additional Queries ({{ state.queries.length }})
+            </p>
+            <div
+              v-for="(query, index) in state.queries"
+              :key="index"
+              class="flex items-center justify-between px-3 py-2 bg-gray-700 rounded"
+            >
+              <div class="flex items-center gap-2">
+                <UToggle
+                  :value="query.enabled !== false"
+                  @update:value="toggleQueryEnabled(index)"
+                />
+                <p
+                  class="text-sm truncate max-w-[230px]"
+                  :class="
+                    query.enabled === false
+                      ? 'text-neutral-500 line-through'
+                      : 'text-neutral-300'
+                  "
+                >
+                  {{ query.query }}
+                </p>
+              </div>
+              <UButton
+                color="error"
+                icon="i-heroicons-trash"
+                variant="ghost"
+                size="sm"
+                aria-label="Remove query"
+                @click="removeQuery(index)"
+              />
+            </div>
+          </div>
+
+          <p class="text-xs text-neutral-500">
+            Add multiple search terms to monitor different variations. Each
+            query will be checked independently.
+          </p>
+        </div>
 
         <UFormField label="Schedule" name="schedule">
           <UInput

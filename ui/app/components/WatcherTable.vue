@@ -213,7 +213,27 @@ const columns: ComputedRef<TableColumn<Watcher>[]> = computed(() => [
         onClick: () => column.toggleSorting(column.getIsSorted() === 'asc'),
       });
     },
-    cell: ({ row }) => h('div', { class: 'lowercase' }, row.getValue('query')),
+    cell: ({ row }) => {
+      const watcher = row.original;
+      const mainQuery = row.getValue('query') as string;
+      const additionalQueries =
+        watcher.queries?.filter((q) => q.enabled !== false) || [];
+
+      if (additionalQueries.length === 0) {
+        return h('div', { class: 'lowercase' }, mainQuery);
+      }
+
+      return h('div', { class: 'flex flex-col gap-1' }, [
+        h('div', { class: 'lowercase font-medium' }, mainQuery),
+        h(
+          'div',
+          { class: 'text-xs text-neutral-500' },
+          `+${additionalQueries.length} more ${
+            additionalQueries.length === 1 ? 'query' : 'queries'
+          }`
+        ),
+      ]);
+    },
   },
   {
     accessorKey: 'status',
