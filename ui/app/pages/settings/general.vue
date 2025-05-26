@@ -16,7 +16,6 @@ const { settings } = storeToRefs(settingsStore);
 type BlocketQueryRef = {
   blocketQueryState: {
     limit: number;
-    maxPages: number;
     sort: 'rel' | 'dat' | 'pri';
     listingType: 's' | 'w';
     status: 'active' | 'all';
@@ -44,10 +43,6 @@ const settingsMap = {
   'blocket.query.limit': (value: string) => {
     if (blocketQueryRef.value)
       blocketQueryRef.value.blocketQueryState.limit = parseInt(value) || 60;
-  },
-  'blocket.query.max_pages': (value: string) => {
-    if (blocketQueryRef.value)
-      blocketQueryRef.value.blocketQueryState.maxPages = parseInt(value) || 3;
   },
   'blocket.query.sort': (value: string) => {
     if (blocketQueryRef.value)
@@ -132,10 +127,6 @@ async function saveBlocketQuerySettings() {
       {
         key: 'blocket.query.limit',
         value: blocketQueryRef.value.blocketQueryState.limit.toString(),
-      },
-      {
-        key: 'blocket.query.max_pages',
-        value: blocketQueryRef.value.blocketQueryState.maxPages.toString(),
       },
       {
         key: 'blocket.query.sort',
@@ -297,10 +288,6 @@ async function resetSettings() {
             limit:
               parseInt(settingsStore.getSettingValue('blocket.query.limit')) ||
               60,
-            maxPages:
-              parseInt(
-                settingsStore.getSettingValue('blocket.query.max_pages')
-              ) || 3,
             sort: settingsStore.getSettingValue('blocket.query.sort') || 'rel',
             listingType:
               settingsStore.getSettingValue('blocket.query.listing_type') ||

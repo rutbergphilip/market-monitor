@@ -31,7 +31,6 @@ export enum SettingKey {
 
   // Blocket query settings
   BLOCKET_QUERY_LIMIT = 'blocket.query.limit',
-  BLOCKET_QUERY_MAX_PAGES = 'blocket.query.max_pages',
   BLOCKET_QUERY_SORT = 'blocket.query.sort',
   BLOCKET_QUERY_LISTING_TYPE = 'blocket.query.listing_type',
   BLOCKET_QUERY_STATUS = 'blocket.query.status',
@@ -125,11 +124,6 @@ export const DEFAULT_SETTINGS: Record<
     value: '60',
     description:
       'Maximum number of results to return from Blocket API per page',
-  },
-  [SettingKey.BLOCKET_QUERY_MAX_PAGES]: {
-    value: '3',
-    description:
-      'Maximum number of pages to fetch per query (prevents excessive API calls)',
   },
   [SettingKey.BLOCKET_QUERY_SORT]: {
     value: 'rel',
