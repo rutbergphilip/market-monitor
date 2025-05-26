@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import ProfileInformation from '~/components/settings/account/ProfileInformation.vue';
 import SecuritySettings from '~/components/settings/account/SecuritySettings.vue';
+import TokenSettings from '~/components/settings/account/TokenSettings.vue';
 import type { Setting } from '../../../shared/types/settings';
 
 definePageMeta({
@@ -29,8 +30,15 @@ type SecurityRef = {
   };
 };
 
+type TokenRef = {
+  tokenState: {
+    tokenExpiry: string;
+  };
+};
+
 const profileRef = ref<ProfileRef | null>(null);
 const securityRef = ref<SecurityRef | null>(null);
+const tokenRef = ref<TokenRef | null>(null);
 
 const isLoading = ref(true);
 const isSaving = ref(false);
@@ -44,6 +52,9 @@ const settingsMap = {
   },
   'account.profile.avatarUrl': (value: string) => {
     if (profileRef.value) profileRef.value.profileState.avatarUrl = value;
+  },
+  'security.token.expiry': (value: string) => {
+    if (tokenRef.value) tokenRef.value.tokenState.tokenExpiry = value;
   },
 };
 
@@ -183,6 +194,53 @@ async function changePassword() {
     isSaving.value = false;
   }
 }
+
+async function saveTokenSettings() {
+  if (!tokenRef.value) return;
+
+  isSaving.value = true;
+  try {
+    const { tokenExpiry } = tokenRef.value.tokenState;
+
+    const tokenSettings = [
+      {
+        key: 'security.token.expiry',
+        value: tokenExpiry,
+      },
+    ];
+
+    await updateSettings(tokenSettings);
+
+    // Immediately rotate the current token to apply new expiry settings
+    console.log('[Settings] Token expiry updated, rotating current token...');
+    const tokenRotated = await authStore.refreshAccessToken();
+    
+    if (tokenRotated) {
+      console.log('[Settings] Token successfully rotated with new expiry settings');
+      toast.add({
+        title: 'Success',
+        description: 'Token settings saved and current session updated',
+        color: 'success',
+      });
+    } else {
+      console.warn('[Settings] Token rotation failed, but settings were saved');
+      toast.add({
+        title: 'Warning',
+        description: 'Token settings saved, but current session may need manual refresh',
+        color: 'warning',
+      });
+    }
+  } catch (error) {
+    toast.add({
+      title: 'Error',
+      description: 'Failed to save token settings',
+      color: 'error',
+    });
+    console.error('Failed to save token settings:', error);
+  } finally {
+    isSaving.value = false;
+  }
+}
 </script>
 
 <template>
@@ -218,6 +276,16 @@ async function changePassword() {
           ref="securityRef"
           :is-saving="isSaving"
           @save="changePassword"
+        />
+
+        <TokenSettings
+          ref="tokenRef"
+          :is-saving="isSaving"
+          :settings="{
+            tokenExpiry:
+              settingsStore.getSettingValue('security.token.expiry') || '48h',
+          }"
+          @save="saveTokenSettings"
         />
       </div>
     </div>
