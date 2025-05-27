@@ -119,15 +119,15 @@ defineExpose({
 </script>
 
 <template>
-  <div class="space-y-4">
+  <div class="space-y-8">
     <div class="flex items-center justify-between">
-      <p class="text-sm text-neutral-600 dark:text-neutral-400">
+      <p class="text-neutral-600 dark:text-neutral-400 max-w-2xl">
         Manage predefined Discord webhook URLs that can be used in watchers.
         Each webhook can have a custom name for easy identification.
       </p>
       <UButton
         icon="heroicons:plus"
-        size="sm"
+        size="md"
         :disabled="isAddingWebhook"
         @click="addWebhook"
       >
@@ -136,45 +136,75 @@ defineExpose({
     </div>
 
     <!-- Add new webhook form -->
-    <div
-      v-if="isAddingWebhook"
-      class="p-4 border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-800"
-    >
-      <h4 class="font-medium mb-3">Add New Webhook</h4>
-      <div class="space-y-3">
-        <div>
-          <label for="webhook-name" class="block text-sm font-medium mb-1"
-            >Name</label
+    <UCard v-if="isAddingWebhook" class="border-dashed border-2">
+      <template #header>
+        <div class="flex items-center">
+          <UIcon name="heroicons:plus" class="mr-3 text-lg" />
+          <h4 class="font-semibold text-lg">Add New Webhook</h4>
+        </div>
+      </template>
+
+      <div class="space-y-6 p-2">
+        <UFormGroup
+          class="flex flex-col"
+          label="Webhook Name"
+          description="A friendly name to identify this webhook"
+          name="name"
+        >
+          <label
+            for="webhookName"
+            class="text-sm text-neutral-500 dark:text-neutral-400 mb-1"
           >
+            Webhook Name
+          </label>
           <UInput
-            id="webhook-name"
             v-model="newWebhook.name"
             placeholder="e.g., Main Channel, Alerts, etc."
-            class="w-full"
+            icon="heroicons:tag"
+            size="md"
           />
-        </div>
-        <div>
-          <label for="webhook-url" class="block text-sm font-medium mb-1"
-            >Webhook URL</label
+          <p class="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+            A friendly name to identify this webhook
+          </p>
+        </UFormGroup>
+
+        <UFormGroup
+          class="flex flex-col"
+          label="Webhook URL"
+          description="Discord webhook URL from your server settings"
+          name="url"
+        >
+          <label
+            for="webhookUrl"
+            class="text-sm text-neutral-500 dark:text-neutral-400 mb-1"
           >
+            Webhook URL
+          </label>
           <UInput
-            id="webhook-url"
             v-model="newWebhook.url"
             placeholder="https://discord.com/api/webhooks/..."
-            class="w-full"
+            icon="heroicons:link"
+            size="md"
           />
-        </div>
-        <div class="flex gap-2 justify-end">
+          <p class="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+            Discord webhook URL from your server settings
+          </p>
+        </UFormGroup>
+
+        <div
+          class="flex gap-3 justify-end pt-6 border-t border-neutral-200 dark:border-neutral-700"
+        >
           <UButton
             color="neutral"
             variant="outline"
-            size="sm"
+            size="md"
             @click="cancelNewWebhook"
           >
             Cancel
           </UButton>
           <UButton
-            size="sm"
+            size="md"
+            icon="heroicons:check"
             :disabled="!newWebhook.name.trim() || !isValidUrl(newWebhook.url)"
             @click="saveNewWebhook"
           >
@@ -182,65 +212,68 @@ defineExpose({
           </UButton>
         </div>
       </div>
-    </div>
+    </UCard>
 
     <!-- Webhooks list -->
-    <div v-if="webhooks.length > 0" class="space-y-3">
-      <h4 class="font-medium">Configured Webhooks</h4>
-      <div class="space-y-2">
+    <div v-if="webhooks.length > 0" class="space-y-6">
+      <h4 class="font-semibold text-lg">Configured Webhooks</h4>
+      <div class="space-y-4">
         <div
           v-for="(webhook, index) in webhooks"
           :key="webhook.id"
-          class="flex items-center gap-3 p-3 border border-neutral-200 dark:border-neutral-700 rounded-lg"
+          class="flex items-center gap-4 p-4 border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-800/50"
         >
-          <div class="flex-1 space-y-2">
-            <div v-if="editingIndex === index" class="space-y-2">
+          <div class="flex-1 space-y-3">
+            <div v-if="editingIndex === index" class="space-y-4">
               <UInput
                 v-model="webhook.name"
                 placeholder="Webhook name"
+                size="md"
                 class="w-full"
               />
               <UInput
                 v-model="webhook.url"
                 placeholder="Webhook URL"
+                size="md"
                 class="w-full"
               />
             </div>
-            <div v-else>
-              <div class="font-medium">{{ webhook.name }}</div>
-              <div class="text-sm text-neutral-500 truncate text-wrap">
+            <div v-else class="space-y-2">
+              <div class="font-semibold text-lg">{{ webhook.name }}</div>
+              <div class="text-sm text-neutral-500 break-all">
                 {{ webhook.url }}
               </div>
             </div>
           </div>
 
-          <div class="flex gap-1">
-            <div v-if="editingIndex === index" class="flex gap-1">
+          <div class="flex gap-2">
+            <div v-if="editingIndex === index" class="flex gap-2">
               <UButton
-                size="sm"
+                size="md"
                 icon="heroicons:check"
                 color="success"
+                variant="soft"
                 :disabled="!webhook.name.trim() || !isValidUrl(webhook.url)"
                 @click="saveEditWebhook(index)"
               />
               <UButton
-                size="sm"
+                size="md"
                 icon="heroicons:x-mark"
                 color="neutral"
                 variant="outline"
                 @click="cancelEditWebhook"
               />
             </div>
-            <div v-else class="flex gap-1">
+            <div v-else class="flex gap-2">
               <UButton
-                size="sm"
+                size="md"
                 icon="heroicons:pencil"
                 color="neutral"
                 variant="outline"
                 @click="editWebhook(index)"
               />
               <UButton
-                size="sm"
+                size="md"
                 icon="heroicons:trash"
                 color="error"
                 variant="outline"
@@ -253,9 +286,12 @@ defineExpose({
     </div>
 
     <!-- Empty state -->
-    <div v-else-if="!isAddingWebhook" class="text-center py-8 text-neutral-500">
-      <UIcon name="material-symbols:webhook" class="text-4xl mb-2 opacity-50" />
-      <p>No Discord webhooks configured</p>
+    <div
+      v-else-if="!isAddingWebhook"
+      class="text-center py-12 text-neutral-500"
+    >
+      <UIcon name="material-symbols:webhook" class="text-6xl mb-4 opacity-50" />
+      <p class="text-lg font-medium mb-2">No Discord webhooks configured</p>
       <p class="text-sm">Add your first webhook to get started</p>
     </div>
   </div>

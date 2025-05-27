@@ -53,95 +53,147 @@ function saveDiscordSettings() {
   <UForm
     :schema="discordSchema"
     :state="discordState"
-    class="space-y-4"
+    class="space-y-8"
     @submit="saveDiscordSettings"
   >
-    <div class="flex justify-between mb-4">
-      <div class="flex w-full flex-col gap-4 justify-between mb-4">
-        <div class="w-full">
-          <div class="mb-1">
-            <label for="discord-username" class="block font-medium text-sm"
-              >Bot Username</label
-            >
-          </div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <!-- Bot Identity Settings -->
+      <div class="space-y-6">
+        <h4
+          class="font-medium text-base text-neutral-700 dark:text-neutral-300 flex items-center pb-2"
+        >
+          <UIcon name="heroicons:identification" class="mr-2" />
+          Bot Identity
+        </h4>
+
+        <UFormGroup
+          class="flex flex-col"
+          label="Bot Username"
+          description="Name that will appear for the bot in Discord"
+          name="username"
+        >
+          <label
+            for="username"
+            class="text-sm text-neutral-500 dark:text-neutral-400 mb-1"
+          >
+            Bot Username
+          </label>
           <UInput
-            id="discord-username"
             v-model="discordState.username"
-            class="w-2/3"
             placeholder="Blocket Bot"
+            icon="heroicons:user"
+            size="md"
           />
-          <p class="text-xs text-neutral-500 mt-1">
+          <p class="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
             Name that will appear for the bot in Discord
           </p>
-        </div>
+        </UFormGroup>
 
-        <div class="w-full">
-          <div class="mb-1">
-            <label for="discord-avatar-url" class="block font-medium text-sm"
-              >Avatar URL</label
-            >
-          </div>
+        <UFormGroup
+          class="flex flex-col"
+          label="Avatar URL"
+          description="URL to the bot's avatar image (optional)"
+          name="avatarUrl"
+        >
+          <label
+            for="avatarUrl"
+            class="text-sm text-neutral-500 dark:text-neutral-400 mb-1"
+          >
+            Avatar URL
+          </label>
           <UInput
-            id="discord-avatar-url"
             v-model="discordState.avatarUrl"
-            class="w-2/3"
             placeholder="https://example.com/avatar.png"
+            icon="heroicons:photo"
+            size="md"
           />
-          <p class="text-xs text-neutral-500 mt-1">
+          <p class="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
             URL to the bot's avatar image (optional)
           </p>
-        </div>
+        </UFormGroup>
       </div>
 
-      <div class="flex w-full flex-col gap-4 justify-between mb-4">
-        <div class="w-full">
-          <div class="mb-1">
-            <label for="discord-max-retries" class="block font-medium text-sm"
-              >Max Retries</label
-            >
-          </div>
+      <!-- Reliability Settings -->
+      <div class="space-y-6">
+        <h4
+          class="font-medium text-base text-neutral-700 dark:text-neutral-300 flex items-center pb-2"
+        >
+          <UIcon name="heroicons:arrow-path" class="mr-2" />
+          Reliability
+        </h4>
+
+        <UFormGroup
+          class="flex flex-col"
+          label="Max Retries"
+          description="Maximum number of retries (1-10)"
+          name="maxRetries"
+        >
+          <label
+            for="maxRetries"
+            class="text-sm text-neutral-500 dark:text-neutral-400 mb-1"
+          >
+            Max Retries
+          </label>
           <UInput
-            id="discord-max-retries"
             v-model="discordState.maxRetries"
-            class="w-1/3"
             type="number"
             placeholder="3"
+            icon="heroicons:arrow-path"
+            size="md"
+            class="w-40"
           />
-          <p class="text-xs text-neutral-500 mt-1">
+          <p class="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
             Maximum number of retries (1-10)
           </p>
-        </div>
+        </UFormGroup>
 
-        <div class="w-full">
-          <div class="mb-1">
-            <label for="discord-retry-delay" class="block font-medium text-sm"
-              >Retry Delay (ms)</label
-            >
-          </div>
+        <UFormGroup
+          class="flex flex-col"
+          label="Retry Delay (ms)"
+          description="Delay between retries in milliseconds (500-10000)"
+          name="retryDelay"
+        >
+          <label
+            for="retryDelay"
+            class="text-sm text-neutral-500 dark:text-neutral-400 mb-1"
+          >
+            Retry Delay (ms)
+          </label>
           <UInput
-            id="discord-retry-delay"
             v-model="discordState.retryDelay"
-            class="w-1/3"
             type="number"
             placeholder="1000"
+            icon="heroicons:clock"
+            size="md"
+            class="w-40"
           />
-          <p class="text-xs text-neutral-500 mt-1">
+          <p class="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
             Delay between retries in milliseconds (500-10000)
           </p>
-        </div>
+        </UFormGroup>
       </div>
     </div>
 
-    <div class="flex gap-4 justify-end">
+    <UDivider class="my-8" />
+
+    <div class="flex gap-4 justify-end pt-4">
       <UButton
         variant="outline"
+        color="neutral"
+        icon="heroicons:paper-airplane"
+        size="md"
         :loading="props.isSaving"
         @click="$emit('test')"
       >
         Test Notification
       </UButton>
-      <UButton type="submit" :loading="props.isSaving">
-        Save Discord Settings
+      <UButton
+        type="submit"
+        icon="heroicons:check"
+        size="md"
+        :loading="props.isSaving"
+      >
+        Save Settings
       </UButton>
     </div>
   </UForm>

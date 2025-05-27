@@ -449,18 +449,21 @@ async function testDiscordNotification() {
 </script>
 
 <template>
-  <div class="container mx-auto py-8">
-    <div class="max-w-4xl mx-auto">
+  <UContainer>
+    <div class="py-8">
       <header class="mb-8 flex justify-between items-center">
         <div>
-          <h1 class="text-2xl font-bold">Notification Settings</h1>
-          <p class="text-neutral-500 mt-2">
-            Manage your notification preferences
+          <h1 class="text-3xl font-bold tracking-tight">
+            Notification Settings
+          </h1>
+          <p class="text-neutral-500 mt-2 text-lg">
+            Manage your notification preferences and providers
           </p>
         </div>
         <UButton
           color="error"
           variant="outline"
+          icon="heroicons:arrow-path"
           @click="resetConfirmationOpen = true"
         >
           Reset All Settings
@@ -495,19 +498,19 @@ async function testDiscordNotification() {
         <USkeleton class="h-[600px] w-full" />
       </div>
 
-      <div v-else class="space-y-8">
+      <div v-else class="space-y-12">
         <!-- Discord Provider Section -->
-        <UCard>
+        <UCard class="overflow-hidden">
           <template #header>
-            <div class="flex items-center justify-between">
+            <div class="flex items-center justify-between p-1">
               <div class="flex items-center">
                 <UIcon
                   name="ic:baseline-discord"
-                  class="mr-3 text-2xl text-indigo-500"
+                  class="mr-4 text-3xl text-indigo-500"
                 />
                 <div>
                   <h2 class="text-xl font-bold">Discord</h2>
-                  <p class="text-sm text-neutral-500">
+                  <p class="text-sm text-neutral-500 mt-1">
                     Configure Discord notifications and webhooks
                   </p>
                 </div>
@@ -516,52 +519,75 @@ async function testDiscordNotification() {
             </div>
           </template>
 
-          <div class="space-y-6">
-            <!-- Discord Settings -->
-            <div class="bg-neutral-50 dark:bg-neutral-900 rounded-lg p-6">
-              <h3 class="text-lg font-semibold mb-4 flex items-center">
-                <UIcon name="heroicons:cog-6-tooth" class="mr-2" />
-                Bot Configuration
-              </h3>
-              <DiscordNotifications
-                ref="discordRef"
-                :is-loading="isLoading"
-                :is-saving="isSaving"
-                :settings="discordSettings"
-                @save="saveDiscordSettings"
-                @test="testDiscordNotification"
-              />
-            </div>
+          <div class="p-6">
+            <UAlert
+              icon="heroicons:information-circle"
+              color="primary"
+              variant="soft"
+              title="Discord Integration Active"
+              description="Discord notifications are configured and ready to use. Manage your bot settings and webhooks below."
+              :close-button="false"
+              class="mb-8"
+            />
 
-            <!-- Discord Webhooks -->
-            <div class="bg-neutral-50 dark:bg-neutral-900 rounded-lg p-6">
-              <h3 class="text-lg font-semibold mb-4 flex items-center">
-                <UIcon name="heroicons:link" class="mr-2" />
-                Webhook Management
-              </h3>
-              <DiscordWebhooks
-                ref="discordWebhooksRef"
-                :is-loading="isLoading"
-                :is-saving="isSaving"
-                :webhooks="discordWebhooks"
-                @save="saveDiscordWebhooks"
-              />
-            </div>
+            <UAccordion
+              :items="[
+                {
+                  label: 'Bot Configuration',
+                  icon: 'heroicons:cog-6-tooth',
+                  defaultOpen: true,
+                  slot: 'discord-config',
+                },
+                {
+                  label: 'Webhook Management',
+                  icon: 'heroicons:link',
+                  defaultOpen: false,
+                  slot: 'discord-webhooks',
+                },
+              ]"
+            >
+              <template #discord-config>
+                <div class="pt-6">
+                  <DiscordNotifications
+                    ref="discordRef"
+                    :is-loading="isLoading"
+                    :is-saving="isSaving"
+                    :settings="discordSettings"
+                    @save="saveDiscordSettings"
+                    @test="testDiscordNotification"
+                  />
+                </div>
+              </template>
+
+              <template #discord-webhooks>
+                <div class="pt-6">
+                  <DiscordWebhooks
+                    ref="discordWebhooksRef"
+                    :is-loading="isLoading"
+                    :is-saving="isSaving"
+                    :webhooks="discordWebhooks"
+                    @save="saveDiscordWebhooks"
+                  />
+                </div>
+              </template>
+            </UAccordion>
           </div>
         </UCard>
 
-        <!-- Email Provider Section -->
-        <UCard>
+        <UDivider class="my-16" />
+
+        <!-- Email Provider Section, blurred until ready -->
+        <UCard class="overflow-hidden blur-xs">
           <template #header>
-            <div class="flex items-center justify-between">
+            <div class="flex items-center justify-between p-1">
               <div class="flex items-center">
                 <UIcon
                   name="heroicons:envelope"
-                  class="mr-3 text-2xl text-green-500"
+                  class="mr-4 text-3xl text-green-500"
                 />
                 <div>
                   <h2 class="text-xl font-bold">Email</h2>
-                  <p class="text-sm text-neutral-500">
+                  <p class="text-sm text-neutral-500 mt-1">
                     Configure SMTP email notifications
                   </p>
                 </div>
@@ -570,53 +596,98 @@ async function testDiscordNotification() {
             </div>
           </template>
 
-          <div class="bg-neutral-50 dark:bg-neutral-900 rounded-lg p-6">
-            <h3 class="text-lg font-semibold mb-4 flex items-center">
-              <UIcon name="heroicons:cog-6-tooth" class="mr-2" />
-              SMTP Configuration
-            </h3>
-            <EmailNotifications
-              ref="emailRef"
-              :is-loading="isLoading"
-              :is-saving="isSaving"
-              :settings="emailSettings"
-              @save="saveEmailSettings"
+          <div class="p-6">
+            <UAlert
+              icon="heroicons:clock"
+              color="warning"
+              variant="soft"
+              title="Coming Soon"
+              description="Email notifications via SMTP are planned for a future release. Stay tuned for updates!"
+              :close-button="false"
+              class="mb-8"
             />
+
+            <UAccordion
+              disabled
+              :items="[
+                {
+                  label: 'SMTP Configuration',
+                  icon: 'heroicons:cog-6-tooth',
+                  defaultOpen: false,
+                  slot: 'email-config',
+                },
+              ]"
+            >
+              <template #email-config>
+                <div class="pt-6">
+                  <EmailNotifications
+                    ref="emailRef"
+                    :is-loading="isLoading"
+                    :is-saving="isSaving"
+                    :settings="emailSettings"
+                    @save="saveEmailSettings"
+                  />
+                </div>
+              </template>
+            </UAccordion>
           </div>
         </UCard>
 
+        <UDivider class="my-16" />
+
         <!-- General Settings Section -->
-        <UCard>
+        <UCard class="overflow-hidden">
           <template #header>
-            <div class="flex items-center">
+            <div class="flex items-center p-1">
               <UIcon
                 name="heroicons:adjustments-horizontal"
-                class="mr-3 text-2xl text-orange-500"
+                class="mr-4 text-3xl text-orange-500"
               />
               <div>
                 <h2 class="text-xl font-bold">General Settings</h2>
-                <p class="text-sm text-neutral-500">
+                <p class="text-sm text-neutral-500 mt-1">
                   Global notification preferences
                 </p>
               </div>
             </div>
           </template>
 
-          <div class="bg-neutral-50 dark:bg-neutral-900 rounded-lg p-6">
-            <h3 class="text-lg font-semibold mb-4 flex items-center">
-              <UIcon name="heroicons:squares-2x2" class="mr-2" />
-              Notification Batching
-            </h3>
-            <BatchingSettings
-              ref="batchingRef"
-              :is-loading="isLoading"
-              :is-saving="isSaving"
-              :settings="batchingSettings"
-              @save="saveBatchingSettings"
+          <div class="p-6">
+            <UAlert
+              icon="heroicons:light-bulb"
+              color="info"
+              variant="soft"
+              title="Optimization Settings"
+              description="Configure how notifications are batched and delivered to optimize performance and reduce spam."
+              :close-button="false"
+              class="mb-8"
             />
+
+            <UAccordion
+              :items="[
+                {
+                  label: 'Notification Batching',
+                  icon: 'heroicons:squares-2x2',
+                  defaultOpen: true,
+                  slot: 'batching-config',
+                },
+              ]"
+            >
+              <template #batching-config>
+                <div class="pt-6">
+                  <BatchingSettings
+                    ref="batchingRef"
+                    :is-loading="isLoading"
+                    :is-saving="isSaving"
+                    :settings="batchingSettings"
+                    @save="saveBatchingSettings"
+                  />
+                </div>
+              </template>
+            </UAccordion>
           </div>
         </UCard>
       </div>
     </div>
-  </div>
+  </UContainer>
 </template>

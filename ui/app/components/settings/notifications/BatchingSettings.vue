@@ -37,51 +37,72 @@ function saveBatchingSettings() {
   <UForm
     :schema="batchingSchema"
     :state="batchingState"
-    class="space-y-4"
+    class="space-y-8"
     @submit="saveBatchingSettings"
   >
-    <div class="space-y-4">
-      <p class="text-sm text-neutral-600 dark:text-neutral-400">
-        Configure how notifications are grouped and sent together to reduce
-        frequency.
-      </p>
-
-      <div class="flex items-center space-x-2 mb-4">
+    <div class="space-y-6">
+      <UFormGroup
+        class="flex flex-col"
+        name="enableBatching"
+        description="Group multiple notifications together to reduce frequency and improve readability"
+      >
         <UCheckbox
-          id="enable-batching"
           v-model="batchingState.enableBatching"
           name="enableBatching"
+          label="Enable Notification Batching"
+          size="md"
         />
-        <label for="enable-batching" class="font-medium"
-          >Enable Notification Batching</label
-        >
-      </div>
+        <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+          Group multiple notifications together to reduce frequency and improve
+          readability
+        </p>
+      </UFormGroup>
 
-      <div class="mb-4">
-        <div class="mb-1">
-          <label for="batch-size" class="block font-medium text-sm"
-            >Batch Size</label
-          >
-        </div>
+      <UFormGroup
+        class="flex flex-col"
+        label="Batch Size"
+        description="Number of notifications to send in one batch (1-100)"
+        name="batchSize"
+        :disabled="!batchingState.enableBatching"
+      >
+        <label
+          for="batchSize"
+          class="text-sm text-neutral-500 dark:text-neutral-400 mb-1"
+          :class="{ 'opacity-50': !batchingState.enableBatching }"
+        >
+          Batch Size
+        </label>
         <UInput
-          id="batch-size"
           v-model.number="batchingState.batchSize"
           type="number"
           :min="1"
           :max="100"
           :disabled="!batchingState.enableBatching"
-          class="w-32"
+          placeholder="10"
+          icon="heroicons:squares-2x2"
+          size="md"
+          class="w-40"
         />
-        <p class="text-xs text-neutral-500 mt-1">
+        <p
+          class="text-xs text-neutral-500 dark:text-neutral-400 mb-1"
+          :class="{ 'opacity-50': !batchingState.enableBatching }"
+        >
           Number of notifications to send in one batch (1-100)
         </p>
-      </div>
+      </UFormGroup>
+    </div>
 
-      <div class="flex justify-end">
-        <UButton type="submit" :loading="props.isSaving">
-          Save Batching Settings
-        </UButton>
-      </div>
+    <UDivider class="my-8" />
+
+    <div class="flex justify-end pt-4">
+      <UButton
+        type="submit"
+        icon="heroicons:check"
+        size="md"
+        :loading="props.isSaving"
+      >
+        Save Settings
+      </UButton>
     </div>
   </UForm>
 </template>

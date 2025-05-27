@@ -55,23 +55,33 @@ function saveEmailSettings() {
 </script>
 
 <template>
-  <div class="space-y-4">
+  <div class="space-y-8">
     <div class="flex items-center justify-between">
-      <div>
-        <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-2">
+      <div class="space-y-3">
+        <p class="text-neutral-600 dark:text-neutral-400">
           SMTP email notifications for new listings (coming soon).
         </p>
-        <UBadge color="neutral">Upcoming Feature</UBadge>
+        <UBadge color="neutral" size="md">Upcoming Feature</UBadge>
       </div>
     </div>
 
     <!-- Upcoming Feature Placeholder -->
-    <div
-      class="text-center py-8 text-neutral-500 bg-neutral-50 dark:bg-neutral-900 rounded-lg border-2 border-dashed border-neutral-200 dark:border-neutral-700"
-    >
-      <UIcon name="material-symbols:mail" class="text-4xl mb-2 opacity-50" />
-      <h4 class="font-medium mb-1">Email Notifications</h4>
-      <p class="text-sm">SMTP email support coming in a future update</p>
+    <div class="text-center py-16 px-8">
+      <div class="max-w-md mx-auto space-y-6">
+        <UIcon
+          name="heroicons:envelope"
+          class="text-8xl mb-6 opacity-30 mx-auto text-green-500"
+        />
+        <h4 class="font-semibold text-xl mb-3">Email Notifications</h4>
+        <p class="text-neutral-500 mb-6 leading-relaxed">
+          SMTP email support is coming in a future update. This will allow you
+          to receive notifications via email with full customization options.
+        </p>
+        <UBadge color="warning" variant="soft" size="lg">
+          <UIcon name="heroicons:clock" class="mr-2" />
+          Coming Soon
+        </UBadge>
+      </div>
     </div>
 
     <!-- Future Implementation (currently disabled) -->
@@ -79,149 +89,210 @@ function saveEmailSettings() {
       v-if="false"
       :schema="emailSchema"
       :state="emailState"
-      class="space-y-4"
+      class="space-y-8"
       @submit="saveEmailSettings"
     >
-      <div class="flex items-center space-x-2 mb-4">
+      <div class="flex items-center space-x-3 mb-6">
         <UCheckbox
           id="email-enabled"
           v-model="emailState.enabled"
           name="enabled"
           disabled
+          size="md"
         />
-        <label for="email-enabled" class="font-medium"
+        <label for="email-enabled" class="font-semibold text-lg"
           >Enable Email Notifications</label
         >
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-        <div>
-          <div class="mb-1">
-            <label for="email-from" class="block font-medium text-sm"
-              >From Email</label
-            >
-          </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <UFormGroup
+          class="flex flex-col"
+          label="From Email"
+          description="Sender email address"
+          name="from"
+        >
+          <label
+            for="fromEmail"
+            class="text-sm text-neutral-500 dark:text-neutral-400 mb-1"
+          >
+            From Email
+          </label>
           <UInput
-            id="email-from"
             v-model="emailState.from"
             placeholder="sender@example.com"
+            size="md"
             disabled
           />
-          <p class="text-xs text-neutral-500 mt-1">Sender email address</p>
-        </div>
+          <p class="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+            Sender email address
+          </p>
+        </UFormGroup>
 
-        <div>
-          <div class="mb-1">
-            <label for="email-to" class="block font-medium text-sm"
-              >To Email</label
-            >
-          </div>
+        <UFormGroup
+          class="flex flex-col"
+          label="To Email"
+          description="Recipient email address"
+          name="to"
+        >
+          <label
+            for="toEmail"
+            class="text-sm text-neutral-500 dark:text-neutral-400 mb-1"
+          >
+            To Email
+          </label>
           <UInput
-            id="email-to"
             v-model="emailState.to"
             placeholder="recipient@example.com"
+            size="md"
             disabled
           />
-          <p class="text-xs text-neutral-500 mt-1">Recipient email address</p>
-        </div>
+          <p class="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+            Recipient email address
+          </p>
+        </UFormGroup>
 
-        <div class="md:col-span-2">
-          <div class="mb-1">
-            <label for="email-subject" class="block font-medium text-sm"
-              >Email Subject</label
-            >
-          </div>
+        <UFormGroup
+          class="flex flex-col md:col-span-2"
+          label="Email Subject"
+          description="Subject line for notification emails"
+          name="subject"
+        >
+          <label
+            for="emailSubject"
+            class="text-sm text-neutral-500 dark:text-neutral-400 mb-1"
+          >
+            Email Subject
+          </label>
           <UInput
-            id="email-subject"
             v-model="emailState.subject"
             placeholder="New Blocket Listings"
+            size="md"
             disabled
           />
-          <p class="text-xs text-neutral-500 mt-1">
+          <p class="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
             Subject line for notification emails
           </p>
-        </div>
+        </UFormGroup>
 
-        <div>
-          <div class="mb-1">
-            <label for="smtp-host" class="block font-medium text-sm"
-              >SMTP Host</label
-            >
-          </div>
+        <UFormGroup
+          class="flex flex-col"
+          label="SMTP Host"
+          description="SMTP server address"
+          name="smtpHost"
+        >
+          <label
+            for="smtpHost"
+            class="text-sm text-neutral-500 dark:text-neutral-400 mb-1"
+          >
+            SMTP Host
+          </label>
           <UInput
-            id="smtp-host"
             v-model="emailState.smtpHost"
             placeholder="smtp.example.com"
+            size="md"
             disabled
           />
-          <p class="text-xs text-neutral-500 mt-1">SMTP server address</p>
-        </div>
+          <p class="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+            SMTP server address
+          </p>
+        </UFormGroup>
 
-        <div>
-          <div class="mb-1">
-            <label for="smtp-port" class="block font-medium text-sm"
-              >SMTP Port</label
-            >
-          </div>
+        <UFormGroup
+          class="flex flex-col"
+          label="SMTP Port"
+          description="SMTP server port"
+          name="smtpPort"
+        >
+          <label
+            for="smtpPort"
+            class="text-sm text-neutral-500 dark:text-neutral-400 mb-1"
+          >
+            SMTP Port
+          </label>
           <UInput
-            id="smtp-port"
             v-model.number="emailState.smtpPort"
             type="number"
             :min="1"
             :max="65535"
+            size="md"
+            class="w-32"
             disabled
           />
-          <p class="text-xs text-neutral-500 mt-1">SMTP server port</p>
-        </div>
+          <p class="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+            SMTP server port
+          </p>
+        </UFormGroup>
 
-        <div>
-          <div class="mb-1">
-            <label for="smtp-user" class="block font-medium text-sm"
-              >SMTP Username</label
-            >
-          </div>
+        <UFormGroup
+          class="flex flex-col"
+          label="SMTP Username"
+          description="SMTP authentication username"
+          name="smtpUser"
+        >
+          <label
+            for="smtpUser"
+            class="text-sm text-neutral-500 dark:text-neutral-400 mb-1"
+          >
+            SMTP Username
+          </label>
           <UInput
-            id="smtp-user"
             v-model="emailState.smtpUser"
             placeholder="username"
+            size="md"
             disabled
           />
-          <p class="text-xs text-neutral-500 mt-1">
+          <p class="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
             SMTP authentication username
           </p>
-        </div>
+        </UFormGroup>
 
-        <div>
-          <div class="mb-1">
-            <label for="smtp-pass" class="block font-medium text-sm"
-              >SMTP Password</label
-            >
-          </div>
+        <UFormGroup
+          class="flex flex-col"
+          label="SMTP Password"
+          description="SMTP authentication password"
+          name="smtpPass"
+        >
+          <label
+            for="smtpPass"
+            class="text-sm text-neutral-500 dark:text-neutral-400 mb-1"
+          >
+            SMTP Password
+          </label>
           <UInput
-            id="smtp-pass"
             v-model="emailState.smtpPass"
             type="password"
             placeholder="••••••••"
+            size="md"
             disabled
           />
-          <p class="text-xs text-neutral-500 mt-1">
+          <p class="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
             SMTP authentication password
           </p>
-        </div>
+        </UFormGroup>
       </div>
 
-      <div class="flex items-center space-x-2 mb-4">
+      <UFormGroup
+        class="flex flex-col"
+        name="useTLS"
+        description="Use TLS encryption for secure email transmission"
+      >
         <UCheckbox
-          id="use-tls"
           v-model="emailState.useTLS"
           name="useTLS"
+          label="Use TLS Encryption"
+          size="md"
           disabled
         />
-        <label for="use-tls" class="font-medium">Use TLS</label>
-      </div>
+        <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+          Use TLS encryption for secure email transmission
+        </p>
+      </UFormGroup>
 
-      <div class="flex justify-end">
-        <UButton type="submit" :loading="props.isSaving" disabled>
+      <UDivider class="my-8" />
+
+      <div class="flex justify-end pt-4">
+        <UButton type="submit" size="md" :loading="props.isSaving" disabled>
           Save Email Settings
         </UButton>
       </div>
