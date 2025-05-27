@@ -214,7 +214,7 @@ defineExpose({
               </div>
               <div v-else>
                 <div class="font-medium">{{ webhook.name }}</div>
-                <div class="text-sm text-neutral-500 truncate">
+                <div class="text-sm text-neutral-500 truncate text-wrap">
                   {{ webhook.url }}
                 </div>
               </div>
@@ -223,14 +223,14 @@ defineExpose({
             <div class="flex gap-1">
               <div v-if="editingIndex === index" class="flex gap-1">
                 <UButton
-                  size="xs"
+                  size="sm"
                   icon="heroicons:check"
                   color="success"
                   :disabled="!webhook.name.trim() || !isValidUrl(webhook.url)"
                   @click="saveEditWebhook(index)"
                 />
                 <UButton
-                  size="xs"
+                  size="sm"
                   icon="heroicons:x-mark"
                   color="neutral"
                   variant="outline"
@@ -239,14 +239,14 @@ defineExpose({
               </div>
               <div v-else class="flex gap-1">
                 <UButton
-                  size="xs"
+                  size="sm"
                   icon="heroicons:pencil"
                   color="neutral"
                   variant="outline"
                   @click="editWebhook(index)"
                 />
                 <UButton
-                  size="xs"
+                  size="sm"
                   icon="heroicons:trash"
                   color="error"
                   variant="outline"
