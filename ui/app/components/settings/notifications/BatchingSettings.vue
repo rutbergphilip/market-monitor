@@ -34,19 +34,18 @@ function saveBatchingSettings() {
 </script>
 
 <template>
-  <UCard>
-    <template #header>
-      <div class="flex items-center">
-        <UIcon name="i-lucide-layers" class="mr-2 text-xl" />
-        <h2 class="text-lg font-semibold">Notification Batching</h2>
-      </div>
-    </template>
-    <UForm
-      :schema="batchingSchema"
-      :state="batchingState"
-      class="space-y-4"
-      @submit="saveBatchingSettings"
-    >
+  <UForm
+    :schema="batchingSchema"
+    :state="batchingState"
+    class="space-y-4"
+    @submit="saveBatchingSettings"
+  >
+    <div class="space-y-4">
+      <p class="text-sm text-neutral-600 dark:text-neutral-400">
+        Configure how notifications are grouped and sent together to reduce
+        frequency.
+      </p>
+
       <div class="flex items-center space-x-2 mb-4">
         <UCheckbox
           id="enable-batching"
@@ -71,9 +70,10 @@ function saveBatchingSettings() {
           :min="1"
           :max="100"
           :disabled="!batchingState.enableBatching"
+          class="w-32"
         />
         <p class="text-xs text-neutral-500 mt-1">
-          Number of notifications to send in one batch
+          Number of notifications to send in one batch (1-100)
         </p>
       </div>
 
@@ -82,6 +82,6 @@ function saveBatchingSettings() {
           Save Batching Settings
         </UButton>
       </div>
-    </UForm>
-  </UCard>
+    </div>
+  </UForm>
 </template>

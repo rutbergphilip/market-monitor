@@ -55,16 +55,26 @@ function saveEmailSettings() {
 </script>
 
 <template>
-  <UCard>
-    <template #header>
-      <div class="flex items-center">
-        <UIcon name="material-symbols:mail" class="mr-2 text-xl" />
-        <h2 class="text-lg font-semibold">Email Notifications</h2>
-        <UBadge class="ml-2" color="neutral">Upcoming Feature</UBadge>
+  <div class="space-y-4">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-2">
+          SMTP email notifications for new listings (coming soon).
+        </p>
+        <UBadge color="neutral">Upcoming Feature</UBadge>
       </div>
-    </template>
+    </div>
 
-    <!-- Upcoming Feature -->
+    <!-- Upcoming Feature Placeholder -->
+    <div
+      class="text-center py-8 text-neutral-500 bg-neutral-50 dark:bg-neutral-900 rounded-lg border-2 border-dashed border-neutral-200 dark:border-neutral-700"
+    >
+      <UIcon name="material-symbols:mail" class="text-4xl mb-2 opacity-50" />
+      <h4 class="font-medium mb-1">Email Notifications</h4>
+      <p class="text-sm">SMTP email support coming in a future update</p>
+    </div>
+
+    <!-- Future Implementation (currently disabled) -->
     <UForm
       v-if="false"
       :schema="emailSchema"
@@ -216,5 +226,5 @@ function saveEmailSettings() {
         </UButton>
       </div>
     </UForm>
-  </UCard>
+  </div>
 </template>

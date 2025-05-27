@@ -495,39 +495,127 @@ async function testDiscordNotification() {
         <USkeleton class="h-[600px] w-full" />
       </div>
 
-      <div v-else class="space-y-6">
-        <DiscordNotifications
-          ref="discordRef"
-          :is-loading="isLoading"
-          :is-saving="isSaving"
-          :settings="discordSettings"
-          @save="saveDiscordSettings"
-          @test="testDiscordNotification"
-        />
+      <div v-else class="space-y-8">
+        <!-- Discord Provider Section -->
+        <UCard>
+          <template #header>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center">
+                <UIcon
+                  name="ic:baseline-discord"
+                  class="mr-3 text-2xl text-indigo-500"
+                />
+                <div>
+                  <h2 class="text-xl font-bold">Discord</h2>
+                  <p class="text-sm text-neutral-500">
+                    Configure Discord notifications and webhooks
+                  </p>
+                </div>
+              </div>
+              <UBadge color="primary" variant="soft">Active Provider</UBadge>
+            </div>
+          </template>
 
-        <DiscordWebhooks
-          ref="discordWebhooksRef"
-          :is-loading="isLoading"
-          :is-saving="isSaving"
-          :webhooks="discordWebhooks"
-          @save="saveDiscordWebhooks"
-        />
+          <div class="space-y-6">
+            <!-- Discord Settings -->
+            <div class="bg-neutral-50 dark:bg-neutral-900 rounded-lg p-6">
+              <h3 class="text-lg font-semibold mb-4 flex items-center">
+                <UIcon name="heroicons:cog-6-tooth" class="mr-2" />
+                Bot Configuration
+              </h3>
+              <DiscordNotifications
+                ref="discordRef"
+                :is-loading="isLoading"
+                :is-saving="isSaving"
+                :settings="discordSettings"
+                @save="saveDiscordSettings"
+                @test="testDiscordNotification"
+              />
+            </div>
 
-        <EmailNotifications
-          ref="emailRef"
-          :is-loading="isLoading"
-          :is-saving="isSaving"
-          :settings="emailSettings"
-          @save="saveEmailSettings"
-        />
+            <!-- Discord Webhooks -->
+            <div class="bg-neutral-50 dark:bg-neutral-900 rounded-lg p-6">
+              <h3 class="text-lg font-semibold mb-4 flex items-center">
+                <UIcon name="heroicons:link" class="mr-2" />
+                Webhook Management
+              </h3>
+              <DiscordWebhooks
+                ref="discordWebhooksRef"
+                :is-loading="isLoading"
+                :is-saving="isSaving"
+                :webhooks="discordWebhooks"
+                @save="saveDiscordWebhooks"
+              />
+            </div>
+          </div>
+        </UCard>
 
-        <BatchingSettings
-          ref="batchingRef"
-          :is-loading="isLoading"
-          :is-saving="isSaving"
-          :settings="batchingSettings"
-          @save="saveBatchingSettings"
-        />
+        <!-- Email Provider Section -->
+        <UCard>
+          <template #header>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center">
+                <UIcon
+                  name="heroicons:envelope"
+                  class="mr-3 text-2xl text-green-500"
+                />
+                <div>
+                  <h2 class="text-xl font-bold">Email</h2>
+                  <p class="text-sm text-neutral-500">
+                    Configure SMTP email notifications
+                  </p>
+                </div>
+              </div>
+              <UBadge color="success" variant="soft">Available Provider</UBadge>
+            </div>
+          </template>
+
+          <div class="bg-neutral-50 dark:bg-neutral-900 rounded-lg p-6">
+            <h3 class="text-lg font-semibold mb-4 flex items-center">
+              <UIcon name="heroicons:cog-6-tooth" class="mr-2" />
+              SMTP Configuration
+            </h3>
+            <EmailNotifications
+              ref="emailRef"
+              :is-loading="isLoading"
+              :is-saving="isSaving"
+              :settings="emailSettings"
+              @save="saveEmailSettings"
+            />
+          </div>
+        </UCard>
+
+        <!-- General Settings Section -->
+        <UCard>
+          <template #header>
+            <div class="flex items-center">
+              <UIcon
+                name="heroicons:adjustments-horizontal"
+                class="mr-3 text-2xl text-orange-500"
+              />
+              <div>
+                <h2 class="text-xl font-bold">General Settings</h2>
+                <p class="text-sm text-neutral-500">
+                  Global notification preferences
+                </p>
+              </div>
+            </div>
+          </template>
+
+          <div class="bg-neutral-50 dark:bg-neutral-900 rounded-lg p-6">
+            <h3 class="text-lg font-semibold mb-4 flex items-center">
+              <UIcon name="heroicons:squares-2x2" class="mr-2" />
+              Notification Batching
+            </h3>
+            <BatchingSettings
+              ref="batchingRef"
+              :is-loading="isLoading"
+              :is-saving="isSaving"
+              :settings="batchingSettings"
+              @save="saveBatchingSettings"
+            />
+          </div>
+        </UCard>
       </div>
     </div>
   </div>
