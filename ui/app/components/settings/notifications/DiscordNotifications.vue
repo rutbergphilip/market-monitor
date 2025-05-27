@@ -176,7 +176,7 @@ function saveDiscordSettings() {
 
     <UDivider class="my-8" />
 
-    <div class="flex gap-4 justify-end pt-4">
+    <div class="flex gap-4 justify-end py-4">
       <UButton
         variant="outline"
         color="neutral"
