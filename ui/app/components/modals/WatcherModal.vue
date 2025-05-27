@@ -58,10 +58,42 @@ const props = defineProps({
 });
 
 const watcherStore = useWatcherStore();
+const settingsStore = useSettingsStore();
 const toast = useToast();
 const { copy } = useClipboard();
 
 const metadataOpen = ref(false);
+
+// Discord webhook type
+type DiscordWebhook = {
+  name: string;
+  url: string;
+};
+
+// Discord webhooks from settings
+const discordWebhooks = computed((): DiscordWebhook[] => {
+  try {
+    const webhooksJson = settingsStore.getSettingValue(
+      'notification.discord.webhooks'
+    );
+    const parsed = webhooksJson ? JSON.parse(webhooksJson) : [];
+    return parsed;
+  } catch (error) {
+    console.error('Error parsing webhooks:', error);
+    return [];
+  }
+});
+
+// Multiple webhook selection state
+const selectedDiscordWebhooks = ref<{ label: string; value: string }[]>([]);
+
+// Discord webhook items for the input menu
+const discordWebhookItems = computed(() => {
+  return discordWebhooks.value.map((webhook) => ({
+    label: webhook.name || 'Unnamed Webhook',
+    value: webhook.url,
+  }));
+});
 
 const schema = z.object({
   query: z.string().min(1, 'Required'),
@@ -100,7 +132,16 @@ const validate = (state: Partial<Watcher>): FormError[] => {
   return errors;
 };
 
-onMounted(() => {
+onMounted(async () => {
+  // Fetch settings to get Discord webhooks if not already loaded
+  if (settingsStore.settings.length === 0) {
+    try {
+      await settingsStore.fetchSettings();
+    } catch (error) {
+      console.error('Failed to fetch settings:', error);
+    }
+  }
+
   if (props.watcher) {
     state.query = props.watcher.query;
     state.queries = props.watcher.queries ?? [];
@@ -108,6 +149,21 @@ onMounted(() => {
     state.notifications = [...props.watcher.notifications];
     state.min_price = props.watcher.min_price ?? null;
     state.max_price = props.watcher.max_price ?? null;
+
+    // Initialize selected Discord webhooks from existing notifications
+    const discordNotifications = state.notifications.filter(
+      (n) => n.kind === 'DISCORD'
+    ) as DiscordNotification[];
+    selectedDiscordWebhooks.value = discordNotifications.map((notification) => {
+      // Try to find a matching predefined webhook
+      const webhook = discordWebhooks.value.find(
+        (w) => w.url === notification.webhook_url
+      );
+      return {
+        label: webhook ? webhook.name : `Custom: ${notification.webhook_url}`,
+        value: notification.webhook_url,
+      };
+    });
   }
 });
 
@@ -250,12 +306,16 @@ function addNotification() {
         kind: 'EMAIL',
         email: notificationInput.value,
       };
+      state.notifications.push(notification);
+      notificationInput.value = '';
       break;
     case 'DISCORD':
-      notification = {
-        kind: 'DISCORD',
-        webhook_url: notificationInput.value,
-      };
+      // Discord notifications are now handled by the input menu
+      toast.add({
+        title: 'Info',
+        description: 'Please use the Discord webhook selector above',
+        color: 'info',
+      });
       break;
     default:
       toast.add({
@@ -265,13 +325,75 @@ function addNotification() {
       });
       return;
   }
-
-  state.notifications.push(notification);
-  notificationInput.value = '';
 }
 
 function removeNotification(index: number) {
+  const removedNotification = state.notifications[index];
   state.notifications.splice(index, 1);
+
+  // If it's a Discord notification, also remove it from selectedDiscordWebhooks
+  if (removedNotification && removedNotification.kind === 'DISCORD') {
+    const webhookUrl = (removedNotification as DiscordNotification).webhook_url;
+    selectedDiscordWebhooks.value = selectedDiscordWebhooks.value.filter(
+      (webhook) => webhook.value !== webhookUrl
+    );
+  }
+}
+
+// Handle Discord webhook selection from input menu
+function onDiscordWebhookSelect(webhooks: { label: string; value: string }[]) {
+  // Update Discord notifications based on selected webhooks
+  const discordNotifications: DiscordNotification[] = webhooks.map(
+    (webhook) => ({
+      kind: 'DISCORD',
+      webhook_url: webhook.value,
+    })
+  );
+
+  // Remove existing Discord notifications and add new ones
+  const nonDiscordNotifications = state.notifications.filter(
+    (n) => n.kind !== 'DISCORD'
+  );
+  state.notifications = [...nonDiscordNotifications, ...discordNotifications];
+}
+
+// Handle custom Discord webhook creation
+function onCreateDiscordWebhook(customWebhookUrl: string) {
+  // Basic validation for Discord webhook URL
+  if (!customWebhookUrl.includes('discord.com/api/webhooks/')) {
+    toast.add({
+      title: 'Invalid webhook URL',
+      description: 'Please enter a valid Discord webhook URL',
+      color: 'error',
+    });
+    return;
+  }
+
+  // Create a new webhook item
+  const newWebhookItem = {
+    label: `Custom: ${customWebhookUrl.split('/').pop()?.substring(0, 20)}...`,
+    value: customWebhookUrl,
+  };
+
+  // Add to selected webhooks
+  selectedDiscordWebhooks.value = [
+    ...selectedDiscordWebhooks.value,
+    newWebhookItem,
+  ];
+
+  // Add to notifications
+  const newNotification: DiscordNotification = {
+    kind: 'DISCORD',
+    webhook_url: customWebhookUrl,
+  };
+  state.notifications.push(newNotification);
+
+  toast.add({
+    title: 'Custom webhook added',
+    description: 'Discord webhook has been added',
+    color: 'success',
+    duration: 3000,
+  });
 }
 
 function getPlaceholderForNotificationType(type: NotificationKind): string {
@@ -293,6 +415,11 @@ function getNotificationValue(notification: Notification): string {
   }
   return '';
 }
+
+// Watch for notification type changes to clear input
+watch(selectedNotificationType, () => {
+  notificationInput.value = '';
+});
 </script>
 
 <template>
@@ -505,8 +632,47 @@ function getNotificationValue(notification: Notification): string {
                   </UButton>
                 </UButtonGroup>
 
-                <!-- Input Field with Add Button -->
-                <div class="flex gap-2 items-center">
+                <!-- Discord Webhook Input Menu -->
+                <div
+                  v-if="selectedNotificationType === 'DISCORD'"
+                  class="flex flex-col gap-3"
+                >
+                  <UInputMenu
+                    v-model="selectedDiscordWebhooks"
+                    :items="discordWebhookItems"
+                    multiple
+                    create-item
+                    size="md"
+                    placeholder="Select Discord webhooks or enter custom webhook URL"
+                    icon="ic:baseline-discord"
+                    class="w-full"
+                    @create="onCreateDiscordWebhook"
+                    @update:model-value="onDiscordWebhookSelect"
+                  >
+                    <template #item-label="{ item }">
+                      <div class="flex flex-col">
+                        <span>{{ item.label }}</span>
+                        <span class="text-xs text-neutral-400 truncate">{{
+                          item.value
+                        }}</span>
+                      </div>
+                    </template>
+                    <template #tags-item-text="{ item }">
+                      <span class="truncate">{{ item.label }}</span>
+                    </template>
+                  </UInputMenu>
+
+                  <p class="text-xs text-neutral-500">
+                    Select from configured webhooks or paste a Discord webhook
+                    URL and press Enter to add.
+                  </p>
+                </div>
+
+                <!-- Email Input Field (when EMAIL is selected) -->
+                <div
+                  v-else-if="selectedNotificationType === 'EMAIL'"
+                  class="flex gap-2 items-center"
+                >
                   <UInput
                     v-model="notificationInput"
                     class="w-full"

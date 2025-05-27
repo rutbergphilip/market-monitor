@@ -18,8 +18,10 @@ export const useSettingsStore = defineStore('settings', () => {
     return groups;
   });
 
-  const getSettingValue = (key: string): string => {
+  const getSettingValue = (key: SettingKey | string): string => {
+    console.log('settings.value:', settings.value);
     const setting = settings.value.find((s) => s.key === key);
+    console.log('getSettingValue:', key, setting);
     return setting ? setting.value : '';
   };
 

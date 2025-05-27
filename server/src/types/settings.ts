@@ -14,6 +14,7 @@ export enum SettingKey {
   NOTIFICATION_DISCORD_AVATAR_URL = 'notification.discord.avatar_url',
   NOTIFICATION_DISCORD_MAX_RETRIES = 'notification.discord.max_retries',
   NOTIFICATION_DISCORD_RETRY_DELAY = 'notification.discord.retry_delay',
+  NOTIFICATION_DISCORD_WEBHOOKS = 'notification.discord.webhooks',
 
   // Email notification settings
   NOTIFICATION_EMAIL_FROM = 'notification.email.from',
@@ -73,6 +74,11 @@ export const DEFAULT_SETTINGS: Record<
   [SettingKey.NOTIFICATION_DISCORD_RETRY_DELAY]: {
     value: '1000',
     description: 'Delay between retry attempts for Discord webhook in ms',
+  },
+  [SettingKey.NOTIFICATION_DISCORD_WEBHOOKS]: {
+    value: '[]',
+    description:
+      'JSON array of predefined Discord webhook configurations with names and URLs',
   },
 
   // Email notification settings

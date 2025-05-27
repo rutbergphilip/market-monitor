@@ -6,3 +6,7 @@ export type Setting = {
   created_at?: string;
   updated_at?: string;
 };
+
+export enum SettingKey {
+  NOTIFICATION_DISCORD_WEBHOOKS = 'notification.discord.webhooks',
+}

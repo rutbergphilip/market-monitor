@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import DiscordNotifications from '~/components/settings/notifications/DiscordNotifications.vue';
+import DiscordWebhooks from '~/components/settings/notifications/DiscordWebhooks.vue';
 import EmailNotifications from '~/components/settings/notifications/EmailNotifications.vue';
 import BatchingSettings from '~/components/settings/notifications/BatchingSettings.vue';
 import type { Setting } from '../../../shared/types/settings';
@@ -11,6 +12,12 @@ definePageMeta({
 const settingsStore = useSettingsStore();
 const toast = useToast();
 
+type DiscordWebhook = {
+  id: string;
+  name: string;
+  url: string;
+};
+
 type DiscordRef = {
   discordState: {
     username: string;
@@ -18,6 +25,10 @@ type DiscordRef = {
     maxRetries: number;
     retryDelay: number;
   };
+};
+
+type DiscordWebhooksRef = {
+  webhooks: DiscordWebhook[];
 };
 
 type EmailRef = {
@@ -42,6 +53,7 @@ type BatchingRef = {
 };
 
 const discordRef = ref<DiscordRef | null>(null);
+const discordWebhooksRef = ref<DiscordWebhooksRef | null>(null);
 const emailRef = ref<EmailRef | null>(null);
 const batchingRef = ref<BatchingRef | null>(null);
 
@@ -66,6 +78,18 @@ const discordSettings = computed(() => {
         '1000'
     ),
   };
+});
+
+const discordWebhooks = computed(() => {
+  if (!settingsStore.settings.length) return [];
+
+  const webhooksValue =
+    settingsStore.getSettingValue('notification.discord.webhooks') || '[]';
+  try {
+    return JSON.parse(webhooksValue);
+  } catch {
+    return [];
+  }
 });
 
 const emailSettings = computed(() => {
@@ -120,6 +144,15 @@ const settingsMap = {
   'notification.discord.retry_delay': (value: string) => {
     if (discordRef.value)
       discordRef.value.discordState.retryDelay = parseInt(value) || 1000;
+  },
+  'notification.discord.webhooks': (value: string) => {
+    if (discordWebhooksRef.value) {
+      try {
+        discordWebhooksRef.value.webhooks = JSON.parse(value);
+      } catch {
+        discordWebhooksRef.value.webhooks = [];
+      }
+    }
   },
 
   'notification.email.enabled': (value: string) => {
@@ -226,6 +259,31 @@ async function saveDiscordSettings() {
       color: 'error',
     });
     console.error('Failed to save Discord settings:', error);
+  } finally {
+    isSaving.value = false;
+  }
+}
+
+async function saveDiscordWebhooks(webhooks: DiscordWebhook[]) {
+  isSaving.value = true;
+  try {
+    await settingsStore.updateSetting(
+      'notification.discord.webhooks',
+      JSON.stringify(webhooks)
+    );
+
+    toast.add({
+      title: 'Success',
+      description: 'Discord webhook settings saved',
+      color: 'success',
+    });
+  } catch (error) {
+    toast.add({
+      title: 'Error',
+      description: 'Failed to save Discord webhook settings',
+      color: 'error',
+    });
+    console.error('Failed to save Discord webhook settings:', error);
   } finally {
     isSaving.value = false;
   }
@@ -445,6 +503,14 @@ async function testDiscordNotification() {
           :settings="discordSettings"
           @save="saveDiscordSettings"
           @test="testDiscordNotification"
+        />
+
+        <DiscordWebhooks
+          ref="discordWebhooksRef"
+          :is-loading="isLoading"
+          :is-saving="isSaving"
+          :webhooks="discordWebhooks"
+          @save="saveDiscordWebhooks"
         />
 
         <EmailNotifications
