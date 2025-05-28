@@ -160,7 +160,7 @@ async function sendDiscordBatch(
 ): Promise<void> {
   if (ads.length === 0) return;
 
-  const defaultUsername = username || 'Blocket Bot';
+  const defaultUsername = username || 'Market Monitor';
   const defaultAvatarUrl =
     avatarUrl ||
     'https://public-assets.blocketcdn.se/static/images/blocketLogotype.png';
@@ -245,7 +245,7 @@ async function sendDiscordSingle(
 ): Promise<void> {
   const adInfo = formatAdInfo(ad);
 
-  const defaultUsername = username || 'Blocket Bot';
+  const defaultUsername = username || 'Market Monitor';
   const defaultAvatarUrl =
     avatarUrl ||
     'https://public-assets.blocketcdn.se/static/images/blocketLogotype.png';

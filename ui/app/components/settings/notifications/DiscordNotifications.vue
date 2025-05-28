@@ -28,7 +28,7 @@ const discordSchema = z.object({
 });
 
 const discordState = reactive({
-  username: props.settings?.username || 'Blocket Bot',
+  username: props.settings?.username || 'Market Monitor',
   avatarUrl: props.settings?.avatarUrl || '',
   maxRetries:
     props.settings?.maxRetries !== undefined
@@ -80,7 +80,7 @@ function saveDiscordSettings() {
           </label>
           <UInput
             v-model="discordState.username"
-            placeholder="Blocket Bot"
+            placeholder="Market Monitor"
             icon="heroicons:user"
             size="md"
           />

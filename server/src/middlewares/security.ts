@@ -4,15 +4,15 @@ import logger from '@/integrations/logger';
 import { SettingRepository } from '@/db/repositories';
 import { SettingKey } from '@/types/settings';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'blocket-bot-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET || 'market-monitor-secret-key';
 const REFRESH_TOKEN_SECRET =
-  process.env.REFRESH_TOKEN_SECRET || 'blocket-bot-refresh-secret-key';
+  process.env.REFRESH_TOKEN_SECRET || 'market-monitor-refresh-secret-key';
 const REFRESH_TOKEN_EXPIRY = '30d';
 
 export function generateToken(userId: string): string {
   const tokenExpiry: string =
     SettingRepository.getValue(SettingKey.SECURITY_TOKEN_EXPIRY) || '48h';
-  
+
   // Handle "no expire" option
   if (tokenExpiry === 'never' || tokenExpiry === 'no-expire') {
     logger.info({
@@ -22,13 +22,13 @@ export function generateToken(userId: string): string {
     });
     return jwt.sign({ userId }, JWT_SECRET);
   }
-  
+
   logger.info({
     message: 'Generated JWT token with expiry',
     userId,
     tokenExpiry,
   });
-  
+
   return jwt.sign({ userId }, JWT_SECRET, { expiresIn: tokenExpiry as any });
 }
 
@@ -38,7 +38,7 @@ export function generateRefreshToken(userId: string): string {
     userId,
     expiresIn: REFRESH_TOKEN_EXPIRY,
   });
-  
+
   return jwt.sign({ userId }, REFRESH_TOKEN_SECRET, {
     expiresIn: REFRESH_TOKEN_EXPIRY,
   });
@@ -46,16 +46,16 @@ export function generateRefreshToken(userId: string): string {
 
 export function verifyToken(token: string): { userId: string } | null {
   const tokenPreview = token.substring(0, 10) + '...';
-  
+
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
-    
+
     logger.debug({
       message: 'JWT token verified successfully',
       userId: decoded.userId,
       tokenPreview,
     });
-    
+
     return decoded;
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
@@ -83,18 +83,18 @@ export function verifyToken(token: string): { userId: string } | null {
 
 export function verifyRefreshToken(token: string): { userId: string } | null {
   const tokenPreview = token.substring(0, 10) + '...';
-  
+
   try {
     const decoded = jwt.verify(token, REFRESH_TOKEN_SECRET) as {
       userId: string;
     };
-    
+
     logger.debug({
       message: 'Refresh token verified successfully',
       userId: decoded.userId,
       tokenPreview,
     });
-    
+
     return decoded;
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {

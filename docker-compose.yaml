@@ -1,14 +1,14 @@
 version: '3.8'
 
 services:
-  blocket-bot-test:
+  market-monitor-test:
     build: .
     ports:
       - '3000:3000'
       - '8080:8080'
     volumes:
       # Named volume for database persistence
-      - blocket-bot-data:/app/data
+      - market-monitor-data:/app/data
     environment:
       # Database configuration
       - DB_PATH=/app/data
@@ -40,5 +40,5 @@ services:
       start_period: 40s
 
 volumes:
-  blocket-bot-data:
+  market-monitor-data:
     driver: local

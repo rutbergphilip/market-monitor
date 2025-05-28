@@ -67,7 +67,7 @@ const discordSettings = computed(() => {
   return {
     username:
       settingsStore.getSettingValue('notification.discord.username') ||
-      'Blocket Bot',
+      'Market Monitor',
     avatarUrl:
       settingsStore.getSettingValue('notification.discord.avatar_url') || '',
     maxRetries: parseInt(
@@ -410,7 +410,7 @@ async function testDiscordNotification() {
   try {
     const testMessage = {
       subject: 'Test Notification',
-      body: 'This is a test notification from Blocket Bot',
+      body: 'This is a test notification from Market Monitor',
       price: { value: 1000, suffix: ' kr' },
       share_url: 'https://www.blocket.se',
       images: [

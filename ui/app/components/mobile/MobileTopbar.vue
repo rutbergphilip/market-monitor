@@ -11,7 +11,7 @@ const statesStore = useStatesStore();
       aria-label="Open navigation menu"
       @click="statesStore.openSidebar"
     />
-    <div class="ml-4 text-lg font-semibold">Blocket Bot</div>
+    <div class="ml-4 text-lg font-semibold">Market Monitor</div>
     <div class="ml-auto flex items-center space-x-2">
       <UserDropdown />
     </div>

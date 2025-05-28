@@ -1,6 +1,6 @@
-# 🚀 Blocket Bot
+# 🚀 Market Monitor
 
-Monitor Blocket listings effortlessly with a beautiful UI and get instant notifications for new ads, right in your Discord!
+Monitor marketplace listings effortlessly across multiple platforms with a beautiful UI and get instant notifications for new ads, right in your Discord!
 
 ## 🌟 Features
 
@@ -33,11 +33,11 @@ Pull and run the Docker image:
 ```sh
 docker run -d \
   -p 3000:3000 -p 8080:8080 \
-  -v blocket-bot-data:/app/data \
+  -v market-monitor-data:/app/data \
   -e JWT_SECRET=your_secure_jwt_secret \
   -e REFRESH_TOKEN_SECRET=your_secure_refresh_secret \
-  --name blocket-bot \
-  rutbergphilip/blocket-bot:2.0.0
+  --name market-monitor \
+  rutbergphilip/market-monitor:2.0.0
 ```
 
 For custom database path:
@@ -49,8 +49,8 @@ docker run -d \
   -e DB_PATH=/app/data \
   -e JWT_SECRET=your_secure_jwt_secret \
   -e REFRESH_TOKEN_SECRET=your_secure_refresh_secret \
-  --name blocket-bot \
-  rutbergphilip/blocket-bot:2.0.0
+  --name market-monitor \
+  rutbergphilip/market-monitor:2.0.0
 ```
 
 Then access the web UI at `http://localhost:3000`
@@ -60,8 +60,8 @@ Then access the web UI at `http://localhost:3000`
 Clone the repository and install dependencies:
 
 ```sh
-git clone https://github.com/rutbergphilip/blocket-bot
-cd blocket-bot
+git clone https://github.com/rutbergphilip/market-monitor
+cd market-monitor
 
 # Install backend dependencies
 cd server
@@ -185,12 +185,12 @@ Discord notification settings are fully customizable through the UI:
 ```sh
 docker run -d \
   -p 3000:3000 -p 8080:8080 \
-  -v blocket-bot-data:/app/data \
+  -v market-monitor-data:/app/data \
   -e JWT_SECRET=your_secure_jwt_secret \
   -e REFRESH_TOKEN_SECRET=your_secure_refresh_secret \
   -e LOG_LEVEL=info \
-  --name blocket-bot \
-  rutbergphilip/blocket-bot:2.0.0
+  --name market-monitor \
+  rutbergphilip/market-monitor:2.0.0
 ```
 
 ### Using Docker Compose:
@@ -200,7 +200,7 @@ docker run -d \
 docker-compose up -d
 
 # Development with local bind mount
-docker-compose --profile dev up -d blocket-bot-dev
+docker-compose --profile dev up -d market-monitor-dev
 ```
 
 ### Kubernetes Deployment
@@ -222,7 +222,7 @@ volumeMounts:
 volumes:
   - name: data-storage
     persistentVolumeClaim:
-      claimName: blocket-bot-pvc
+      claimName: market-monitor-pvc
 ```
 
 ## 📜 License
@@ -231,4 +231,4 @@ This project is licensed under the MIT License.
 
 ## ⭐ Star me
 
-If you like Blocket Bot, give it a ⭐!
+If you like Market Monitor, give it a ⭐!

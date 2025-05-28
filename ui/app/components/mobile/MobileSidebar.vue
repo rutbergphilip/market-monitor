@@ -45,7 +45,7 @@ const items = computed<NavigationMenuItem[][]>(() => [
 <template>
   <USlideover
     side="left"
-    title="Blocket Bot"
+    title="Market Monitor"
     :open="sidebarOpen"
     :close="{ onClick: statesStore.closeSidebar }"
     :dismissible="true"

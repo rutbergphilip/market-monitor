@@ -68,7 +68,7 @@ export const DEFAULT_SETTINGS: Record<
 > = {
   // Discord notification settings
   [SettingKey.NOTIFICATION_DISCORD_USERNAME]: {
-    value: 'Blocket Bot',
+    value: 'Market Monitor',
     description: 'Username to display for Discord notifications',
   },
   [SettingKey.NOTIFICATION_DISCORD_AVATAR_URL]: {

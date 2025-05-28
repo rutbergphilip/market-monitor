@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Blocket Bot has been successfully refactored to support multiple marketplaces. The architecture now uses an abstract adapter pattern that makes it extremely easy to add new marketplaces beyond the original Blocket integration.
+The Market Monitor has been successfully refactored to support multiple marketplaces. The architecture now uses an abstract adapter pattern that makes it extremely easy to add new marketplaces beyond the original Blocket integration.
 
 ## Key Changes Made
 

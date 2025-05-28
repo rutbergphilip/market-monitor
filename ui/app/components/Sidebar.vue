@@ -76,7 +76,7 @@ function toggleSidebar() {
           v-if="!isCollapsed"
           class="font-bold text-xl text-neutral-900 dark:text-white"
         >
-          Blocket Bot
+          Market Monitor
         </h1>
         <div v-if="!isCollapsed" class="flex items-center space-x-2">
           <UTooltip
@@ -150,7 +150,7 @@ function toggleSidebar() {
       >
         <header class="flex items-center justify-between">
           <h1 class="font-bold text-xl text-neutral-900 dark:text-white">
-            Blocket Bot
+            Market Monitor
           </h1>
           <div class="flex items-center space-x-2">
             <UButton
