@@ -70,7 +70,6 @@ export async function initializeDb() {
     CREATE TABLE IF NOT EXISTS watchers (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       schedule TEXT NOT NULL,
-      query TEXT NOT NULL,
       status TEXT NOT NULL DEFAULT 'active',
       last_run TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       notifications TEXT DEFAULT '[]',

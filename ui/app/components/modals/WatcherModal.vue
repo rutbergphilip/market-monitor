@@ -35,8 +35,7 @@ type WatcherQuery = {
 
 type Watcher = {
   id?: string;
-  query: string;
-  queries?: WatcherQuery[];
+  queries: WatcherQuery[];
   notifications: Notification[];
   schedule: string;
   status?: 'active' | 'stopped';
@@ -96,7 +95,6 @@ const discordWebhookItems = computed(() => {
 });
 
 const schema = z.object({
-  query: z.string().min(1, 'Required'),
   schedule: z.string().min(1, 'Required'),
 });
 
@@ -105,7 +103,6 @@ type Schema = z.output<typeof schema>;
 const selectedNotificationType = ref<NotificationKind>('DISCORD');
 const notificationInput = ref('');
 const state = reactive<Watcher>({
-  query: props.watcher?.query ?? '',
   queries: props.watcher?.queries ?? [],
   schedule: props.watcher?.schedule ?? '',
   notifications: props.watcher?.notifications ?? [],
@@ -126,7 +123,9 @@ const schedule = computed(() =>
 
 const validate = (state: Partial<Watcher>): FormError[] => {
   const errors: FormError[] = [];
-  if (!state.query) errors.push({ name: 'query', message: 'Required' });
+  if (!state.queries || state.queries.length === 0) {
+    errors.push({ name: 'queries', message: 'At least one query is required' });
+  }
   if (schedule.value === 'Invalid cron expression')
     errors.push({ name: 'schedule', message: 'Required' });
   return errors;
@@ -143,7 +142,6 @@ onMounted(async () => {
   }
 
   if (props.watcher) {
-    state.query = props.watcher.query;
     state.queries = props.watcher.queries ?? [];
     state.schedule = props.watcher.schedule;
     state.notifications = [...props.watcher.notifications];
@@ -176,9 +174,8 @@ async function save(event: FormSubmitEvent<Schema>) {
 }
 
 async function create(event: FormSubmitEvent<Schema>) {
-  const { query, schedule } = event.data;
+  const { schedule } = event.data;
   const watcher: Watcher = {
-    query,
     queries: state.queries,
     schedule,
     notifications: state.notifications ? state.notifications : [],
@@ -207,10 +204,9 @@ async function create(event: FormSubmitEvent<Schema>) {
 }
 
 async function update(event: FormSubmitEvent<Schema>) {
-  const { query, schedule } = event.data;
+  const { schedule } = event.data;
   const watcher: Watcher = {
     id: props.watcher?.id,
-    query,
     queries: state.queries,
     schedule,
     notifications: state.notifications ? state.notifications : [],
@@ -436,19 +432,10 @@ watch(selectedNotificationType, () => {
         class="space-y-4 w-full"
         @submit="save"
       >
-        <UFormField label="Watcher query" name="query">
-          <UInput
-            v-model="state.query"
-            size="xl"
-            class="w-full"
-            placeholder="Macbook Pro"
-          />
-        </UFormField>
-
-        <!-- Multiple Queries Section -->
+        <!-- Search Queries Section -->
         <div class="flex flex-col gap-4 w-full">
           <div class="flex items-center justify-between">
-            <p class="text-sm font-medium">Additional Search Queries</p>
+            <p class="text-sm font-medium">Search Queries</p>
             <UButton
               size="sm"
               variant="outline"
@@ -460,7 +447,7 @@ watch(selectedNotificationType, () => {
                 }
               "
             >
-              {{ showMultipleQueries ? 'Hide' : 'Add More' }}
+              {{ showMultipleQueries ? 'Hide' : 'Add Query' }}
             </UButton>
           </div>
 
@@ -469,7 +456,7 @@ watch(selectedNotificationType, () => {
             <UInput
               v-model="queriesInput"
               class="w-full"
-              placeholder="Enter additional search term (e.g. iPhone 15)"
+              placeholder="Enter search term (e.g. iPhone 15, Macbook Pro)"
               @keyup.enter="addQuery"
             />
             <UButton
@@ -488,7 +475,7 @@ watch(selectedNotificationType, () => {
             class="flex flex-col gap-2 p-3 bg-gray-800 rounded-md"
           >
             <p class="text-xs text-neutral-400 mb-1 font-medium">
-              Additional Queries ({{ state.queries.length }})
+              Search Queries ({{ state.queries.length }})
             </p>
             <div
               v-for="(query, index) in state.queries"
@@ -522,9 +509,20 @@ watch(selectedNotificationType, () => {
             </div>
           </div>
 
+          <!-- Show message when no queries exist -->
+          <div
+            v-if="!state.queries || state.queries.length === 0"
+            class="p-4 border border-dashed border-neutral-600 rounded-md text-center"
+          >
+            <p class="text-sm text-neutral-400">
+              No search queries added yet. Click "Add Query" to get started.
+            </p>
+          </div>
+
           <p class="text-xs text-neutral-500">
-            Add multiple search terms to monitor different variations. Each
-            query will be checked independently.
+            Add search terms to monitor different products. Each query will be
+            checked independently and you'll be notified when new matches are
+            found.
           </p>
         </div>
 

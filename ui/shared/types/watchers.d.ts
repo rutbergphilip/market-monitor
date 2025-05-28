@@ -6,8 +6,7 @@ export type WatcherQuery = {
 
 export type Watcher = {
   id?: string;
-  query: string; // Keep for backward compatibility, will be deprecated
-  queries?: WatcherQuery[]; // New multiple queries support
+  queries: WatcherQuery[];
   notifications: Notification[];
   schedule: string;
   status?: 'active' | 'stopped';

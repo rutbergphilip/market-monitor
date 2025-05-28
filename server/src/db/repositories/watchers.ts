@@ -6,8 +6,7 @@ import logger from '@/integrations/logger';
 import type { Watcher, WatcherQuery } from '@/types/watchers';
 
 type CreateWatcherInput = {
-  query: string;
-  queries?: WatcherQuery[];
+  queries: WatcherQuery[]; // At least one query is required
   schedule: string;
   notifications: Watcher['notifications'];
   min_price?: number | null;
@@ -15,7 +14,6 @@ type CreateWatcherInput = {
 };
 
 type UpdateWatcherInput = {
-  query?: string;
   queries?: WatcherQuery[];
   schedule?: string;
   notifications?: Watcher['notifications'];
@@ -171,20 +169,23 @@ function updateWatcherQueries(
 }
 
 /**
- * Get all watchers
- * @returns {Watcher[]} List of all watchers
+ * Get all watchers with their queries
+ * @returns {Watcher[]} List of all watchers with their queries
  */
 export function getAll(): Watcher[] {
   try {
-    const stmt = db.prepare(`SELECT * FROM watchers`);
-    const rows = stmt.all() as WatcherRow[];
+    // First get all watchers
+    const watcherStmt = db.prepare(
+      `SELECT * FROM watchers ORDER BY created_at DESC`,
+    );
+    const watcherRows = watcherStmt.all() as WatcherRow[];
 
-    return rows.map((row) => {
+    return watcherRows.map((row) => {
       const queries = getWatcherQueries(row.id);
+
       return {
         id: row.id,
-        query: row.query,
-        queries: queries.length > 0 ? queries : undefined,
+        queries: queries, // Always return the queries from watcher_queries table
         schedule: row.schedule,
         notifications: JSON.parse(row.notifications),
         status: row.status,
@@ -214,12 +215,11 @@ export function create(input: CreateWatcherInput): Watcher {
     const now = new Date().toISOString();
 
     const stmt = db.prepare(`
-      INSERT INTO watchers (query, schedule, notifications, status, last_run, created_at, updated_at, min_price, max_price)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO watchers (schedule, notifications, status, last_run, created_at, updated_at, min_price, max_price)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     const info = stmt.run(
-      input.query,
       input.schedule,
       JSON.stringify(input.notifications),
       'active',
@@ -232,7 +232,7 @@ export function create(input: CreateWatcherInput): Watcher {
 
     const watcherId = String(info.lastInsertRowid);
 
-    // Create additional queries if provided
+    // Store all queries in the watcher_queries table
     if (input.queries && input.queries.length > 0) {
       createWatcherQueries(watcherId, input.queries);
     }
@@ -240,18 +240,13 @@ export function create(input: CreateWatcherInput): Watcher {
     logger.info({
       message: 'Watcher created',
       watcherId: watcherId,
-      query: input.query,
-      additionalQueries: input.queries?.length || 0,
+      totalQueries: input.queries?.length || 0,
     });
 
-    const queries =
-      input.queries && input.queries.length > 0
-        ? getWatcherQueries(watcherId)
-        : undefined;
+    const queries = getWatcherQueries(watcherId);
 
     return {
       id: watcherId,
-      query: input.query,
       queries: queries,
       schedule: input.schedule,
       notifications: input.notifications,
@@ -292,11 +287,6 @@ export function update(id: string, input: UpdateWatcherInput): Watcher | null {
 
     const updates: string[] = [];
     const values: any[] = [];
-
-    if (input.query !== undefined) {
-      updates.push('query = ?');
-      values.push(input.query);
-    }
 
     if (input.schedule !== undefined) {
       updates.push('schedule = ?');
@@ -398,7 +388,6 @@ export function remove(id: string): number {
 
 type WatcherRow = {
   id: string;
-  query: string;
   schedule: string;
   notifications: string; // Stored as JSON string in the database
   status: 'active' | 'stopped';
@@ -429,8 +418,7 @@ export function getById(id: string): Watcher | null {
 
     return {
       id: row.id,
-      query: row.query,
-      queries: queries.length > 0 ? queries : undefined,
+      queries: queries, // Always return the queries from watcher_queries table
       schedule: row.schedule,
       notifications: JSON.parse(row.notifications),
       status: row.status,

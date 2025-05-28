@@ -10,6 +10,17 @@ import ConfirmationModal from '~/components/modals/ConfirmationModal.vue';
 
 import type { TableColumn } from '@nuxt/ui';
 
+// Type definitions for this component
+type DiscordNotification = {
+  kind: 'DISCORD';
+  webhook_url: string;
+};
+
+type EmailNotification = {
+  kind: 'EMAIL';
+  email: string;
+};
+
 const UButton = resolveComponent('UButton');
 const UBadge = resolveComponent('UBadge');
 const UDropdownMenu = resolveComponent('UDropdownMenu');
@@ -196,14 +207,14 @@ const columns: ComputedRef<TableColumn<Watcher>[]> = computed(() => [
     cell: ({ row }) => `#${row.getValue('id')}`,
   },
   {
-    accessorKey: 'query',
+    accessorKey: 'queries',
     header: ({ column }) => {
       const isSorted = column.getIsSorted();
 
       return h(UButton, {
         color: 'neutral',
         variant: 'ghost',
-        label: 'Query',
+        label: 'Queries',
         icon: isSorted
           ? isSorted === 'asc'
             ? 'i-lucide-arrow-up-narrow-wide'
@@ -215,24 +226,61 @@ const columns: ComputedRef<TableColumn<Watcher>[]> = computed(() => [
     },
     cell: ({ row }) => {
       const watcher = row.original;
-      const mainQuery = row.getValue('query') as string;
-      const additionalQueries =
-        watcher.queries?.filter((q) => q.enabled !== false) || [];
+      const queries = watcher.queries.filter((q) => q.enabled !== false);
 
-      if (additionalQueries.length === 0) {
-        return h('div', { class: 'lowercase' }, mainQuery);
+      // Handle case with no queries
+      if (!queries || queries.length === 0) {
+        return h('div', { class: 'lowercase text-neutral-500' }, 'No queries');
+      }
+
+      // Single query
+      if (queries.length === 1) {
+        const firstQuery = queries[0];
+        return h(
+          'div',
+          { class: 'lowercase' },
+          firstQuery?.query || 'No query'
+        );
+      }
+
+      // Multiple queries
+      const firstQuery = queries[0];
+      if (!firstQuery) {
+        return h('div', { class: 'lowercase text-neutral-500' }, 'No queries');
       }
 
       return h('div', { class: 'flex flex-col gap-1' }, [
-        h('div', { class: 'lowercase font-medium' }, mainQuery),
+        h('div', { class: 'lowercase font-medium' }, firstQuery.query),
         h(
           'div',
           { class: 'text-xs text-neutral-500' },
-          `+${additionalQueries.length} more ${
-            additionalQueries.length === 1 ? 'query' : 'queries'
+          `+${queries.length - 1} more ${
+            queries.length - 1 === 1 ? 'query' : 'queries'
           }`
         ),
       ]);
+    },
+    sortingFn: (rowA, rowB) => {
+      const queriesA = rowA.original.queries.filter((q) => q.enabled !== false);
+      const queriesB = rowB.original.queries.filter((q) => q.enabled !== false);
+
+      const firstQueryA =
+        queriesA.length > 0 && queriesA[0] ? queriesA[0].query : '';
+      const firstQueryB =
+        queriesB.length > 0 && queriesB[0] ? queriesB[0].query : '';
+
+      return firstQueryA.localeCompare(firstQueryB);
+    },
+    filterFn: (row, columnId, filterValue) => {
+      if (!filterValue) return true;
+
+      const watcher = row.original;
+      const queries = watcher.queries.filter((q) => q.enabled !== false);
+
+      // Search across all enabled queries
+      return queries.some((query) =>
+        query.query.toLowerCase().includes(filterValue.toLowerCase())
+      );
     },
   },
   {
@@ -324,14 +372,16 @@ const columns: ComputedRef<TableColumn<Watcher>[]> = computed(() => [
     accessorKey: 'notifications',
     header: () => h('div', { class: 'text-left' }, 'Enabled Notifications'),
     cell: ({ row }) => {
-      const notifications = row.getValue('notifications') as Notification[];
+      const notifications = row.getValue('notifications') as Array<
+        DiscordNotification | EmailNotification
+      >;
 
       return h(
         'div',
         { class: 'flex flex-wrap items-center justify-start gap-2' },
         notifications.map((notification) =>
           h(UIcon, {
-            name: NOTIFICATION_ICON_MAP[notification.kind as NotificationKind],
+            name: NOTIFICATION_ICON_MAP[notification.kind],
             class: 'text-lg',
             title: notification,
           })
@@ -512,11 +562,11 @@ const table = useTemplateRef('table');
 
     <div class="flex items-center gap-2 px-4 py-3.5 overflow-x-auto">
       <UInput
-        :model-value="(table?.tableApi?.getColumn('query')?.getFilterValue() as string)"
+        :model-value="(table?.tableApi?.getColumn('queries')?.getFilterValue() as string)"
         class="max-w-sm min-w-[12ch]"
-        placeholder="Filter"
+        placeholder="Filter queries"
         @update:model-value="
-          table?.tableApi?.getColumn('query')?.setFilterValue($event)
+          table?.tableApi?.getColumn('queries')?.setFilterValue($event)
         "
       />
 

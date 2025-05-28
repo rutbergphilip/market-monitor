@@ -68,7 +68,7 @@ async function withRetry<T>(
 export async function sendDiscordNotification(
   ads: BlocketAd[],
   webhookUrl?: string,
-  watcherInfo?: { query: string; id?: string },
+  watcherInfo?: { queries: string[]; id?: string },
 ): Promise<void> {
   const { username, avatarUrl, maxRetries, retryDelay } =
     NOTIFICATION_CONFIG.discord;
@@ -91,7 +91,7 @@ export async function sendDiscordNotification(
           batchSize: batch.length,
           batchNumber: Math.floor(i / batchSize) + 1,
           totalBatches: Math.ceil(ads.length / batchSize),
-          watcherQuery: watcherInfo?.query,
+          watcherQueries: watcherInfo?.queries,
           watcherId: watcherInfo?.id,
         });
 
@@ -115,7 +115,7 @@ export async function sendDiscordNotification(
       logger.info({
         message: 'Sending individual Discord notifications',
         count: ads.length,
-        watcherQuery: watcherInfo?.query,
+        watcherQueries: watcherInfo?.queries,
         watcherId: watcherInfo?.id,
       });
 
@@ -141,7 +141,7 @@ export async function sendDiscordNotification(
       error: error as Error,
       message: 'Error sending Discord notification',
       adsCount: ads.length,
-      watcherQuery: watcherInfo?.query,
+      watcherQueries: watcherInfo?.queries,
     });
   }
 }
@@ -156,7 +156,7 @@ async function sendDiscordBatch(
   avatarUrl: string,
   maxRetries: number,
   retryDelay: number,
-  watcherInfo?: { query: string; id?: string },
+  watcherInfo?: { queries: string[]; id?: string },
 ): Promise<void> {
   if (ads.length === 0) return;
 
@@ -176,10 +176,10 @@ async function sendDiscordBatch(
       },
     ];
 
-    if (watcherInfo?.query) {
+    if (watcherInfo?.queries && watcherInfo.queries.length > 0) {
       fields.push({
-        name: 'Search Query',
-        value: watcherInfo.query,
+        name: 'Search Queries',
+        value: watcherInfo.queries.join(', '),
         inline: true,
       });
     }
@@ -222,7 +222,7 @@ async function sendDiscordBatch(
       logger.debug({
         message: 'Batch Discord notification sent successfully',
         count: ads.length,
-        watcherQuery: watcherInfo?.query,
+        watcherQueries: watcherInfo?.queries,
         watcherId: watcherInfo?.id,
       });
     },
@@ -241,7 +241,7 @@ async function sendDiscordSingle(
   avatarUrl: string,
   maxRetries: number,
   retryDelay: number,
-  watcherInfo?: { query: string; id?: string },
+  watcherInfo?: { queries: string[]; id?: string },
 ): Promise<void> {
   const adInfo = formatAdInfo(ad);
 
@@ -260,10 +260,10 @@ async function sendDiscordSingle(
   ];
 
   // Add watcher info as a field if available
-  if (watcherInfo?.query) {
+  if (watcherInfo?.queries && watcherInfo.queries.length > 0) {
     fields.push({
-      name: 'Search Query',
-      value: watcherInfo.query,
+      name: 'Search Queries',
+      value: watcherInfo.queries.join(', '),
       inline: true,
     });
   }
@@ -293,7 +293,7 @@ async function sendDiscordSingle(
       logger.debug({
         message: 'Single Discord notification sent successfully',
         ad: adInfo.title,
-        watcherQuery: watcherInfo?.query,
+        watcherQueries: watcherInfo?.queries,
         watcherId: watcherInfo?.id,
       });
     },
@@ -328,7 +328,7 @@ async function sendEmailNotification(
 export async function notifyAboutAds(
   ads: BlocketAd[],
   notifications?: Notification[],
-  watcherInfo?: { query: string; id?: string },
+  watcherInfo?: { queries: string[]; id?: string },
 ): Promise<void> {
   if (!ads || !ads.length) {
     logger.debug('No ads to notify about');
@@ -339,7 +339,7 @@ export async function notifyAboutAds(
     message: 'Sending notifications for new ads',
     count: ads.length,
     customNotifications: notifications ? notifications.length : 0,
-    watcherQuery: watcherInfo?.query,
+    watcherQueries: watcherInfo?.queries,
     watcherId: watcherInfo?.id,
   });
 

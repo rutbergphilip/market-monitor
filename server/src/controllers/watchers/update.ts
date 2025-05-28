@@ -6,15 +6,13 @@ import type { Watcher } from '@/types/watchers';
 
 export async function update(req: Request, res: Response) {
   const { id } = req.params;
-  const { query, queries, schedule, notifications, min_price, max_price } =
-    req.body;
+  const { queries, schedule, notifications, min_price, max_price } = req.body;
 
   const originalWatcher = WatcherRepository.getById(id);
   const scheduleChanged =
     originalWatcher && schedule && originalWatcher.schedule !== schedule;
 
   const updatedWatcher: Watcher = {
-    query,
     queries,
     notifications,
     schedule,

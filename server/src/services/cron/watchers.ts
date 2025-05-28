@@ -120,11 +120,19 @@ async function fetchAdsForWatcher(watcher: Watcher): Promise<BlocketAd[]> {
   const allAds: BlocketAd[] = [];
   const adMap = new Map<string, BlocketAd>(); // To avoid duplicates
 
-  // Get all queries for this watcher
+  // Get all enabled queries for this watcher from the separate queries table
   const queries =
     watcher.queries && watcher.queries.length > 0
       ? watcher.queries.filter((q) => q.enabled !== false)
-      : [{ query: watcher.query, enabled: true }]; // Fallback to main query
+      : [];
+
+  if (queries.length === 0) {
+    logger.warn({
+      message: 'No enabled queries found for watcher',
+      watcherId: watcher.id,
+    });
+    return [];
+  }
 
   for (const queryObj of queries) {
     try {
@@ -229,7 +237,7 @@ function createWatcherJobFunction(watcher: Watcher): () => Promise<void> {
         const queries =
           watcher.queries && watcher.queries.length > 0
             ? watcher.queries.map((q) => q.query)
-            : [watcher.query];
+            : [];
         logger.warn({
           message: `No results for watcher queries`,
           watcherId: watcher.id,
@@ -263,13 +271,13 @@ function createWatcherJobFunction(watcher: Watcher): () => Promise<void> {
         const queries =
           watcher.queries && watcher.queries.length > 0
             ? watcher.queries.map((q) => q.query)
-            : [watcher.query];
+            : [];
         logger.info({
           message: `First run for watcher: cached ${filteredAds.length} existing ads (${ads.length - filteredAds.length} excluded by price range)`,
           watcherId: watcher.id,
           queries: queries,
           enabledQueries:
-            watcher.queries?.filter((q) => q.enabled !== false).length || 1,
+            watcher.queries?.filter((q) => q.enabled !== false).length || 0,
           priceRange: {
             min: watcher.min_price,
             max: watcher.max_price,
@@ -285,9 +293,8 @@ function createWatcherJobFunction(watcher: Watcher): () => Promise<void> {
         const queries =
           watcher.queries && watcher.queries.length > 0
             ? watcher.queries.map((q) => q.query)
-            : [watcher.query];
+            : [];
         const watcherInfo = {
-          query: watcher.query, // Keep main query for backward compatibility
           queries: queries,
           id: watcher.id!,
         };
@@ -302,13 +309,13 @@ function createWatcherJobFunction(watcher: Watcher): () => Promise<void> {
       const queries =
         watcher.queries && watcher.queries.length > 0
           ? watcher.queries.map((q) => q.query)
-          : [watcher.query];
+          : [];
       logger.info({
         message: `Job completed for watcher: found ${newAds.length} new ads`,
         watcherId: watcher.id,
         queries: queries,
         enabledQueries:
-          watcher.queries?.filter((q) => q.enabled !== false).length || 1,
+          watcher.queries?.filter((q) => q.enabled !== false).length || 0,
         priceRange: {
           min: watcher.min_price,
           max: watcher.max_price,
@@ -319,7 +326,7 @@ function createWatcherJobFunction(watcher: Watcher): () => Promise<void> {
       const queries =
         watcher.queries && watcher.queries.length > 0
           ? watcher.queries.map((q) => q.query)
-          : [watcher.query];
+          : [];
       logger.error({
         error: error as Error,
         message: `Error in watcher job`,
@@ -363,7 +370,7 @@ export function startWatcherJob(watcher: Watcher): void {
       message: 'Watcher job started',
       watcherId: watcher.id,
       schedule: watcher.schedule,
-      query: watcher.query,
+      queries: watcher.queries?.map((q) => q.query) || [],
     });
   } catch (error) {
     logger.error({
@@ -443,7 +450,7 @@ export async function runWatcherManually(watcher: Watcher): Promise<void> {
   logger.info({
     message: 'Manually triggering watcher job',
     watcherId: watcher.id,
-    query: watcher.query,
+    queries: watcher.queries?.map((q) => q.query) || [],
   });
 
   try {
@@ -456,14 +463,14 @@ export async function runWatcherManually(watcher: Watcher): Promise<void> {
     logger.info({
       message: 'Manual watcher job completed',
       watcherId: watcher.id,
-      query: watcher.query,
+      queries: watcher.queries?.map((q) => q.query) || [],
     });
   } catch (error) {
     logger.error({
       error: error as Error,
       message: 'Error in manual watcher job execution',
       watcherId: watcher.id,
-      query: watcher.query,
+      queries: watcher.queries?.map((q) => q.query) || [],
     });
     throw error;
   }
