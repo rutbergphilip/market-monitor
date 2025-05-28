@@ -234,7 +234,7 @@ async function resetSettings() {
 
 <template>
   <div class="container mx-auto py-8">
-    <div class="max-w-4xl mx-auto">
+    <div class="max-w-7xl mx-auto">
       <header class="mb-8 flex justify-between items-center">
         <div>
           <h1 class="text-2xl font-bold">General Settings</h1>

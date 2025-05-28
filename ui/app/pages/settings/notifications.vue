@@ -449,14 +449,12 @@ async function testDiscordNotification() {
 </script>
 
 <template>
-  <UContainer>
-    <div class="py-8">
+  <div class="container mx-auto py-8">
+    <div class="max-w-7xl mx-auto">
       <header class="mb-8 flex justify-between items-center">
         <div>
-          <h1 class="text-3xl font-bold tracking-tight">
-            Notification Settings
-          </h1>
-          <p class="text-neutral-500 mt-2 text-lg">
+          <h1 class="text-2xl font-bold">Notification Settings</h1>
+          <p class="text-neutral-500 mt-2">
             Manage your notification preferences and providers
           </p>
         </div>
@@ -689,5 +687,5 @@ async function testDiscordNotification() {
         </UCard>
       </div>
     </div>
-  </UContainer>
+  </div>
 </template>

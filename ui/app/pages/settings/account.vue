@@ -214,9 +214,11 @@ async function saveTokenSettings() {
     // Immediately rotate the current token to apply new expiry settings
     console.log('[Settings] Token expiry updated, rotating current token...');
     const tokenRotated = await authStore.refreshAccessToken();
-    
+
     if (tokenRotated) {
-      console.log('[Settings] Token successfully rotated with new expiry settings');
+      console.log(
+        '[Settings] Token successfully rotated with new expiry settings'
+      );
       toast.add({
         title: 'Success',
         description: 'Token settings saved and current session updated',
@@ -226,7 +228,8 @@ async function saveTokenSettings() {
       console.warn('[Settings] Token rotation failed, but settings were saved');
       toast.add({
         title: 'Warning',
-        description: 'Token settings saved, but current session may need manual refresh',
+        description:
+          'Token settings saved, but current session may need manual refresh',
         color: 'warning',
       });
     }
@@ -245,12 +248,14 @@ async function saveTokenSettings() {
 
 <template>
   <div class="container mx-auto py-8">
-    <div class="max-w-4xl mx-auto">
-      <header class="mb-8">
-        <h1 class="text-2xl font-bold">Account Settings</h1>
-        <p class="text-neutral-500 mt-2">
-          Manage your account information and preferences
-        </p>
+    <div class="max-w-7xl mx-auto">
+      <header class="mb-8 flex justify-between items-center">
+        <div>
+          <h1 class="text-2xl font-bold">Account Settings</h1>
+          <p class="text-neutral-500 mt-2">
+            Manage your account information and preferences
+          </p>
+        </div>
       </header>
 
       <div v-if="isLoading" class="space-y-6">
