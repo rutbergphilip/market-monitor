@@ -30,15 +30,24 @@ export enum SettingKey {
   NOTIFICATION_BATCH_SIZE = 'notification.general.batch_size',
   NOTIFICATION_ENABLE_BATCHING = 'notification.general.enable_batching',
 
-  // Blocket query settings
+  // Marketplace-specific settings (Blocket)
+  MARKETPLACE_BLOCKET_QUERY_LIMIT = 'marketplace.blocket.query.limit',
+  MARKETPLACE_BLOCKET_QUERY_SORT = 'marketplace.blocket.query.sort',
+  MARKETPLACE_BLOCKET_QUERY_LISTING_TYPE = 'marketplace.blocket.query.listing_type',
+  MARKETPLACE_BLOCKET_QUERY_STATUS = 'marketplace.blocket.query.status',
+  MARKETPLACE_BLOCKET_QUERY_GEOLOCATION = 'marketplace.blocket.query.geolocation',
+  MARKETPLACE_BLOCKET_QUERY_INCLUDE = 'marketplace.blocket.query.include',
+  MARKETPLACE_BLOCKET_API_MAX_RETRIES = 'marketplace.blocket.api.max_retries',
+  MARKETPLACE_BLOCKET_API_RETRY_DELAY = 'marketplace.blocket.api.retry_delay',
+  MARKETPLACE_BLOCKET_API_TIMEOUT = 'marketplace.blocket.api.timeout',
+
+  // Legacy Blocket settings (for backward compatibility)
   BLOCKET_QUERY_LIMIT = 'blocket.query.limit',
   BLOCKET_QUERY_SORT = 'blocket.query.sort',
   BLOCKET_QUERY_LISTING_TYPE = 'blocket.query.listing_type',
   BLOCKET_QUERY_STATUS = 'blocket.query.status',
   BLOCKET_QUERY_GEOLOCATION = 'blocket.query.geolocation',
   BLOCKET_QUERY_INCLUDE = 'blocket.query.include',
-
-  // Blocket API settings
   BLOCKET_API_MAX_RETRIES = 'blocket.api.max_retries',
   BLOCKET_API_RETRY_DELAY = 'blocket.api.retry_delay',
   BLOCKET_API_TIMEOUT = 'blocket.api.timeout',
@@ -125,7 +134,46 @@ export const DEFAULT_SETTINGS: Record<
     description: 'Enable/disable notification batching',
   },
 
-  // Blocket query settings
+  // Marketplace-specific settings (Blocket)
+  [SettingKey.MARKETPLACE_BLOCKET_QUERY_LIMIT]: {
+    value: '60',
+    description:
+      'Maximum number of results to return from Blocket API per page',
+  },
+  [SettingKey.MARKETPLACE_BLOCKET_QUERY_SORT]: {
+    value: 'rel',
+    description: 'Sort order for Blocket results (rel, dat, pri)',
+  },
+  [SettingKey.MARKETPLACE_BLOCKET_QUERY_LISTING_TYPE]: {
+    value: 's',
+    description: 'Listing type (s = selling, w = wanted)',
+  },
+  [SettingKey.MARKETPLACE_BLOCKET_QUERY_STATUS]: {
+    value: 'active',
+    description: 'Status of listings to fetch (active, all)',
+  },
+  [SettingKey.MARKETPLACE_BLOCKET_QUERY_GEOLOCATION]: {
+    value: '3',
+    description: 'Geolocation filter (3 = Sweden)',
+  },
+  [SettingKey.MARKETPLACE_BLOCKET_QUERY_INCLUDE]: {
+    value: 'extend_with_shipping',
+    description: 'Additional data to include in results',
+  },
+  [SettingKey.MARKETPLACE_BLOCKET_API_MAX_RETRIES]: {
+    value: '5',
+    description: 'Maximum number of retries for Blocket API requests',
+  },
+  [SettingKey.MARKETPLACE_BLOCKET_API_RETRY_DELAY]: {
+    value: '3000',
+    description: 'Base delay between retry attempts for Blocket API in ms',
+  },
+  [SettingKey.MARKETPLACE_BLOCKET_API_TIMEOUT]: {
+    value: '15000',
+    description: 'Timeout for Blocket API requests in ms',
+  },
+
+  // Legacy Blocket settings (for backward compatibility)
   [SettingKey.BLOCKET_QUERY_LIMIT]: {
     value: '60',
     description:
@@ -151,8 +199,6 @@ export const DEFAULT_SETTINGS: Record<
     value: 'extend_with_shipping',
     description: 'Additional data to include in results',
   },
-
-  // Blocket API settings
   [SettingKey.BLOCKET_API_MAX_RETRIES]: {
     value: '5',
     description: 'Maximum number of retries for Blocket API requests',

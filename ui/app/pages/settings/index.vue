@@ -53,7 +53,7 @@ const settingsPages = [
           }"
         >
           <div class="flex items-start space-x-4">
-            <div class="flex-shrink-0">
+            <div class="flex-shrink-0 mt-1">
               <UIcon :name="page.icon" class="h-8 w-8 text-primary-500" />
             </div>
             <div class="flex-1 min-w-0">

@@ -154,6 +154,20 @@ export async function initializeDb() {
       logger.info('Adding max_price column to watchers table');
       db.exec(`ALTER TABLE watchers ADD COLUMN max_price INTEGER`);
     }
+
+    // Check for marketplace column in watcher_queries table
+    const { count: hasMarketplaceColumn } = db
+      .prepare(
+        `SELECT COUNT(*) as count FROM pragma_table_info('watcher_queries') WHERE name='marketplace'`,
+      )
+      .get() as { count: number };
+
+    if (hasMarketplaceColumn === 0) {
+      logger.info('Adding marketplace column to watcher_queries table');
+      db.exec(
+        `ALTER TABLE watcher_queries ADD COLUMN marketplace TEXT DEFAULT 'blocket'`,
+      );
+    }
   } catch (error) {
     logger.error({
       message: 'Error updating database schema',

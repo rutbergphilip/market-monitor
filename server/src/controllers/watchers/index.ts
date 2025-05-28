@@ -6,5 +6,17 @@ import { remove } from './remove';
 import { start } from './start';
 import { stop } from './stop';
 import { triggerWatcher } from './trigger';
+import { getMarketplaces, getMarketplaceInfo } from './marketplaces';
 
-export { getAll, getById, create, update, remove, start, stop, triggerWatcher };
+export {
+  getAll,
+  getById,
+  create,
+  update,
+  remove,
+  start,
+  stop,
+  triggerWatcher,
+  getMarketplaces,
+  getMarketplaceInfo,
+};

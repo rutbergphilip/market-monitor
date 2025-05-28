@@ -78,7 +78,7 @@ const db = new Database(dbPath);
 function getWatcherQueries(watcherId: string): WatcherQuery[] {
   try {
     const stmt = db.prepare(`
-      SELECT id, query, enabled FROM watcher_queries 
+      SELECT id, query, enabled, marketplace FROM watcher_queries 
       WHERE watcher_id = ? 
       ORDER BY created_at ASC
     `);
@@ -86,12 +86,14 @@ function getWatcherQueries(watcherId: string): WatcherQuery[] {
       id: string;
       query: string;
       enabled: number;
+      marketplace: string;
     }[];
 
     return rows.map((row) => ({
       id: row.id,
       query: row.query,
       enabled: Boolean(row.enabled),
+      marketplace: row.marketplace as any, // Type assertion for MarketplaceType
     }));
   } catch (error) {
     logger.error({
@@ -114,8 +116,8 @@ function createWatcherQueries(
 ): void {
   try {
     const stmt = db.prepare(`
-      INSERT INTO watcher_queries (watcher_id, query, enabled, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO watcher_queries (watcher_id, query, enabled, marketplace, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?)
     `);
 
     const now = new Date().toISOString();
@@ -124,6 +126,7 @@ function createWatcherQueries(
         watcherId,
         query.query,
         query.enabled !== false ? 1 : 0,
+        query.marketplace || 'blocket', // Default to blocket for backward compatibility
         now,
         now,
       );
