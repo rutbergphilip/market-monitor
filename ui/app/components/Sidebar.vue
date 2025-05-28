@@ -17,28 +17,40 @@ const items = computed<NavigationMenuItem[][]>(() => [
       to: '/',
       badge: activeWatchers.value.length,
     },
-    {
-      label: 'Settings',
-      icon: 'i-lucide-settings',
-      defaultOpen: true,
-      children: [
-        {
-          label: 'General',
-          icon: 'i-lucide-settings',
-          to: '/settings/general',
-        },
-        {
-          label: 'Notifications',
-          icon: 'i-lucide-bell',
-          to: '/settings/notifications',
-        },
-        {
-          label: 'Account',
-          icon: 'i-lucide-user',
-          to: '/settings/account',
-        },
-      ],
-    },
+    ...(isCollapsed.value
+      ? [
+          // When collapsed, settings becomes a direct link
+          {
+            label: 'Settings',
+            icon: 'i-lucide-settings',
+            to: '/settings',
+          },
+        ]
+      : [
+          // When expanded, settings has children
+          {
+            label: 'Settings',
+            icon: 'i-lucide-settings',
+            defaultOpen: true,
+            children: [
+              {
+                label: 'General',
+                icon: 'i-lucide-settings',
+                to: '/settings/general',
+              },
+              {
+                label: 'Notifications',
+                icon: 'i-lucide-bell',
+                to: '/settings/notifications',
+              },
+              {
+                label: 'Account',
+                icon: 'i-lucide-user',
+                to: '/settings/account',
+              },
+            ],
+          },
+        ]),
   ],
 ]);
 
