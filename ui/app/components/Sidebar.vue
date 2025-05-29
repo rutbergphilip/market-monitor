@@ -74,7 +74,7 @@ function toggleSidebar() {
       >
         <h1
           v-if="!isCollapsed"
-          class="font-bold text-xl text-neutral-900 dark:text-white"
+          class="font-bold text-lg text-neutral-900 dark:text-white"
         >
           Market Monitor
         </h1>

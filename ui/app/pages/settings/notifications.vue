@@ -461,7 +461,6 @@ async function testDiscordNotification() {
         <UButton
           color="error"
           variant="outline"
-          icon="heroicons:arrow-path"
           @click="resetConfirmationOpen = true"
         >
           Reset All Settings
