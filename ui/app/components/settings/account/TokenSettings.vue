@@ -18,8 +18,20 @@ const _tokenSchema = z.object({
     .string()
     .min(1, 'Token expiry is required')
     .refine(
-      (value) => value === 'never' || /^(\d+[smhdwy]?)+$/.test(value),
-      'Invalid format. Use formats like: 1h, 24h, 48h, 7d, 30d, or "never" for no expiry'
+      (value) =>
+        [
+          '1m',
+          '1h',
+          '6h',
+          '12h',
+          '24h',
+          '48h',
+          '7d',
+          '30d',
+          '90d',
+          'never',
+        ].includes(value),
+      'Please select a valid token expiry option'
     ),
 });
 
@@ -45,6 +57,7 @@ const expiryOptions = [
   { value: '48h', label: '2 days (default)' },
   { value: '7d', label: '1 week' },
   { value: '30d', label: '1 month' },
+  { value: '90d', label: '3 months' },
   { value: 'never', label: 'Never expire' },
 ];
 </script>
@@ -62,38 +75,16 @@ const expiryOptions = [
           >
         </div>
         <div class="flex flex-col gap-2">
-          <UInput
+          <USelectMenu
             id="token-expiry"
             v-model="tokenState.tokenExpiry"
-            placeholder="48h"
+            :items="expiryOptions"
+            value-key="value"
             class="w-1/3"
           />
           <p class="text-xs text-neutral-500">
-            How long before users need to sign in again. Use formats like: 1h,
-            24h, 48h, 7d, 30d, or "never" for tokens that don't expire
+            How long before users need to sign in again.
           </p>
-        </div>
-      </div>
-
-      <div class="mb-4">
-        <p class="text-sm font-medium mb-2">Quick presets:</p>
-        <div class="flex flex-wrap gap-2">
-          <UBadge
-            v-for="option in expiryOptions"
-            :key="option.value"
-            class="cursor-pointer hover:bg-neutral-700"
-            variant="subtle"
-            :color="
-              tokenState.tokenExpiry === option.value
-                ? 'primary'
-                : option.value === 'never'
-                ? 'warning'
-                : 'neutral'
-            "
-            @click="tokenState.tokenExpiry = option.value"
-          >
-            {{ option.label }}
-          </UBadge>
         </div>
       </div>
 
