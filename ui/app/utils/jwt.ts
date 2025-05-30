@@ -24,7 +24,7 @@ export function decodeJWT(token: string): JWTPayload | null {
 
     const payload = parts[1];
     // Add padding if needed for base64 decoding
-    const paddedPayload = payload + '='.repeat((4 - (payload.length % 4)) % 4);
+    const paddedPayload = payload + '='.repeat((4 - (payload!.length % 4)) % 4);
     const decoded = atob(paddedPayload.replace(/-/g, '+').replace(/_/g, '/'));
 
     return JSON.parse(decoded);
