@@ -40,8 +40,33 @@ const discordState = reactive({
       : 1000,
 });
 
+// Initial state for comparison
+const initialDiscordState = reactive({
+  username: props.settings?.username || 'Market Monitor',
+  avatarUrl: props.settings?.avatarUrl || '',
+  maxRetries:
+    props.settings?.maxRetries !== undefined
+      ? Number(props.settings.maxRetries)
+      : 3,
+  retryDelay:
+    props.settings?.retryDelay !== undefined
+      ? Number(props.settings.retryDelay)
+      : 1000,
+});
+
+// Form validation errors
+const formErrors = ref<unknown[]>([]);
+
+// Form state management
+const { isButtonDisabled, updateInitialData } = useFormState({
+  initialData: initialDiscordState,
+  currentData: toRef(discordState),
+  errors: formErrors,
+});
+
 defineExpose({
   discordState,
+  updateInitialData: () => updateInitialData(discordState),
 });
 
 function saveDiscordSettings() {
@@ -192,6 +217,7 @@ function saveDiscordSettings() {
         icon="heroicons:check"
         size="md"
         :loading="props.isSaving"
+        :disabled="isButtonDisabled"
       >
         Save Settings
       </UButton>

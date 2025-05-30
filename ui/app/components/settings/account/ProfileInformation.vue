@@ -27,8 +27,26 @@ const profileState = reactive({
   avatarUrl: props.settings?.avatarUrl || '',
 });
 
+// Initial state for comparison
+const initialProfileState = reactive({
+  email: props.settings?.email || '',
+  username: props.settings?.username || '',
+  avatarUrl: props.settings?.avatarUrl || '',
+});
+
+// Form validation errors
+const formErrors = ref<unknown[]>([]);
+
+// Form state management
+const { isButtonDisabled, updateInitialData } = useFormState({
+  initialData: initialProfileState,
+  currentData: toRef(profileState),
+  errors: formErrors,
+});
+
 defineExpose({
   profileState,
+  updateInitialData: () => updateInitialData(profileState),
 });
 
 function saveProfileSettings() {
@@ -94,7 +112,10 @@ function saveProfileSettings() {
       </div>
 
       <div class="flex justify-end">
-        <UButton :loading="props.isSaving" @click="saveProfileSettings"
+        <UButton
+          :loading="props.isSaving"
+          :disabled="isButtonDisabled"
+          @click="saveProfileSettings"
           >Save Profile Information</UButton
         >
       </div>

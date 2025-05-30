@@ -39,8 +39,24 @@ const tokenState = reactive({
   tokenExpiry: props.settings?.tokenExpiry || '48h',
 });
 
+// Initial state for comparison
+const initialTokenState = reactive({
+  tokenExpiry: props.settings?.tokenExpiry || '48h',
+});
+
+// Form validation errors
+const formErrors = ref<unknown[]>([]);
+
+// Form state management
+const { isButtonDisabled, updateInitialData } = useFormState({
+  initialData: initialTokenState,
+  currentData: toRef(tokenState),
+  errors: formErrors,
+});
+
 defineExpose({
   tokenState,
+  updateInitialData: () => updateInitialData(tokenState),
 });
 
 function saveTokenSettings() {
@@ -111,7 +127,11 @@ const expiryOptions = [
       </div>
 
       <div class="flex justify-end">
-        <UButton :loading="props.isSaving" @click="saveTokenSettings">
+        <UButton
+          :loading="props.isSaving"
+          :disabled="isButtonDisabled"
+          @click="saveTokenSettings"
+        >
           Save Token Settings
         </UButton>
       </div>

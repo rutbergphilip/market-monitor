@@ -24,8 +24,25 @@ const batchingState = reactive({
   batchSize: props.settings?.batchSize ?? 10,
 });
 
+// Initial state for comparison
+const initialBatchingState = reactive({
+  enableBatching: props.settings?.enableBatching ?? true,
+  batchSize: props.settings?.batchSize ?? 10,
+});
+
+// Form validation errors
+const formErrors = ref<unknown[]>([]);
+
+// Form state management
+const { isButtonDisabled, updateInitialData } = useFormState({
+  initialData: initialBatchingState,
+  currentData: toRef(batchingState),
+  errors: formErrors,
+});
+
 defineExpose({
   batchingState,
+  updateInitialData: () => updateInitialData(batchingState),
 });
 
 function saveBatchingSettings() {
@@ -100,6 +117,7 @@ function saveBatchingSettings() {
         icon="heroicons:check"
         size="md"
         :loading="props.isSaving"
+        :disabled="isButtonDisabled"
       >
         Save Settings
       </UButton>

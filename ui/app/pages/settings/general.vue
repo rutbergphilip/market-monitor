@@ -22,6 +22,7 @@ type BlocketQueryRef = {
     geolocation: number;
     include: string;
   };
+  updateInitialData: () => void;
 };
 
 type BlocketApiRef = {
@@ -30,6 +31,7 @@ type BlocketApiRef = {
     retryDelay: number;
     timeout: number;
   };
+  updateInitialData: () => void;
 };
 
 const blocketQueryRef = ref<BlocketQueryRef | null>(null);
@@ -152,6 +154,9 @@ async function saveBlocketQuerySettings() {
 
     await updateSettings(querySettings);
 
+    // Update initial data to reflect successful save
+    blocketQueryRef.value?.updateInitialData();
+
     toast.add({
       title: 'Success',
       description: 'Blocket query settings saved',
@@ -190,6 +195,9 @@ async function saveBlocketApiSettings() {
     ];
 
     await updateSettings(apiSettings);
+
+    // Update initial data to reflect successful save
+    blocketApiRef.value?.updateInitialData();
 
     toast.add({
       title: 'Success',

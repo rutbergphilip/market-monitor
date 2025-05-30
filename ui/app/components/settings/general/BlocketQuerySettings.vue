@@ -36,8 +36,29 @@ const blocketQueryState = reactive({
   include: props.settings?.include || 'extend_with_shipping',
 });
 
+// Initial state for comparison
+const initialBlocketQueryState = reactive({
+  limit: props.settings?.limit || 60,
+  sort: props.settings?.sort || 'rel',
+  listingType: props.settings?.listingType || 's',
+  status: props.settings?.status || 'active',
+  geolocation: props.settings?.geolocation || 3,
+  include: props.settings?.include || 'extend_with_shipping',
+});
+
+// Form validation errors
+const formErrors = ref<unknown[]>([]);
+
+// Form state management
+const { isButtonDisabled, updateInitialData } = useFormState({
+  initialData: initialBlocketQueryState,
+  currentData: toRef(blocketQueryState),
+  errors: formErrors,
+});
+
 defineExpose({
   blocketQueryState,
+  updateInitialData: () => updateInitialData(blocketQueryState),
 });
 
 function saveBlocketQuerySettings() {
@@ -80,7 +101,10 @@ function saveBlocketQuerySettings() {
       </div>
 
       <div class="flex justify-end mt-4">
-        <UButton type="submit" :loading="props.isSaving"
+        <UButton
+          type="submit"
+          :loading="props.isSaving"
+          :disabled="isButtonDisabled"
           >Save Query Settings</UButton
         >
       </div>

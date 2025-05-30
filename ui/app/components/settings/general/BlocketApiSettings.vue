@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { reactive } from 'vue';
+import { reactive, ref, toRef } from 'vue';
 import * as z from 'zod';
 
 const props = defineProps<{
@@ -28,8 +28,26 @@ const blocketApiState = reactive({
   timeout: props.settings?.timeout || 15000,
 });
 
+// Initial state for comparison
+const initialBlocketApiState = reactive({
+  maxRetries: props.settings?.maxRetries || 5,
+  retryDelay: props.settings?.retryDelay || 3000,
+  timeout: props.settings?.timeout || 15000,
+});
+
+// Form validation errors
+const formErrors = ref<unknown[]>([]);
+
+// Form state management
+const { isButtonDisabled, updateInitialData } = useFormState({
+  initialData: initialBlocketApiState,
+  currentData: toRef(blocketApiState),
+  errors: formErrors,
+});
+
 defineExpose({
   blocketApiState,
+  updateInitialData: () => updateInitialData(blocketApiState),
 });
 
 function saveBlocketApiSettings() {
@@ -129,7 +147,10 @@ function saveBlocketApiSettings() {
       </div>
 
       <div class="flex justify-end mt-4">
-        <UButton type="submit" :loading="props.isSaving"
+        <UButton
+          type="submit"
+          :loading="props.isSaving"
+          :disabled="isButtonDisabled"
           >Save API Settings</UButton
         >
       </div>

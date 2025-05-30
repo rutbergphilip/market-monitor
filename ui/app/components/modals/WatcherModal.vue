@@ -102,6 +102,20 @@ type Schema = z.output<typeof schema>;
 
 const selectedNotificationType = ref<NotificationKind>('DISCORD');
 const notificationInput = ref('');
+
+// Initial state for comparison (deep copy of props)
+const initialState = reactive<Watcher>({
+  queries: props.watcher?.queries
+    ? JSON.parse(JSON.stringify(props.watcher.queries))
+    : [],
+  schedule: props.watcher?.schedule ?? '',
+  notifications: props.watcher?.notifications
+    ? JSON.parse(JSON.stringify(props.watcher.notifications))
+    : [],
+  min_price: props.watcher?.min_price ?? null,
+  max_price: props.watcher?.max_price ?? null,
+});
+
 const state = reactive<Watcher>({
   queries: props.watcher?.queries ?? [],
   schedule: props.watcher?.schedule ?? '',
@@ -113,6 +127,22 @@ const state = reactive<Watcher>({
 // Local state for managing the queries list
 const queriesInput = ref<string>('');
 const showMultipleQueries = ref(false);
+
+// Form validation errors ref
+const formErrors = ref<unknown[]>([]);
+
+// Form state management
+const { isButtonDisabled, updateInitialData } = useFormState({
+  initialData: initialState,
+  currentData: toRef(state),
+  errors: formErrors,
+  isValid: () => {
+    // Custom validation logic
+    const hasQueries = state.queries && state.queries.length > 0;
+    const hasValidSchedule = schedule.value !== 'Invalid cron expression';
+    return hasQueries && hasValidSchedule;
+  },
+});
 
 const schedule = computed(() =>
   cronstrue.toString(state.schedule, { throwExceptionOnParseError: false }) ===
@@ -187,6 +217,8 @@ async function create(event: FormSubmitEvent<Schema>) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await watcherStore.create(watcher as any);
     await watcherStore.refresh();
+    // Update initial data to reflect successful save
+    updateInitialData(state);
     toast.add({
       title: 'Success',
       description: 'The watcher has been created.',
@@ -218,6 +250,8 @@ async function update(event: FormSubmitEvent<Schema>) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await watcherStore.update(watcher as any);
     await watcherStore.refresh();
+    // Update initial data to reflect successful save
+    updateInitialData(state);
     toast.add({
       title: 'Success',
       description: 'The watcher has been updated.',
@@ -757,6 +791,7 @@ watch(selectedNotificationType, () => {
           <UButton
             :aria-label="$props.watcher ? 'Edit' : 'Create'"
             type="submit"
+            :disabled="isButtonDisabled"
           >
             {{ $props.watcher ? 'Update' : 'Create' }}
           </UButton>

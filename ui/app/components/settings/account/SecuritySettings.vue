@@ -32,8 +32,26 @@ const securityState = reactive({
   confirmPassword: '',
 });
 
+// Initial state for comparison
+const initialSecurityState = reactive({
+  currentPassword: '',
+  newPassword: '',
+  confirmPassword: '',
+});
+
+// Form validation errors
+const formErrors = ref<unknown[]>([]);
+
+// Form state management
+const { isButtonDisabled, updateInitialData } = useFormState({
+  initialData: initialSecurityState,
+  currentData: toRef(securityState),
+  errors: formErrors,
+});
+
 defineExpose({
   securityState,
+  updateInitialData: () => updateInitialData(securityState),
 });
 
 function saveSecuritySettings() {
@@ -95,7 +113,10 @@ function saveSecuritySettings() {
       </div>
 
       <div class="flex justify-end">
-        <UButton :loading="props.isSaving" @click="saveSecuritySettings"
+        <UButton
+          :loading="props.isSaving"
+          :disabled="isButtonDisabled"
+          @click="saveSecuritySettings"
           >Change Password</UButton
         >
       </div>

@@ -25,6 +25,7 @@ type DiscordRef = {
     maxRetries: number;
     retryDelay: number;
   };
+  updateInitialData: () => void;
 };
 
 type DiscordWebhooksRef = {
@@ -50,6 +51,7 @@ type BatchingRef = {
     enableBatching: boolean;
     batchSize: number;
   };
+  updateInitialData: () => void;
 };
 
 const discordRef = ref<DiscordRef | null>(null);
@@ -247,6 +249,9 @@ async function saveDiscordSettings() {
 
     await updateSettings(discordSettings);
 
+    // Update initial data to reflect successful save
+    discordRef.value?.updateInitialData();
+
     toast.add({
       title: 'Success',
       description: 'Discord notification settings saved',
@@ -363,6 +368,9 @@ async function saveBatchingSettings() {
     ];
 
     await updateSettings(batchingSettings);
+
+    // Update initial data to reflect successful save
+    batchingRef.value?.updateInitialData();
 
     toast.add({
       title: 'Success',

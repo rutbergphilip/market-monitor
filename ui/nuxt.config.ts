@@ -50,6 +50,10 @@ export default defineNuxtConfig({
   },
 
   imports: {
-    dirs: ['interceptors/**'],
+    dirs: ['composables/**', 'stores/**', 'utils/**', 'interceptors/**'],
+  },
+
+  typescript: {
+    typeCheck: true,
   },
 });
