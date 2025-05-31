@@ -2,15 +2,6 @@
  * JWT utility functions for client-side token validation
  */
 
-export interface JWTPayload {
-  exp?: number;
-  iat?: number;
-  userId?: string;
-  username?: string;
-  role?: string;
-  [key: string]: any;
-}
-
 /**
  * Decode JWT token without verification (client-side only)
  * WARNING: This is for expiration checking only, never trust the payload for security decisions

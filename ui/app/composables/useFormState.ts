@@ -1,16 +1,5 @@
 import { computed, type Ref } from 'vue';
 
-export interface FormStateOptions<T = Record<string, unknown>> {
-  /** Initial/original data to compare against for changes */
-  initialData: T;
-  /** Current form state */
-  currentData: Ref<T>;
-  /** Array of validation errors from UForm */
-  errors?: Ref<unknown[]>;
-  /** Custom validation function that returns true if form is valid */
-  isValid?: () => boolean;
-}
-
 // Simple deep equality check without external dependencies
 function deepEqual(a: unknown, b: unknown): boolean {
   if (a === b) return true;
