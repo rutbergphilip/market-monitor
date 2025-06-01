@@ -2,7 +2,6 @@
 import ProfileInformation from '~/components/settings/account/ProfileInformation.vue';
 import SecuritySettings from '~/components/settings/account/SecuritySettings.vue';
 import TokenSettings from '~/components/settings/account/TokenSettings.vue';
-import type { Setting } from '../../../shared/types/settings';
 
 definePageMeta({
   layout: 'default',

@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import BlocketQuerySettings from '~/components/settings/general/BlocketQuerySettings.vue';
 import BlocketApiSettings from '~/components/settings/general/BlocketApiSettings.vue';
-import type { Setting } from '../../../shared/types/settings';
 
 definePageMeta({
   layout: 'default',

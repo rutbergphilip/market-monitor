@@ -1,5 +1,5 @@
 export default defineEventHandler(async (event) => {
-  const data = await $fetch<User>('/api/auth/me', {
+  const data: User = await $fetch<User>('/api/auth/me', {
     method: 'GET',
     baseURL: useRuntimeConfig(event).apiBaseUrl,
     credentials: 'include',

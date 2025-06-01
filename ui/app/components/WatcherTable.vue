@@ -3,23 +3,12 @@ import cronstrue from 'cronstrue';
 import { h, resolveComponent } from 'vue';
 import { upperFirst } from 'scule';
 
-import { NOTIFICATION_ICON_MAP } from '~/constants';
+import { NOTIFICATION_ICON_MAP, MARKETPLACE_LABELS } from '~/constants';
 
 import WatcherModal from '~/components/modals/WatcherModal.vue';
 import ConfirmationModal from '~/components/modals/ConfirmationModal.vue';
 
 import type { TableColumn } from '@nuxt/ui';
-
-// Type definitions for this component
-type DiscordNotification = {
-  kind: 'DISCORD';
-  webhook_url: string;
-};
-
-type EmailNotification = {
-  kind: 'EMAIL';
-  email: string;
-};
 
 const UButton = resolveComponent('UButton');
 const UBadge = resolveComponent('UBadge');
@@ -280,6 +269,24 @@ const columns: ComputedRef<TableColumn<Watcher>[]> = computed(() => [
       // Search across all enabled queries
       return queries.some((query) =>
         query.query.toLowerCase().includes(filterValue.toLowerCase())
+      );
+    },
+  },
+  {
+    accessorKey: 'marketplace',
+    header: 'Marketplace',
+    cell: ({ row }) => {
+      const watcher = row.original;
+      const marketplace = watcher.marketplace || 'BLOCKET';
+
+      return h(
+        UBadge,
+        {
+          class: 'capitalize',
+          variant: 'outline',
+          color: marketplace === 'BLOCKET' ? 'primary' : 'secondary',
+        },
+        () => MARKETPLACE_LABELS[marketplace] || marketplace.toLowerCase()
       );
     },
   },

@@ -7,6 +7,17 @@ export const NOTIFICATION_ICON_MAP: Record<NotificationKind, string> = {
   EMAIL: 'material-symbols:mail',
 };
 
+// Marketplace constants
+export const MARKETPLACE_OPTIONS = [
+  { value: 'BLOCKET', label: 'Blocket', icon: 'heroicons:shopping-bag' },
+  { value: 'TRADERA', label: 'Tradera', icon: 'heroicons:shopping-cart' },
+] as const;
+
+export const MARKETPLACE_LABELS: Record<string, string> = {
+  BLOCKET: 'Blocket',
+  TRADERA: 'Tradera',
+};
+
 export const SCHEDULE_PRESETS = [
   { cron: '*/5 * * * *', label: 'Every 5 minutes' },
   { cron: '*/15 * * * *', label: 'Every 15 minutes' },

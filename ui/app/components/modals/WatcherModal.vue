@@ -8,44 +8,15 @@ import {
   NOTIFICATION_TARGETS,
   NOTIFICATION_ICON_MAP,
   DISABLED_NOTIFICATION_TARGETS,
+  MARKETPLACE_OPTIONS,
 } from '~/constants';
 
 import type { FormError, FormSubmitEvent } from '@nuxt/ui';
 
-// Local type definitions - these should match the backend types
-type NotificationKind = 'EMAIL' | 'DISCORD';
-
-type EmailNotification = {
-  kind: 'EMAIL';
-  email: string;
-};
-
-type DiscordNotification = {
-  kind: 'DISCORD';
-  webhook_url: string;
-};
-
-type Notification = EmailNotification | DiscordNotification;
-
-type WatcherQuery = {
-  id?: string;
-  query: string;
-  enabled?: boolean;
-};
-
-type Watcher = {
-  id?: string;
-  queries: WatcherQuery[];
-  notifications: Notification[];
-  schedule: string;
-  status?: 'active' | 'stopped';
-  number_of_runs?: number;
-  last_run?: string;
-  created_at?: string;
-  updated_at?: string;
-  min_price?: number | null;
-  max_price?: number | null;
-};
+// Type aliases to avoid conflicts with browser APIs
+type AppNotification = Notification;
+type AppDiscordNotification = DiscordNotification;
+type AppEmailNotification = EmailNotification;
 
 const emit = defineEmits(['cancel', 'success']);
 const props = defineProps({
@@ -114,6 +85,7 @@ const initialState = reactive<Watcher>({
     : [],
   min_price: props.watcher?.min_price ?? null,
   max_price: props.watcher?.max_price ?? null,
+  marketplace: props.watcher?.marketplace ?? 'BLOCKET',
 });
 
 const state = reactive<Watcher>({
@@ -122,6 +94,7 @@ const state = reactive<Watcher>({
   notifications: props.watcher?.notifications ?? [],
   min_price: props.watcher?.min_price ?? null,
   max_price: props.watcher?.max_price ?? null,
+  marketplace: props.watcher?.marketplace ?? 'BLOCKET',
 });
 
 // Local state for managing the queries list
@@ -180,16 +153,21 @@ onMounted(async () => {
 
     // Initialize selected Discord webhooks from existing notifications
     const discordNotifications = state.notifications.filter(
-      (n) => n.kind === 'DISCORD'
-    ) as DiscordNotification[];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (n) => (n as any).kind === 'DISCORD'
+    );
     selectedDiscordWebhooks.value = discordNotifications.map((notification) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const appNotification = notification as any;
       // Try to find a matching predefined webhook
       const webhook = discordWebhooks.value.find(
-        (w) => w.url === notification.webhook_url
+        (w) => w.url === appNotification.webhook_url
       );
       return {
-        label: webhook ? webhook.name : `Custom: ${notification.webhook_url}`,
-        value: notification.webhook_url,
+        label: webhook
+          ? webhook.name
+          : `Custom: ${appNotification.webhook_url}`,
+        value: appNotification.webhook_url,
       };
     });
   }
@@ -328,17 +306,17 @@ function addNotification() {
     return;
   }
 
-  let notification: Notification;
-
   switch (selectedNotificationType.value) {
-    case 'EMAIL':
-      notification = {
+    case 'EMAIL': {
+      const emailNotification = {
         kind: 'EMAIL',
         email: notificationInput.value,
       };
-      state.notifications.push(notification);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (state.notifications as any).push(emailNotification);
       notificationInput.value = '';
       break;
+    }
     case 'DISCORD':
       // Discord notifications are now handled by the input menu
       toast.add({
@@ -362,8 +340,10 @@ function removeNotification(index: number) {
   state.notifications.splice(index, 1);
 
   // If it's a Discord notification, also remove it from selectedDiscordWebhooks
-  if (removedNotification && removedNotification.kind === 'DISCORD') {
-    const webhookUrl = (removedNotification as DiscordNotification).webhook_url;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if (removedNotification && (removedNotification as any).kind === 'DISCORD') {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const webhookUrl = (removedNotification as any).webhook_url;
     selectedDiscordWebhooks.value = selectedDiscordWebhooks.value.filter(
       (webhook) => webhook.value !== webhookUrl
     );
@@ -373,7 +353,7 @@ function removeNotification(index: number) {
 // Handle Discord webhook selection from input menu
 function onDiscordWebhookSelect(webhooks: { label: string; value: string }[]) {
   // Update Discord notifications based on selected webhooks
-  const discordNotifications: DiscordNotification[] = webhooks.map(
+  const discordNotifications: AppDiscordNotification[] = webhooks.map(
     (webhook) => ({
       kind: 'DISCORD',
       webhook_url: webhook.value,
@@ -382,8 +362,10 @@ function onDiscordWebhookSelect(webhooks: { label: string; value: string }[]) {
 
   // Remove existing Discord notifications and add new ones
   const nonDiscordNotifications = state.notifications.filter(
-    (n) => n.kind !== 'DISCORD'
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (n) => (n as any).kind !== 'DISCORD'
   );
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   state.notifications = [...nonDiscordNotifications, ...discordNotifications];
 }
 
@@ -412,11 +394,12 @@ function onCreateDiscordWebhook(customWebhookUrl: string) {
   ];
 
   // Add to notifications
-  const newNotification: DiscordNotification = {
+  const newNotification: AppDiscordNotification = {
     kind: 'DISCORD',
     webhook_url: customWebhookUrl,
   };
-  state.notifications.push(newNotification);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (state.notifications as any).push(newNotification);
 
   toast.add({
     title: 'Custom webhook added',
@@ -437,11 +420,12 @@ function getPlaceholderForNotificationType(type: NotificationKind): string {
   }
 }
 
-function getNotificationValue(notification: Notification): string {
-  if ('webhook_url' in notification) {
-    return notification.webhook_url;
-  } else if ('email' in notification) {
-    return notification.email;
+function getNotificationValue(notification: unknown): string {
+  const appNotification = notification as unknown as AppNotification;
+  if ('webhook_url' in appNotification) {
+    return (appNotification as unknown as AppDiscordNotification).webhook_url;
+  } else if ('email' in appNotification) {
+    return (appNotification as unknown as AppEmailNotification).email;
   }
   return '';
 }
@@ -557,6 +541,27 @@ watch(selectedNotificationType, () => {
             Add search terms to monitor different products. Each query will be
             checked independently and you'll be notified when new matches are
             found.
+          </p>
+        </div>
+
+        <!-- Marketplace Selection -->
+        <div class="flex flex-col gap-4 w-full">
+          <div class="flex items-center justify-between">
+            <p class="text-sm font-medium">Marketplace</p>
+          </div>
+          <UFormField label="Default Marketplace" name="marketplace">
+            <USelect
+              v-model="state.marketplace"
+              :options="MARKETPLACE_OPTIONS"
+              value-attribute="value"
+              option-attribute="label"
+              placeholder="Select marketplace"
+              size="xl"
+            />
+          </UFormField>
+          <p class="text-xs text-neutral-500">
+            Choose the marketplace to search in. This can be overridden per
+            individual query.
           </p>
         </div>
 
@@ -738,8 +743,9 @@ watch(selectedNotificationType, () => {
                     class="flex items-center justify-between px-3 py-2 bg-gray-700 rounded"
                   >
                     <div class="flex items-center gap-2">
+                      <!-- eslint-disable-next-line @typescript-eslint/no-explicit-any -->
                       <UIcon
-                        :name="NOTIFICATION_ICON_MAP[notification.kind]"
+                        :name="NOTIFICATION_ICON_MAP[(notification as any).kind as keyof typeof NOTIFICATION_ICON_MAP]"
                         class="text-neutral-400"
                       />
                       <p

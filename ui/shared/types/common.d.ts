@@ -1,8 +1,3 @@
-/**
- * Common types used across the application
- */
-import type { Ref } from 'vue';
-
 export interface JWTPayload {
   exp?: number;
   iat?: number;

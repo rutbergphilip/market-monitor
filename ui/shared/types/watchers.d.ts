@@ -4,14 +4,14 @@ export type WatcherQuery = {
   id?: string;
   query: string;
   enabled?: boolean;
-  marketplace?: MarketplaceType; // Add marketplace support
-  filters?: Record<string, unknown>; // Marketplace-specific filters
+  marketplace?: MarketplaceType;
+  filters?: Record<string, unknown>;
 };
 
 export type Watcher = {
   id?: string;
   queries: WatcherQuery[];
-  notifications: Notification[];
+  notifications: import('./notifications').Notification[];
   schedule: string;
   status?: 'active' | 'stopped';
   last_run?: string | null;
@@ -19,8 +19,5 @@ export type Watcher = {
   updated_at?: string;
   min_price?: number | null;
   max_price?: number | null;
-  marketplace?: MarketplaceType; // Default marketplace for legacy support
+  marketplace?: MarketplaceType;
 };
-
-// Re-export for convenience
-export { type Notification, type NotificationKind } from './notifications';

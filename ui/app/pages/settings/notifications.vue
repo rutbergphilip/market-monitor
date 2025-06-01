@@ -3,7 +3,6 @@ import DiscordNotifications from '~/components/settings/notifications/DiscordNot
 import DiscordWebhooks from '~/components/settings/notifications/DiscordWebhooks.vue';
 import EmailNotifications from '~/components/settings/notifications/EmailNotifications.vue';
 import BatchingSettings from '~/components/settings/notifications/BatchingSettings.vue';
-import type { Setting } from '../../../shared/types/settings';
 
 definePageMeta({
   layout: 'default',
