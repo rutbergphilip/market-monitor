@@ -7,6 +7,7 @@ import { NOTIFICATION_ICON_MAP, MARKETPLACE_LABELS } from '~/constants';
 
 import WatcherModal from '~/components/modals/WatcherModal.vue';
 import ConfirmationModal from '~/components/modals/ConfirmationModal.vue';
+import WatcherTableFilters from '~/components/WatcherTableFilters.vue';
 
 import type { TableColumn } from '@nuxt/ui';
 
@@ -189,6 +190,73 @@ async function trigger(watcherId: string) {
   }
 }
 
+function clearAllFilters() {
+  // Clear all column filters
+  table.value?.tableApi?.resetColumnFilters();
+
+  toast.add({
+    title: 'Filters cleared',
+    description: 'All filters have been reset',
+    color: 'success',
+    icon: 'i-lucide-filter-x',
+  });
+}
+
+// Computed property to show active filters
+const activeFilters = computed(
+  (): Array<{
+    column: string;
+    value: unknown;
+    displayValue: string;
+    label: string;
+  }> => {
+    if (!table.value?.tableApi) return [];
+
+    const filters: Array<{
+      column: string;
+      value: unknown;
+      displayValue: string;
+      label: string;
+    }> = [];
+    const columns = table.value.tableApi.getAllColumns();
+
+    for (const column of columns) {
+      const filterValue = column.getFilterValue();
+
+      // Only show search and marketplace filters
+      if (!filterValue || !['queries', 'marketplace'].includes(column.id)) {
+        continue;
+      }
+
+      let displayValue = filterValue as string;
+
+      // Make filter values more human-readable
+      switch (column.id) {
+        case 'marketplace':
+          displayValue =
+            MARKETPLACE_LABELS[filterValue as string] ||
+            (filterValue as string);
+          break;
+        case 'queries':
+          displayValue = `"${filterValue}"`;
+          break;
+      }
+
+      filters.push({
+        column: column.id,
+        value: filterValue,
+        displayValue,
+        label:
+          column.id === 'queries'
+            ? 'Query search'
+            : upperFirst(column.id.replace('_', ' ')),
+      });
+    }
+
+    return filters;
+  }
+);
+
 const columns: ComputedRef<TableColumn<Watcher>[]> = computed(() => [
   {
     accessorKey: 'id',
@@ -289,6 +357,12 @@ const columns: ComputedRef<TableColumn<Watcher>[]> = computed(() => [
         () => MARKETPLACE_LABELS[marketplace] || marketplace.toLowerCase()
       );
     },
+    filterFn: (row, columnId, filterValue) => {
+      if (!filterValue) return true;
+      const watcher = row.original;
+      const marketplace = watcher.marketplace || 'BLOCKET';
+      return marketplace === filterValue;
+    },
   },
   {
     accessorKey: 'status',
@@ -310,6 +384,11 @@ const columns: ComputedRef<TableColumn<Watcher>[]> = computed(() => [
         { class: 'capitalize', variant: 'subtle', color },
         () => status
       );
+    },
+    filterFn: (row, columnId, filterValue) => {
+      if (!filterValue) return true;
+      const watcher = row.original;
+      return watcher.status === filterValue;
     },
   },
   {
@@ -360,6 +439,48 @@ const columns: ComputedRef<TableColumn<Watcher>[]> = computed(() => [
       }
 
       return h('span', { class: 'text-neutral-500' }, 'Any price');
+    },
+    filterFn: (row, columnId, filterValue) => {
+      if (!filterValue) return true;
+
+      const watcher = row.original;
+      const minPrice = watcher.min_price;
+      const maxPrice = watcher.max_price;
+
+      switch (filterValue) {
+        case 'any':
+          return minPrice === null && maxPrice === null;
+        case 'with_range':
+          return minPrice !== null || maxPrice !== null;
+        case 'budget': {
+          // Budget: either max price is < 1000 or (no max and min < 1000)
+          if (maxPrice !== null && maxPrice !== undefined)
+            return maxPrice < 1000;
+          if (minPrice !== null && minPrice !== undefined)
+            return minPrice < 1000;
+          return minPrice === null && maxPrice === null; // Any price could be budget
+        }
+        case 'mid': {
+          // Mid-range: 1000-5000 SEK
+          const effectiveMin = minPrice || 0;
+          const effectiveMax = maxPrice || Infinity;
+          return (
+            (effectiveMin >= 1000 && effectiveMin <= 5000) ||
+            (effectiveMax >= 1000 && effectiveMax <= 5000) ||
+            (effectiveMin < 1000 && effectiveMax > 5000)
+          );
+        }
+        case 'premium': {
+          // Premium: > 5000 SEK
+          if (minPrice !== null && minPrice !== undefined)
+            return minPrice > 5000;
+          if (maxPrice !== null && maxPrice !== undefined)
+            return maxPrice > 5000;
+          return minPrice === null && maxPrice === null; // Any price could be premium
+        }
+        default:
+          return true;
+      }
     },
   },
   {
@@ -535,29 +656,10 @@ const columns: ComputedRef<TableColumn<Watcher>[]> = computed(() => [
       ]);
     },
   },
-  {
-    accessorKey: 'header',
-    header: () =>
-      h(
-        UTooltip,
-        {
-          text: 'Refresh',
-          placement: 'bottom',
-          delayDuration: 200,
-          loading: refreshing.value,
-          onClick: () => refresh(),
-        },
-        h(UButton, {
-          leadingIcon: 'i-lucide-refresh-cw',
-          variant: 'link',
-          color: 'neutral',
-          ui: { leadingIcon: 'scale-150' },
-        })
-      ),
-  },
 ]);
 
-const table = useTemplateRef('table');
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const table = useTemplateRef<any>('table');
 </script>
 
 <template>
@@ -567,40 +669,13 @@ const table = useTemplateRef('table');
       <UButton label="Try again" @click="refresh" />
     </div>
 
-    <div class="flex items-center gap-2 px-4 py-3.5 overflow-x-auto">
-      <UInput
-        :model-value="(table?.tableApi?.getColumn('queries')?.getFilterValue() as string)"
-        class="max-w-sm min-w-[12ch]"
-        placeholder="Filter queries"
-        @update:model-value="
-          table?.tableApi?.getColumn('queries')?.setFilterValue($event)
-        "
-      />
-
-      <UDropdownMenu
-        :items="table?.tableApi?.getAllColumns().filter(column => column.getCanHide()).map(column => ({
-          label: upperFirst(column.id),
-          type: 'checkbox' as const,
-          checked: column.getIsVisible(),
-          onUpdateChecked(checked: boolean) {
-            table?.tableApi?.getColumn(column.id)?.toggleVisibility(!!checked)
-          },
-          onSelect(e?: Event) {
-            e?.preventDefault()
-          }
-        }))"
-        :content="{ align: 'end' }"
-      >
-        <UButton
-          label="Columns"
-          color="neutral"
-          variant="outline"
-          trailing-icon="i-lucide-chevron-down"
-          class="ml-auto"
-          aria-label="Columns select dropdown"
-        />
-      </UDropdownMenu>
-    </div>
+    <WatcherTableFilters
+      :table="table"
+      :refreshing="refreshing"
+      :active-filters="activeFilters"
+      @refresh="refresh"
+      @clear-all-filters="clearAllFilters"
+    />
 
     <UTable
       ref="table"
