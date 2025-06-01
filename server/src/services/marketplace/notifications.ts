@@ -377,9 +377,6 @@ export async function notifyAboutAds(
     return;
   }
 
-  // Final deduplication step: Filter out any duplicate listings by ID
-  // This prevents the same listing from being notified multiple times
-  // when multiple similar queries return the same ad
   const seenAdIds = new Set<string>();
   const uniqueAds = ads.filter((ad) => {
     const adKey = `${ad.marketplace}:${ad.id}`;
@@ -398,7 +395,6 @@ export async function notifyAboutAds(
     return true;
   });
 
-  // Log deduplication results if any duplicates were found
   if (uniqueAds.length < ads.length) {
     logger.info({
       message: 'Deduplicated ads before sending notifications',
@@ -421,7 +417,6 @@ export async function notifyAboutAds(
   const notificationPromises: Promise<void>[] = [];
 
   if (notifications && notifications.length > 0) {
-    // Use provided notification configurations
     for (const notification of notifications) {
       if (notification.kind === 'DISCORD') {
         notificationPromises.push(
@@ -438,10 +433,8 @@ export async function notifyAboutAds(
       }
     }
   } else {
-    // Fall back to default notification behavior
     notificationPromises.push(sendEmailNotification(uniqueAds));
   }
 
-  // Send notifications in parallel
   await Promise.all(notificationPromises);
 }
