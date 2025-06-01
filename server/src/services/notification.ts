@@ -335,9 +335,40 @@ export async function notifyAboutAds(
     return;
   }
 
+  // Final deduplication step: Filter out any duplicate listings by ID
+  // This prevents the same listing from being notified multiple times
+  // when multiple similar queries return the same ad
+  const seenAdIds = new Set<string>();
+  const uniqueAds = ads.filter((ad) => {
+    const adKey = ad.ad_id; // BlocketAd uses ad_id field
+    if (seenAdIds.has(adKey)) {
+      logger.debug({
+        message: 'Filtering out duplicate ad before notification',
+        adId: ad.ad_id,
+        adKey,
+        adTitle: ad.subject,
+        watcherId: watcherInfo?.id,
+      });
+      return false;
+    }
+    seenAdIds.add(adKey);
+    return true;
+  });
+
+  // Log deduplication results if any duplicates were found
+  if (uniqueAds.length < ads.length) {
+    logger.info({
+      message: 'Deduplicated ads before sending notifications',
+      originalCount: ads.length,
+      uniqueCount: uniqueAds.length,
+      duplicatesRemoved: ads.length - uniqueAds.length,
+      watcherId: watcherInfo?.id,
+    });
+  }
+
   logger.info({
     message: 'Sending notifications for new ads',
-    count: ads.length,
+    count: uniqueAds.length,
     customNotifications: notifications ? notifications.length : 0,
     watcherQueries: watcherInfo?.queries,
     watcherId: watcherInfo?.id,
@@ -350,17 +381,21 @@ export async function notifyAboutAds(
     for (const notification of notifications) {
       if (notification.kind === 'DISCORD') {
         notificationPromises.push(
-          sendDiscordNotification(ads, notification.webhook_url, watcherInfo),
+          sendDiscordNotification(
+            uniqueAds,
+            notification.webhook_url,
+            watcherInfo,
+          ),
         );
       } else if (notification.kind === 'EMAIL') {
         notificationPromises.push(
-          sendEmailNotification(ads, notification.email),
+          sendEmailNotification(uniqueAds, notification.email),
         );
       }
     }
   } else {
     // Fall back to default notification behavior
-    notificationPromises.push(sendEmailNotification(ads));
+    notificationPromises.push(sendEmailNotification(uniqueAds));
   }
 
   // Send notifications in parallel
