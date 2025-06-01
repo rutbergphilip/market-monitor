@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { upperFirst } from 'scule';
+import { MARKETPLACE_LABELS } from '~/constants';
 
 interface Props {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -18,8 +18,51 @@ interface Emits {
   clearAllFilters: [];
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
 defineEmits<Emits>();
+
+const selectedMarketplaces = ref<
+  {
+    value: string;
+    label: string;
+  }[]
+>([]);
+
+onMounted(() => {
+  const currentFilter = props.table?.tableApi
+    ?.getColumn('marketplace')
+    ?.getFilterValue();
+  if (Array.isArray(currentFilter)) {
+    selectedMarketplaces.value = currentFilter.map((value) => ({
+      value: value,
+      label: MARKETPLACE_LABELS[value] || value,
+    }));
+  } else if (currentFilter && typeof currentFilter === 'string') {
+    selectedMarketplaces.value = [
+      {
+        value: currentFilter,
+        label: MARKETPLACE_LABELS[currentFilter] || currentFilter,
+      },
+    ];
+  }
+});
+
+watch(
+  selectedMarketplaces,
+  (newValue) => {
+    if (!props.table?.tableApi) return;
+
+    if (!newValue.length) {
+      props.table.tableApi.getColumn('marketplace')?.setFilterValue(undefined);
+    } else {
+      const marketplaceValues = newValue.map((item) => item.value);
+      props.table.tableApi
+        .getColumn('marketplace')
+        ?.setFilterValue(marketplaceValues);
+    }
+  },
+  { deep: true }
+);
 </script>
 
 <template>
@@ -46,45 +89,44 @@ defineEmits<Emits>();
         <span class="text-xs font-medium text-neutral-600 dark:text-neutral-400"
           >Marketplace</span
         >
-        <USelect
-          :model-value="(table?.tableApi?.getColumn('marketplace')?.getFilterValue() as string) || ''"
-          :options="[
-            { value: '', label: 'All' },
+        <USelectMenu
+          v-model="selectedMarketplaces"
+          :items="[
             { value: 'BLOCKET', label: 'Blocket' },
             { value: 'TRADERA', label: 'Tradera' },
           ]"
-          placeholder="All"
-          class="min-w-[10ch]"
-          @update:model-value="
-            table?.tableApi
-              ?.getColumn('marketplace')
-              ?.setFilterValue($event || undefined)
-          "
+          multiple
+          placeholder="Select marketplaces..."
+          class="min-w-[15ch]"
         />
       </div>
 
       <!-- Action Buttons -->
       <div class="flex items-end gap-2 ml-auto">
-        <UButton
-          :loading="refreshing"
-          icon="i-lucide-refresh-cw"
-          variant="ghost"
-          color="neutral"
-          aria-label="Refresh"
-          @click="$emit('refresh')"
-        />
+        <UTooltip text="Refresh table" :delay-duration="250">
+          <UButton
+            :loading="refreshing"
+            icon="i-lucide-refresh-cw"
+            variant="ghost"
+            color="neutral"
+            aria-label="Refresh"
+            @click="$emit('refresh')"
+          />
+        </UTooltip>
 
-        <UButton
-          icon="i-lucide-filter-x"
-          variant="ghost"
-          color="neutral"
-          aria-label="Clear filters"
-          @click="$emit('clearAllFilters')"
-        />
+        <UTooltip text="Clear all filters" :delay-duration="250">
+          <UButton
+            icon="i-lucide-filter-x"
+            variant="ghost"
+            color="neutral"
+            aria-label="Clear filters"
+            @click="$emit('clearAllFilters')"
+          />
+        </UTooltip>
 
         <UDropdownMenu
           :items="table?.tableApi?.getAllColumns().filter((column: any) => column.getCanHide()).map((column: any) => ({
-            label: upperFirst(column.id),
+            label: column.id.charAt(0).toUpperCase() + column.id.slice(1).replace('_', ' '),
             type: 'checkbox' as const,
             checked: column.getIsVisible(),
             onUpdateChecked(checked: boolean) {

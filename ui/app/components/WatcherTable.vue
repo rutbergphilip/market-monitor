@@ -233,9 +233,20 @@ const activeFilters = computed(
       // Make filter values more human-readable
       switch (column.id) {
         case 'marketplace':
-          displayValue =
-            MARKETPLACE_LABELS[filterValue as string] ||
-            (filterValue as string);
+          if (Array.isArray(filterValue)) {
+            // Handle multiple marketplace selection
+            displayValue = filterValue
+              .map(
+                (marketplace: string) =>
+                  MARKETPLACE_LABELS[marketplace] || marketplace
+              )
+              .join(', ');
+          } else {
+            // Handle single marketplace selection (backward compatibility)
+            displayValue =
+              MARKETPLACE_LABELS[filterValue as string] ||
+              (filterValue as string);
+          }
           break;
         case 'queries':
           displayValue = `"${filterValue}"`;
@@ -361,6 +372,13 @@ const columns: ComputedRef<TableColumn<Watcher>[]> = computed(() => [
       if (!filterValue) return true;
       const watcher = row.original;
       const marketplace = watcher.marketplace || 'BLOCKET';
+
+      // Handle array filtering for multiple marketplace selection
+      if (Array.isArray(filterValue)) {
+        return filterValue.includes(marketplace);
+      }
+
+      // Handle single value filtering (backward compatibility)
       return marketplace === filterValue;
     },
   },
@@ -670,6 +688,7 @@ const table = useTemplateRef<any>('table');
     </div>
 
     <WatcherTableFilters
+      v-if="table?.tableApi"
       :table="table"
       :refreshing="refreshing"
       :active-filters="activeFilters"
