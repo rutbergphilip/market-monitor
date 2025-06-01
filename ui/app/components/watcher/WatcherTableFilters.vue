@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { MARKETPLACE_LABELS } from '~/constants';
+import { useTableFiltersStore } from '~/stores/table-filters-store';
 
 interface Props {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -21,48 +21,123 @@ interface Emits {
 const props = defineProps<Props>();
 defineEmits<Emits>();
 
-const selectedMarketplaces = ref<
-  {
-    value: string;
-    label: string;
-  }[]
->([]);
+const tableFiltersStore = useTableFiltersStore();
 
+// Sync store state with table filters
 onMounted(() => {
-  const currentFilter = props.table?.tableApi
+  // Initialize store from current table state
+  const marketplaceFilter = props.table?.tableApi
     ?.getColumn('marketplace')
     ?.getFilterValue();
-  if (Array.isArray(currentFilter)) {
-    selectedMarketplaces.value = currentFilter.map((value) => ({
-      value: value,
-      label: MARKETPLACE_LABELS[value] || value,
-    }));
-  } else if (currentFilter && typeof currentFilter === 'string') {
-    selectedMarketplaces.value = [
-      {
-        value: currentFilter,
-        label: MARKETPLACE_LABELS[currentFilter] || currentFilter,
-      },
-    ];
+  if (marketplaceFilter) {
+    if (Array.isArray(marketplaceFilter)) {
+      tableFiltersStore.initializeFromMarketplaceValues(marketplaceFilter);
+    } else if (typeof marketplaceFilter === 'string') {
+      tableFiltersStore.initializeFromMarketplaceValues([marketplaceFilter]);
+    }
+  }
+
+  const searchFilter = props.table?.tableApi
+    ?.getColumn('queries')
+    ?.getFilterValue();
+  if (typeof searchFilter === 'string') {
+    tableFiltersStore.setSearchQuery(searchFilter);
   }
 });
 
+// Watch store changes and update table
 watch(
-  selectedMarketplaces,
-  (newValue) => {
-    if (!props.table?.tableApi) return;
+  () => tableFiltersStore.marketplaceValues,
+  (newValues) => {
+    if (!props.table?.tableApi || tableFiltersStore.isUpdatingFromTable) return;
 
-    if (!newValue.length) {
-      props.table.tableApi.getColumn('marketplace')?.setFilterValue(undefined);
-    } else {
-      const marketplaceValues = newValue.map((item) => item.value);
-      props.table.tableApi
-        .getColumn('marketplace')
-        ?.setFilterValue(marketplaceValues);
+    const column = props.table.tableApi.getColumn('marketplace');
+    const currentValue = column?.getFilterValue();
+
+    // Only update if the values are actually different
+    const currentValues = Array.isArray(currentValue)
+      ? currentValue
+      : currentValue && typeof currentValue === 'string'
+      ? [currentValue]
+      : [];
+
+    if (
+      JSON.stringify(currentValues.sort()) !== JSON.stringify(newValues.sort())
+    ) {
+      if (newValues.length === 0) {
+        column?.setFilterValue(undefined);
+      } else {
+        column?.setFilterValue(newValues);
+      }
     }
-  },
-  { deep: true }
+  }
 );
+
+watch(
+  () => tableFiltersStore.searchQuery,
+  (newQuery) => {
+    if (!props.table?.tableApi || tableFiltersStore.isUpdatingFromTable) return;
+
+    const column = props.table.tableApi.getColumn('queries');
+    const currentValue = column?.getFilterValue() || '';
+
+    if (currentValue !== newQuery) {
+      column?.setFilterValue(newQuery || undefined);
+    }
+  }
+);
+
+// Watch table changes and update store (for external changes like chip removal)
+watch(
+  () => props.table?.tableApi?.getColumn('marketplace')?.getFilterValue(),
+  (newFilterValue) => {
+    if (tableFiltersStore.isUpdatingFromTable) return;
+
+    const newValues = !newFilterValue
+      ? []
+      : Array.isArray(newFilterValue)
+      ? newFilterValue
+      : [newFilterValue];
+
+    // Only update store if values are different
+    const currentStoreValues = tableFiltersStore.marketplaceValues;
+    if (
+      JSON.stringify(currentStoreValues.sort()) !==
+      JSON.stringify(newValues.sort())
+    ) {
+      tableFiltersStore.initializeFromMarketplaceValues(newValues);
+    }
+  }
+);
+
+watch(
+  () => props.table?.tableApi?.getColumn('queries')?.getFilterValue(),
+  (newFilterValue) => {
+    if (tableFiltersStore.isUpdatingFromTable) return;
+
+    const queryValue = typeof newFilterValue === 'string' ? newFilterValue : '';
+
+    // Only update store if values are different
+    if (tableFiltersStore.searchQuery !== queryValue) {
+      tableFiltersStore.updateSearchQueryFromTable(queryValue);
+    }
+  }
+);
+
+function removeFilter(filter: {
+  column: string;
+  value: unknown;
+  displayValue: string;
+  label: string;
+}) {
+  if (filter.column === 'marketplace') {
+    // Use store to remove marketplace
+    tableFiltersStore.removeMarketplace(filter.value as string);
+  } else if (filter.column === 'queries') {
+    // Clear search query
+    tableFiltersStore.clearSearchQuery();
+  }
+}
 </script>
 
 <template>
@@ -75,12 +150,10 @@ watch(
           >Search</span
         >
         <UInput
-          :model-value="(table?.tableApi?.getColumn('queries')?.getFilterValue() as string)"
+          :model-value="tableFiltersStore.searchQuery"
           class="max-w-sm min-w-[12ch]"
           placeholder="Search queries..."
-          @update:model-value="
-            table?.tableApi?.getColumn('queries')?.setFilterValue($event)
-          "
+          @update:model-value="tableFiltersStore.setSearchQuery($event)"
         />
       </div>
 
@@ -90,7 +163,7 @@ watch(
           >Marketplace</span
         >
         <USelectMenu
-          v-model="selectedMarketplaces"
+          :model-value="tableFiltersStore.selectedMarketplaces"
           :items="[
             { value: 'BLOCKET', label: 'Blocket' },
             { value: 'TRADERA', label: 'Tradera' },
@@ -98,6 +171,7 @@ watch(
           multiple
           placeholder="Select marketplaces..."
           class="min-w-[15ch]"
+          @update:model-value="tableFiltersStore.setMarketplaceFilter($event)"
         />
       </div>
 
@@ -174,11 +248,7 @@ watch(
               size="xs"
               variant="ghost"
               color="error"
-              @click="
-                table?.tableApi
-                  ?.getColumn(filter.column)
-                  ?.setFilterValue(undefined)
-              "
+              @click="removeFilter(filter)"
             />
           </template>
         </UBadge>

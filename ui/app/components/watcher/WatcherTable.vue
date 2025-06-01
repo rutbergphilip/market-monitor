@@ -4,6 +4,7 @@ import { h, resolveComponent } from 'vue';
 import { upperFirst } from 'scule';
 
 import { NOTIFICATION_ICON_MAP, MARKETPLACE_LABELS } from '~/constants';
+import { useTableFiltersStore } from '~/stores/table-filters-store';
 
 import WatcherTableFilters from '~/components/watcher/WatcherTableFilters.vue';
 
@@ -17,6 +18,7 @@ const UTooltip = resolveComponent('UTooltip');
 
 const watcherStore = useWatcherStore();
 const toast = useToast();
+const tableFiltersStore = useTableFiltersStore();
 
 // Use the composable for all action functions
 const {
@@ -42,6 +44,10 @@ watchAuthState();
 
 // Wrapper function for clearAllFilters that uses the table ref
 function handleClearAllFilters() {
+  // Clear store state
+  tableFiltersStore.clearAllFilters();
+
+  // Also clear table filters directly to ensure sync
   clearAllFilters(table.value);
 }
 
@@ -77,13 +83,16 @@ const activeFilters = computed(
       switch (column.id) {
         case 'marketplace':
           if (Array.isArray(filterValue)) {
-            // Handle multiple marketplace selection
-            displayValue = filterValue
-              .map(
-                (marketplace: string) =>
-                  MARKETPLACE_LABELS[marketplace] || marketplace
-              )
-              .join(', ');
+            // Handle multiple marketplace selection - create separate filters for each
+            for (const marketplace of filterValue) {
+              filters.push({
+                column: column.id,
+                value: marketplace,
+                displayValue: MARKETPLACE_LABELS[marketplace] || marketplace,
+                label: 'Marketplace',
+              });
+            }
+            continue; // Skip the general push below since we handled each individually
           } else {
             // Handle single marketplace selection (backward compatibility)
             displayValue =
