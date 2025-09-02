@@ -9,6 +9,7 @@ import { useTableFiltersStore } from '~/stores/table-filters-store';
 import WatcherTableFilters from '~/components/watcher/WatcherTableFilters.vue';
 
 import type { TableColumn } from '@nuxt/ui';
+import type { Watcher, WatcherQuery } from '../../../shared/types/watchers';
 
 const UButton = resolveComponent('UButton');
 const UBadge = resolveComponent('UBadge');
@@ -146,7 +147,7 @@ const columns: ComputedRef<TableColumn<Watcher>[]> = computed(() => [
     },
     cell: ({ row }) => {
       const watcher = row.original;
-      const queries = watcher.queries.filter((q) => q.enabled !== false);
+      const queries = watcher.queries.filter((q: WatcherQuery) => q.enabled !== false);
 
       // Handle case with no queries
       if (!queries || queries.length === 0) {
@@ -181,8 +182,8 @@ const columns: ComputedRef<TableColumn<Watcher>[]> = computed(() => [
       ]);
     },
     sortingFn: (rowA, rowB) => {
-      const queriesA = rowA.original.queries.filter((q) => q.enabled !== false);
-      const queriesB = rowB.original.queries.filter((q) => q.enabled !== false);
+      const queriesA = rowA.original.queries.filter((q: WatcherQuery) => q.enabled !== false);
+      const queriesB = rowB.original.queries.filter((q: WatcherQuery) => q.enabled !== false);
 
       const firstQueryA =
         queriesA.length > 0 && queriesA[0] ? queriesA[0].query : '';
@@ -195,10 +196,10 @@ const columns: ComputedRef<TableColumn<Watcher>[]> = computed(() => [
       if (!filterValue) return true;
 
       const watcher = row.original;
-      const queries = watcher.queries.filter((q) => q.enabled !== false);
+      const queries = watcher.queries.filter((q: WatcherQuery) => q.enabled !== false);
 
       // Search across all enabled queries
-      return queries.some((query) =>
+      return queries.some((query: WatcherQuery) =>
         query.query.toLowerCase().includes(filterValue.toLowerCase())
       );
     },

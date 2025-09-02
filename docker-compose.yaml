@@ -1,8 +1,7 @@
-version: '3.8'
-
 services:
   market-monitor-test:
     build: .
+    platform: linux/amd64
     ports:
       - '3000:3000'
       - '8080:8080'

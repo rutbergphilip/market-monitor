@@ -29,9 +29,9 @@ const blocketQuerySchema = z.object({
 
 const blocketQueryState = reactive({
   limit: props.settings?.limit || 60,
-  sort: props.settings?.sort || 'rel',
-  listingType: props.settings?.listingType || 's',
-  status: props.settings?.status || 'active',
+  sort: (props.settings?.sort as 'rel') || 'rel',
+  listingType: (props.settings?.listingType as 's') || 's',
+  status: (props.settings?.status as 'active') || 'active',
   geolocation: props.settings?.geolocation || 3,
   include: props.settings?.include || 'extend_with_shipping',
 });

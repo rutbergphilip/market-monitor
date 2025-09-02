@@ -1,7 +1,9 @@
+import type { Watcher } from '../../shared/types/watchers';
+
 export const useWatcherStore = defineStore('watcher', () => {
   const watchers = ref<Watcher[]>([]);
   const activeWatchers = computed(() =>
-    watchers.value.filter((w) => w.status === 'active')
+    watchers.value.filter((w: Watcher) => w.status === 'active')
   );
 
   const authStore = useAuthStore();
@@ -85,7 +87,7 @@ export const useWatcherStore = defineStore('watcher', () => {
       throw new Error('Failed to update watcher');
     }
 
-    const index = watchers.value.findIndex((w) => w.id === watcher.id);
+    const index = watchers.value.findIndex((w: Watcher) => w.id === watcher.id);
     if (index !== -1) {
       watchers.value[index] = data.value;
     }
@@ -107,11 +109,11 @@ export const useWatcherStore = defineStore('watcher', () => {
       throw new Error('Failed to delete watcher');
     }
 
-    watchers.value = watchers.value.filter((w) => w.id !== id);
+    watchers.value = watchers.value.filter((w: Watcher) => w.id !== id);
   };
 
   const getById = (id: string) => {
-    return watchers.value.find((w) => w.id === id);
+    return watchers.value.find((w: Watcher) => w.id === id);
   };
 
   const stop = async (id: string) => {
@@ -124,7 +126,7 @@ export const useWatcherStore = defineStore('watcher', () => {
       onResponse: [refreshTokenInterceptor],
     });
 
-    const index = watchers.value.findIndex((w) => w.id === id);
+    const index = watchers.value.findIndex((w: Watcher) => w.id === id);
     if (index !== -1) {
       watchers.value[index]!.status = 'stopped';
     }
@@ -140,7 +142,7 @@ export const useWatcherStore = defineStore('watcher', () => {
       onResponse: [refreshTokenInterceptor],
     });
 
-    const index = watchers.value.findIndex((w) => w.id === id);
+    const index = watchers.value.findIndex((w: Watcher) => w.id === id);
     if (index !== -1) {
       watchers.value[index]!.status = 'active';
     }

@@ -13,7 +13,7 @@ COPY ui/package*.json ./ui/
 
 # Install dependencies
 RUN cd server && npm install
-RUN cd ui && npm install
+RUN cd ui && npm install || (rm -rf package-lock.json node_modules && npm install)
 
 # Copy application source code
 COPY server ./server

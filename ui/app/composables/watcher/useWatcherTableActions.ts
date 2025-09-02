@@ -27,11 +27,6 @@ export function useWatcherTableActions() {
       title: 'Delete Watcher',
       message:
         'Are you sure you want to delete this watcher? This action cannot be undone.',
-      onCancel: () => confirmationModal.close(),
-      onConfirm: (watcherId: string) => {
-        confirmationModal.close();
-        deleteWatcher(watcherId);
-      },
     },
   });
 

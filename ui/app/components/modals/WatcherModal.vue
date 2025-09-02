@@ -14,9 +14,9 @@ import {
 import type { FormError, FormSubmitEvent } from '@nuxt/ui';
 
 // Type aliases to avoid conflicts with browser APIs
-type AppNotification = Notification;
-type AppDiscordNotification = DiscordNotification;
-type AppEmailNotification = EmailNotification;
+type AppNotification = import('../../../shared/types/notifications').Notification;
+type AppDiscordNotification = import('../../../shared/types/notifications').DiscordNotification;
+type AppEmailNotification = import('../../../shared/types/notifications').EmailNotification;
 
 const emit = defineEmits(['cancel', 'success']);
 const props = defineProps({
@@ -153,10 +153,9 @@ onMounted(async () => {
 
     // Initialize selected Discord webhooks from existing notifications
     const discordNotifications = state.notifications.filter(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (n) => (n as any).kind === 'DISCORD'
+      (n: AppNotification) => n.kind === 'DISCORD'
     );
-    selectedDiscordWebhooks.value = discordNotifications.map((notification) => {
+    selectedDiscordWebhooks.value = discordNotifications.map((notification: AppNotification) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const appNotification = notification as any;
       // Try to find a matching predefined webhook
@@ -362,8 +361,7 @@ function onDiscordWebhookSelect(webhooks: { label: string; value: string }[]) {
 
   // Remove existing Discord notifications and add new ones
   const nonDiscordNotifications = state.notifications.filter(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (n) => (n as any).kind !== 'DISCORD'
+    (n: AppNotification) => n.kind !== 'DISCORD'
   );
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   state.notifications = [...nonDiscordNotifications, ...discordNotifications];
@@ -745,7 +743,7 @@ watch(selectedNotificationType, () => {
                     <div class="flex items-center gap-2">
                       <!-- eslint-disable-next-line @typescript-eslint/no-explicit-any -->
                       <UIcon
-                        :name="NOTIFICATION_ICON_MAP[(notification as any).kind as keyof typeof NOTIFICATION_ICON_MAP]"
+                        :name="NOTIFICATION_ICON_MAP[notification.kind as keyof typeof NOTIFICATION_ICON_MAP] || ''"
                         class="text-neutral-400"
                       />
                       <p

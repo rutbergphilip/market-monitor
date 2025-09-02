@@ -1,3 +1,5 @@
+import type { Setting, SettingKey } from '../../shared/types/settings';
+
 export const useSettingsStore = defineStore('settings', () => {
   const settings = ref<Setting[]>([]);
   const isLoading = ref(false);
@@ -20,7 +22,7 @@ export const useSettingsStore = defineStore('settings', () => {
 
   const getSettingValue = (key: SettingKey | string): string => {
     console.log('settings.value:', settings.value);
-    const setting = settings.value.find((s) => s.key === key);
+    const setting = settings.value.find((s: Setting) => s.key === key);
     console.log('getSettingValue:', key, setting);
     return setting ? setting.value : '';
   };
@@ -102,7 +104,7 @@ export const useSettingsStore = defineStore('settings', () => {
       }
 
       // Update the local state
-      const index = settings.value.findIndex((s) => s.key === key);
+      const index = settings.value.findIndex((s: Setting) => s.key === key);
       if (index !== -1) {
         settings.value[index] = data.value as Setting;
       }
