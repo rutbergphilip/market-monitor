@@ -32,7 +32,7 @@ export const useSettingsStore = defineStore('settings', () => {
     error.value = null;
 
     try {
-      const { data } = await useFetch('/api/settings', {
+      const { data } = await useFetch<Setting[]>('/api/settings', {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${authStore.token}`,
