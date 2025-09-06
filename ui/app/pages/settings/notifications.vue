@@ -578,66 +578,6 @@ async function testDiscordNotification() {
           </div>
         </UCard>
 
-        <UDivider class="my-16" />
-
-        <!-- Email Provider Section, blurred until ready -->
-        <UCard class="overflow-hidden blur-xs">
-          <template #header>
-            <div class="flex items-center justify-between p-1">
-              <div class="flex items-center">
-                <UIcon
-                  name="heroicons:envelope"
-                  class="mr-4 text-3xl text-green-500"
-                />
-                <div>
-                  <h2 class="text-xl font-bold">Email</h2>
-                  <p class="text-sm text-neutral-500 mt-1">
-                    Configure SMTP email notifications
-                  </p>
-                </div>
-              </div>
-              <UBadge color="success" variant="soft">Available Provider</UBadge>
-            </div>
-          </template>
-
-          <div class="p-6">
-            <UAlert
-              icon="heroicons:clock"
-              color="warning"
-              variant="soft"
-              title="Coming Soon"
-              description="Email notifications via SMTP are planned for a future release. Stay tuned for updates!"
-              :close-button="false"
-              class="mb-8"
-            />
-
-            <UAccordion
-              disabled
-              :items="[
-                {
-                  label: 'SMTP Configuration',
-                  icon: 'heroicons:cog-6-tooth',
-                  defaultOpen: false,
-                  slot: 'email-config',
-                },
-              ]"
-            >
-              <template #email-config>
-                <div class="pt-6">
-                  <EmailNotifications
-                    ref="emailRef"
-                    :is-loading="isLoading"
-                    :is-saving="isSaving"
-                    :settings="emailSettings"
-                    @save="saveEmailSettings"
-                  />
-                </div>
-              </template>
-            </UAccordion>
-          </div>
-        </UCard>
-
-        <UDivider class="my-16" />
 
         <!-- General Settings Section -->
         <UCard class="overflow-hidden">
