@@ -53,6 +53,12 @@ export default defineNuxtConfig({
     dirs: ['composables/**', 'stores/**', 'utils/**', 'interceptors/**'],
   },
 
+  nitro: {
+    routeRules: {
+      '/api/sse': { cors: false },
+    },
+  },
+
   typescript: {
     typeCheck: true,
   },

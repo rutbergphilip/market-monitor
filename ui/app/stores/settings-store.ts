@@ -21,9 +21,7 @@ export const useSettingsStore = defineStore('settings', () => {
   });
 
   const getSettingValue = (key: SettingKey | string): string => {
-    console.log('settings.value:', settings.value);
     const setting = settings.value.find((s: Setting) => s.key === key);
-    console.log('getSettingValue:', key, setting);
     return setting ? setting.value : '';
   };
 
