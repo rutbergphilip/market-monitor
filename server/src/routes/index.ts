@@ -5,6 +5,7 @@ import notificationRoutes from './notifications';
 import watcherRoutes from './watchers';
 import settingsRoutes from './settings';
 import authRoutes from './auth';
+import sseRoutes from './sse';
 import { authenticateJWT } from '@/middlewares/security';
 
 const router = Router();
@@ -18,5 +19,6 @@ router.use(authenticateJWT); // Apply authentication middleware to all routes be
 router.use('/api/notifications', notificationRoutes);
 router.use('/api/watchers', watcherRoutes);
 router.use('/api/settings', settingsRoutes);
+router.use('/api/sse', sseRoutes);
 
 export default router;
