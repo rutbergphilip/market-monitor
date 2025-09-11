@@ -13,10 +13,12 @@ export interface WatcherStatusUpdateEvent {
   type: 'watcher:status_update';
   data: {
     watcherId: string;
-    status: 'active' | 'stopped' | 'running' | 'error';
+    status: 'active' | 'stopped' | 'running' | 'error' | 'idle';
     message?: string;
     lastRun?: string;
     nextRun?: string;
+    newAdsCount?: number;
+    error?: string;
   };
 }
 

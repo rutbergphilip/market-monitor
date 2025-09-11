@@ -99,47 +99,20 @@ export function sseHandler(req: Request, res: Response): void {
     });
   }
 
-  // Set up pulsating heartbeat for this connection
-  const pulseInterval = setInterval(() => {
+  // Set up basic keepalive heartbeat (no events sent to client)
+  const heartbeatInterval = setInterval(() => {
     if (res.destroyed || res.writableEnded) {
-      logger.info({ 
-        message: '[SSE Backend] Connection closed, stopping pulse',
-        userId,
-        connectionId: connection.id 
-      });
-      clearInterval(pulseInterval);
+      clearInterval(heartbeatInterval);
       return;
     }
 
     try {
-      const pulseEvent = {
-        type: 'heartbeat' as const,
-        data: {
-          timestamp: new Date().toISOString(),
-          connectionId: connection.id,
-          message: `Pulse from backend - Connection active`
-        }
-      };
-
-      const pulseMessage = formatSSEMessage(pulseEvent);
-      res.write(pulseMessage);
-      
-      logger.info({ 
-        message: '[SSE Backend] Pulse sent to client',
-        userId,
-        connectionId: connection.id,
-        timestamp: pulseEvent.data.timestamp
-      });
+      // Send a simple comment to keep connection alive
+      res.write(': keepalive\n\n');
     } catch (error) {
-      logger.error({ 
-        message: '[SSE Backend] Error sending pulse',
-        userId,
-        connectionId: connection.id,
-        error: (error as Error).message 
-      });
-      clearInterval(pulseInterval);
+      clearInterval(heartbeatInterval);
     }
-  }, 5000); // Send pulse every 5 seconds
+  }, 30000); // Send keepalive every 30 seconds
 
   // Handle client disconnect
   req.on('close', () => {
@@ -149,7 +122,7 @@ export function sseHandler(req: Request, res: Response): void {
       connectionId: connection.id,
       connectedDuration: Date.now() - connection.connectedAt.getTime(),
     });
-    clearInterval(pulseInterval);
+    clearInterval(heartbeatInterval);
     sseManager.removeConnection(connection.id);
   });
 
@@ -161,7 +134,7 @@ export function sseHandler(req: Request, res: Response): void {
       connectionId: connection.id,
       error: error.message,
     });
-    clearInterval(pulseInterval);
+    clearInterval(heartbeatInterval);
     sseManager.removeConnection(connection.id);
   });
 }

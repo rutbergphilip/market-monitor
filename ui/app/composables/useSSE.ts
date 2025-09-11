@@ -196,14 +196,6 @@ export function useSSE(path = '/api/sse'): SSEConnection {
     on('heartbeat', handler);
   };
 
-  // Log heartbeat events automatically for connection verification
-  onHeartbeat((event) => {
-    console.log('[SSE Frontend] Heartbeat received:', {
-      timestamp: event.data.timestamp,
-      connectionId: event.data.connectionId,
-      message: event.data.message
-    });
-  });
 
   onMounted(connect);
   onBeforeUnmount(() => {
