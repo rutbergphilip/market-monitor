@@ -94,15 +94,15 @@ class SSEManagerImpl implements SSEManager {
       }
     });
 
-    if (event.type !== 'heartbeat') {
-      logger.debug({
-        message: 'SSE event broadcasted',
-        eventType: event.type,
-        successCount,
-        failureCount,
-        totalConnections: this.connections.size,
-      });
-    }
+    logger.info({
+      message: '🚀 SSE event broadcasted',
+      eventType: event.type,
+      successCount,
+      failureCount,
+      totalConnections: this.connections.size,
+      isHeartbeat: event.type === 'heartbeat',
+      eventData: event.type !== 'heartbeat' ? JSON.stringify(event.data) : undefined,
+    });
   }
 
   broadcastToUser(userId: string, event: SSEEvent): void {
@@ -133,16 +133,16 @@ class SSEManagerImpl implements SSEManager {
       }
     });
 
-    if (event.type !== 'heartbeat') {
-      logger.debug({
-        message: 'SSE event sent to user',
-        userId,
-        eventType: event.type,
-        successCount,
-        failureCount,
-        userConnections: userConnections.length,
-      });
-    }
+    logger.info({
+      message: '👤 SSE event sent to user',
+      userId,
+      eventType: event.type,
+      successCount,
+      failureCount,
+      userConnections: userConnections.length,
+      isHeartbeat: event.type === 'heartbeat',
+      eventData: event.type !== 'heartbeat' ? JSON.stringify(event.data) : undefined,
+    });
   }
 
   getConnectionCount(): number {

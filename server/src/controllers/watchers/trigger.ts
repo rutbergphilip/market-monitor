@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import logger from '@/integrations/logger';
-import { runMarketplaceWatcherManually } from '@/services/cron';
+import { runWatcherManually } from '@/services/cron';
 import { getById } from '@/db/repositories/watchers';
 
 /**
@@ -21,7 +21,7 @@ export async function triggerWatcher(req: Request, res: Response) {
     }
 
     // Run the watcher manually
-    await runMarketplaceWatcherManually(watcher);
+    await runWatcherManually(watcher);
 
     res.json({
       success: true,
