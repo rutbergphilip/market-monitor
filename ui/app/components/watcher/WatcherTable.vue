@@ -37,7 +37,42 @@ const {
   watchAuthState,
 } = useWatcherTableActions();
 
-const { watchers } = storeToRefs(watcherStore);
+const { watchers, updateTrigger } = storeToRefs(watcherStore);
+
+// Add reactive data with deep watch for debugging
+const reactiveWatchers = computed(() => {
+  // Force deep reactivity by accessing array length, items, and trigger
+  const watcherList = watchers.value;
+  const trigger = updateTrigger.value; // Include trigger to force reactivity
+  console.log('[WatcherTable] 🔄 Computed reactiveWatchers triggered, count:', watcherList.length, 'trigger:', trigger);
+  return watcherList;
+});
+
+// Watch for deep changes to watchers for debugging
+watch(
+  () => watchers.value,
+  (newWatchers, oldWatchers) => {
+    console.log('[WatcherTable] 👀 Watchers changed:', {
+      newCount: newWatchers?.length || 0,
+      oldCount: oldWatchers?.length || 0,
+      newWatchers: newWatchers?.map(w => ({ id: w.id, last_run: w.last_run })) || [],
+    });
+  },
+  { deep: true, immediate: false }
+);
+
+// Watch for update trigger changes
+watch(
+  updateTrigger,
+  (newTrigger, oldTrigger) => {
+    console.log('[WatcherTable] 🔔 Update trigger changed:', {
+      oldTrigger,
+      newTrigger,
+      watchersCount: watchers.value.length,
+    });
+  },
+  { immediate: false }
+);
 
 // Initialize and watch auth state
 onMounted(initialize);
@@ -551,7 +586,7 @@ const table = useTemplateRef<any>('table');
 
     <UTable
       ref="table"
-      :data="watchers ?? []"
+      :data="reactiveWatchers ?? []"
       :columns="columns"
       :loading="refreshing || isLoading"
       sticky

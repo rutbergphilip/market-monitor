@@ -2,6 +2,7 @@
 import WatcherModal from '~/components/modals/WatcherModal.vue';
 
 const toast = useToast();
+const watcherStore = useWatcherStore();
 
 // SSE Integration for real-time updates
 const sse = useSSE();
@@ -33,7 +34,25 @@ onMounted(() => {
   });
 
   // Listen for watcher status updates
-  sse.onWatcherUpdate((event) => {
+  sse.onWatcherUpdate(async (event) => {
+    console.log('[SSE Handler] 📡 Received watcher update event:', event);
+    
+    // Update the watcher store with the new data
+    watcherStore.updateWatcherFromSSE({
+      watcherId: event.data.watcherId,
+      status: event.data.status,
+      message: event.data.message,
+      lastRun: event.data.lastRun,
+      nextRun: event.data.nextRun,
+      newAdsCount: event.data.newAdsCount,
+      error: event.data.error,
+    });
+
+    // Wait for next tick to ensure store update completes
+    await nextTick();
+    console.log('[SSE Handler] ✅ Store update completed for watcher:', event.data.watcherId);
+    
+    // Show appropriate toast notifications
     if (event.data.status === 'error') {
       toast.add({
         title: 'Watcher Error',
@@ -51,6 +70,13 @@ onMounted(() => {
         title: 'New Listings Found',
         description: `Watcher ${event.data.watcherId} found ${event.data.newAdsCount} new listings`,
         color: 'success',
+      });
+    } else if (event.data.status === 'idle' && (!event.data.newAdsCount || event.data.newAdsCount === 0)) {
+      // Optionally show a subtle notification for completed jobs with no new ads
+      toast.add({
+        title: 'Watcher Completed',
+        description: `Watcher ${event.data.watcherId} completed successfully`,
+        color: 'info',
       });
     }
   });

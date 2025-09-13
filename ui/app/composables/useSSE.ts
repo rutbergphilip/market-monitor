@@ -78,22 +78,32 @@ export function useSSE(path = '/api/sse'): SSEConnection {
         lastEventId.value = event.lastEventId ?? null;
         const data = JSON.parse(event.data) as SSEEvent;
 
+        console.log('[SSE Frontend] 📨 Received SSE event:', {
+          type: data.type,
+          data: data.data,
+          lastEventId: event.lastEventId
+        });
+
         // Call registered handlers for this event type
         const handlers = eventHandlers.get(data.type);
-        if (handlers) {
+        if (handlers && handlers.size > 0) {
+          console.log(`[SSE Frontend] 🔔 Found ${handlers.size} handlers for event type: ${data.type}`);
           handlers.forEach((handler) => {
             try {
               handler(data);
             } catch (handlerError) {
               console.error(
-                `Error in SSE event handler for ${data.type}:`,
+                `[SSE Frontend] ❌ Error in SSE event handler for ${data.type}:`,
                 handlerError
               );
             }
           });
+        } else {
+          console.log(`[SSE Frontend] ⚠️ No handlers registered for event type: ${data.type}`);
         }
       } catch (parseError) {
-        console.error('Error parsing SSE event data:', parseError);
+        console.error('[SSE Frontend] ❌ Error parsing SSE event data:', parseError);
+        console.error('[SSE Frontend] Raw event data:', event.data);
         error.value = 'Invalid event data received';
       }
     });
@@ -115,22 +125,31 @@ export function useSSE(path = '/api/sse'): SSEConnection {
           const data = JSON.parse(event.data);
           const sseEvent: SSEEvent = { type: eventType, data };
 
+          console.log(`[SSE Frontend] 🎯 Received specific event '${eventType}':`, {
+            data: sseEvent.data,
+            lastEventId: event.lastEventId
+          });
+
           // Call registered handlers for this event type
           const handlers = eventHandlers.get(eventType);
-          if (handlers) {
+          if (handlers && handlers.size > 0) {
+            console.log(`[SSE Frontend] 🔔 Found ${handlers.size} specific handlers for: ${eventType}`);
             handlers.forEach((handler) => {
               try {
                 handler(sseEvent);
               } catch (handlerError) {
                 console.error(
-                  `Error in SSE event handler for ${eventType}:`,
+                  `[SSE Frontend] ❌ Error in specific SSE event handler for ${eventType}:`,
                   handlerError
                 );
               }
             });
+          } else {
+            console.log(`[SSE Frontend] ⚠️ No specific handlers registered for: ${eventType}`);
           }
         } catch (parseError) {
-          console.error(`Error parsing SSE ${eventType} event:`, parseError);
+          console.error(`[SSE Frontend] ❌ Error parsing specific SSE ${eventType} event:`, parseError);
+          console.error('[SSE Frontend] Raw specific event data:', event.data);
         }
       });
     });
