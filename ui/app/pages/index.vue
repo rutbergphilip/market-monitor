@@ -4,7 +4,6 @@ import WatcherModal from '~/components/modals/WatcherModal.vue';
 const toast = useToast();
 const watcherStore = useWatcherStore();
 
-// SSE Integration for real-time updates
 const sse = useSSE();
 
 const overlay = useOverlay();
@@ -22,9 +21,7 @@ async function openWatcherModal() {
   await modal.open();
 }
 
-// Set up SSE event handlers for watcher updates
 onMounted(() => {
-  // Listen for new listings found by watchers
   sse.onNewListing((event) => {
     toast.add({
       title: 'New Listing Found!',
@@ -33,11 +30,7 @@ onMounted(() => {
     });
   });
 
-  // Listen for watcher status updates
   sse.onWatcherUpdate(async (event) => {
-    console.log('[SSE Handler] 📡 Received watcher update event:', event);
-    
-    // Update the watcher store with the new data
     watcherStore.updateWatcherFromSSE({
       watcherId: event.data.watcherId,
       status: event.data.status,
@@ -48,40 +41,8 @@ onMounted(() => {
       error: event.data.error,
     });
 
-    // Wait for next tick to ensure store update completes
     await nextTick();
-    console.log('[SSE Handler] ✅ Store update completed for watcher:', event.data.watcherId);
-    
-    // Show appropriate toast notifications
-    if (event.data.status === 'error') {
-      toast.add({
-        title: 'Watcher Error',
-        description: `Watcher ${event.data.watcherId} encountered an error`,
-        color: 'error',
-      });
-    } else if (event.data.status === 'running') {
-      toast.add({
-        title: 'Watcher Started',
-        description: `Watcher ${event.data.watcherId} is now running`,
-        color: 'info',
-      });
-    } else if (event.data.status === 'idle' && event.data.newAdsCount && event.data.newAdsCount > 0) {
-      toast.add({
-        title: 'New Listings Found',
-        description: `Watcher ${event.data.watcherId} found ${event.data.newAdsCount} new listings`,
-        color: 'success',
-      });
-    } else if (event.data.status === 'idle' && (!event.data.newAdsCount || event.data.newAdsCount === 0)) {
-      // Optionally show a subtle notification for completed jobs with no new ads
-      toast.add({
-        title: 'Watcher Completed',
-        description: `Watcher ${event.data.watcherId} completed successfully`,
-        color: 'info',
-      });
-    }
   });
-
-  // Listen for system notifications
   sse.onNotification((event) => {
     if (event.data.success) {
       toast.add({
@@ -92,7 +53,6 @@ onMounted(() => {
     }
   });
 
-  // Listen for system status updates
   sse.onSystemStatus((event) => {
     if (event.data.status !== 'healthy') {
       toast.add({

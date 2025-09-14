@@ -187,7 +187,6 @@ function createWatcherJobFunction(watcher: Watcher): () => Promise<void> {
       });
 
       // Emit watcher start event
-      console.log('[DEBUG] Emitting JOB_STARTED event for watcher:', watcher.id);
       eventEmitter.emit(WatcherEvents.JOB_STARTED, watcher);
 
       // Fetch new ads
@@ -198,7 +197,6 @@ function createWatcherJobFunction(watcher: Watcher): () => Promise<void> {
           message: 'No ads found for watcher',
           watcherId: watcher.id,
         });
-        console.log('[DEBUG] Emitting JOB_COMPLETED event for watcher:', watcher.id, 'with 0 new ads');
         eventEmitter.emit(WatcherEvents.JOB_COMPLETED, watcher, []);
         return;
       }
@@ -214,7 +212,6 @@ function createWatcherJobFunction(watcher: Watcher): () => Promise<void> {
           watcherId: watcher.id,
           totalAds: ads.length,
         });
-        console.log('[DEBUG] Emitting JOB_COMPLETED event for watcher:', watcher.id, 'with 0 new ads');
         eventEmitter.emit(WatcherEvents.JOB_COMPLETED, watcher, []);
         return;
       }

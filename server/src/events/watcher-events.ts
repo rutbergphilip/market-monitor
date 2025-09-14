@@ -10,7 +10,6 @@ import type { BaseAd } from '@/marketplaces/base';
  * Initialize watcher event listeners
  */
 export function initWatcherEvents(): void {
-  console.log('[DEBUG] Initializing watcher event listeners');
   
   emitter.on(WatcherEvents.RUN, (watcherId: string) => {
     try {
@@ -30,7 +29,6 @@ export function initWatcherEvents(): void {
   });
 
   emitter.on(WatcherEvents.JOB_STARTED, (watcher: Watcher) => {
-    console.log('[DEBUG] 🚀 JOB_STARTED event received for watcher:', watcher.id);
     try {
       if (watcher.id) {
         watcherRepository.updateLastRun(watcher.id);
@@ -47,7 +45,6 @@ export function initWatcherEvents(): void {
         },
       };
 
-      console.log('[DEBUG] 📡 Sending SSE event for JOB_STARTED:', JSON.stringify(event, null, 2));
       sendSSEEvent(event);
 
       logger.info({
@@ -65,7 +62,6 @@ export function initWatcherEvents(): void {
   });
 
   emitter.on(WatcherEvents.JOB_COMPLETED, (watcher: Watcher, newAds: BaseAd[]) => {
-    console.log('[DEBUG] ✅ JOB_COMPLETED event received for watcher:', watcher.id, 'with', newAds.length, 'new ads');
     try {
       const event: WatcherStatusUpdateEvent = {
         type: 'watcher:status_update',
@@ -79,7 +75,6 @@ export function initWatcherEvents(): void {
         },
       };
 
-      console.log('[DEBUG] 📡 Sending SSE event for JOB_COMPLETED:', JSON.stringify(event, null, 2));
       sendSSEEvent(event);
 
       logger.info({

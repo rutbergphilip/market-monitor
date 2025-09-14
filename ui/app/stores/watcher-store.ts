@@ -190,24 +190,6 @@ export const useWatcherStore = defineStore('watcher', () => {
       // Force reactivity update with trigger
       updateTrigger.value++;
       
-      // Force reactivity update
-      nextTick(() => {
-        console.log('[Watcher Store] 🔄 Updated watcher (after nextTick):', {
-          watcherId,
-          updates,
-          updatedWatcher,
-          currentArrayLength: watchers.value.length,
-          updateTrigger: updateTrigger.value,
-        });
-      });
-
-      console.log('[Watcher Store] 🔄 Updated watcher:', {
-        watcherId,
-        updates,
-        updatedWatcher,
-        currentArrayLength: watchers.value.length,
-        updateTrigger: updateTrigger.value,
-      });
     } else {
       console.warn(
         '[Watcher Store] ⚠️ Watcher not found for update:',
@@ -251,12 +233,6 @@ export const useWatcherStore = defineStore('watcher', () => {
       updates.last_run = event.lastRun;
     }
 
-    // Log the SSE event processing
-    console.log('[Watcher Store] 📡 Processing SSE event:', {
-      event,
-      updates,
-      watcherId: event.watcherId,
-    });
 
     updateWatcherStatus(event.watcherId, updates);
   };

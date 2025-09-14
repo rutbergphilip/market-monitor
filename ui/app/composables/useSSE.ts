@@ -20,31 +20,22 @@ export function useSSE(path = '/api/sse'): SSEConnection {
   const eventHandlers = new Map<string, Set<SSEEventHandler>>();
 
   const connect = () => {
-    console.log('[SSE Frontend] Connect called');
-    console.log('[SSE Frontend] Server-side rendering:', import.meta.server);
-    console.log('[SSE Frontend] Existing EventSource:', es);
-    console.log('[SSE Frontend] Path:', path);
     
     if (import.meta.server) {
-      console.log('[SSE Frontend] Skipping connection (SSR)');
       return;
     }
     
     if (es) {
-      console.log('[SSE Frontend] Skipping connection (already exists)');
       return;
     }
 
     // Clear previous error
     error.value = null;
-    console.log('[SSE Frontend] Creating EventSource...');
 
     try {
       es = new EventSource(path, {
         withCredentials: true
       });
-      console.log('[SSE Frontend] EventSource created:', es);
-      console.log('[SSE Frontend] Initial state:', es.readyState);
     } catch (createError) {
       console.error('[SSE Frontend] Error creating EventSource:', createError);
       error.value = 'Failed to create connection';
@@ -54,9 +45,6 @@ export function useSSE(path = '/api/sse'): SSEConnection {
     es.addEventListener('open', () => {
       connected.value = true;
       error.value = null;
-      console.log('[SSE Frontend] Connection established!');
-      console.log('[SSE Frontend] EventSource state:', es?.readyState);
-      console.log('[SSE Frontend] URL:', es?.url);
     });
 
     es.addEventListener('error', (event) => {
@@ -78,16 +66,9 @@ export function useSSE(path = '/api/sse'): SSEConnection {
         lastEventId.value = event.lastEventId ?? null;
         const data = JSON.parse(event.data) as SSEEvent;
 
-        console.log('[SSE Frontend] 📨 Received SSE event:', {
-          type: data.type,
-          data: data.data,
-          lastEventId: event.lastEventId
-        });
-
         // Call registered handlers for this event type
         const handlers = eventHandlers.get(data.type);
         if (handlers && handlers.size > 0) {
-          console.log(`[SSE Frontend] 🔔 Found ${handlers.size} handlers for event type: ${data.type}`);
           handlers.forEach((handler) => {
             try {
               handler(data);
@@ -98,8 +79,6 @@ export function useSSE(path = '/api/sse'): SSEConnection {
               );
             }
           });
-        } else {
-          console.log(`[SSE Frontend] ⚠️ No handlers registered for event type: ${data.type}`);
         }
       } catch (parseError) {
         console.error('[SSE Frontend] ❌ Error parsing SSE event data:', parseError);
@@ -125,15 +104,9 @@ export function useSSE(path = '/api/sse'): SSEConnection {
           const data = JSON.parse(event.data);
           const sseEvent: SSEEvent = { type: eventType, data };
 
-          console.log(`[SSE Frontend] 🎯 Received specific event '${eventType}':`, {
-            data: sseEvent.data,
-            lastEventId: event.lastEventId
-          });
-
           // Call registered handlers for this event type
           const handlers = eventHandlers.get(eventType);
           if (handlers && handlers.size > 0) {
-            console.log(`[SSE Frontend] 🔔 Found ${handlers.size} specific handlers for: ${eventType}`);
             handlers.forEach((handler) => {
               try {
                 handler(sseEvent);
@@ -144,8 +117,6 @@ export function useSSE(path = '/api/sse'): SSEConnection {
                 );
               }
             });
-          } else {
-            console.log(`[SSE Frontend] ⚠️ No specific handlers registered for: ${eventType}`);
           }
         } catch (parseError) {
           console.error(`[SSE Frontend] ❌ Error parsing specific SSE ${eventType} event:`, parseError);
