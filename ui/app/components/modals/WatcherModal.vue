@@ -8,15 +8,17 @@ import {
   NOTIFICATION_TARGETS,
   NOTIFICATION_ICON_MAP,
   DISABLED_NOTIFICATION_TARGETS,
-  MARKETPLACE_OPTIONS,
 } from '~/constants';
 
 import type { FormError, FormSubmitEvent } from '@nuxt/ui';
 
 // Type aliases to avoid conflicts with browser APIs
-type AppNotification = import('../../../shared/types/notifications').Notification;
-type AppDiscordNotification = import('../../../shared/types/notifications').DiscordNotification;
-type AppEmailNotification = import('../../../shared/types/notifications').EmailNotification;
+type AppNotification =
+  import('../../../shared/types/notifications').Notification;
+type AppDiscordNotification =
+  import('../../../shared/types/notifications').DiscordNotification;
+type AppEmailNotification =
+  import('../../../shared/types/notifications').EmailNotification;
 
 const emit = defineEmits(['cancel', 'success']);
 const props = defineProps({
@@ -155,20 +157,22 @@ onMounted(async () => {
     const discordNotifications = state.notifications.filter(
       (n: AppNotification) => n.kind === 'DISCORD'
     );
-    selectedDiscordWebhooks.value = discordNotifications.map((notification: AppNotification) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const appNotification = notification as any;
-      // Try to find a matching predefined webhook
-      const webhook = discordWebhooks.value.find(
-        (w) => w.url === appNotification.webhook_url
-      );
-      return {
-        label: webhook
-          ? webhook.name
-          : `Custom: ${appNotification.webhook_url}`,
-        value: appNotification.webhook_url,
-      };
-    });
+    selectedDiscordWebhooks.value = discordNotifications.map(
+      (notification: AppNotification) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const appNotification = notification as any;
+        // Try to find a matching predefined webhook
+        const webhook = discordWebhooks.value.find(
+          (w) => w.url === appNotification.webhook_url
+        );
+        return {
+          label: webhook
+            ? webhook.name
+            : `Custom: ${appNotification.webhook_url}`,
+          value: appNotification.webhook_url,
+        };
+      }
+    );
   }
 });
 
@@ -188,6 +192,7 @@ async function create(event: FormSubmitEvent<Schema>) {
     notifications: state.notifications ? state.notifications : [],
     min_price: state.min_price,
     max_price: state.max_price,
+    marketplace: state.marketplace,
   };
 
   try {
@@ -221,6 +226,7 @@ async function update(event: FormSubmitEvent<Schema>) {
     notifications: state.notifications ? state.notifications : [],
     min_price: state.min_price || null,
     max_price: state.max_price || null,
+    marketplace: state.marketplace,
   };
 
   try {
@@ -548,11 +554,12 @@ watch(selectedNotificationType, () => {
             <p class="text-sm font-medium">Marketplace</p>
           </div>
           <UFormField label="Default Marketplace" name="marketplace">
-            <USelect
+            <USelectMenu
               v-model="state.marketplace"
-              :options="MARKETPLACE_OPTIONS"
-              value-attribute="value"
-              option-attribute="label"
+              :options="[
+                { value: 'BLOCKET', label: 'Blocket' },
+                { value: 'TRADERA', label: 'Tradera' }
+              ]"
               placeholder="Select marketplace"
               size="xl"
             />

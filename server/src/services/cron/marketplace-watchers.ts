@@ -78,16 +78,40 @@ function getMarketplaceSettings(marketplace: MarketplaceType) {
  * Fetches ads for a specific watcher using marketplace adapters
  */
 async function fetchAdsForWatcher(watcher: Watcher): Promise<BaseAd[]> {
+  logger.info({
+    message: '[CRON DEBUG] Starting ad fetch for watcher',
+    watcherId: watcher.id,
+    timestamp: new Date().toISOString(),
+    watcherDetails: {
+      id: watcher.id,
+      marketplace: watcher.marketplace,
+      schedule: watcher.schedule,
+      minPrice: watcher.min_price,
+      maxPrice: watcher.max_price,
+      queriesCount: watcher.queries?.length || 0,
+    },
+  });
+
   const allAds: BaseAd[] = [];
   const adMap = new Map<string, BaseAd>(); // To avoid duplicates
 
   // Get all enabled queries for this watcher
   const queries = watcher.queries?.filter((q) => q.enabled !== false) || [];
 
+  logger.info({
+    message: '[CRON DEBUG] Query filtering completed',
+    watcherId: watcher.id,
+    totalQueries: watcher.queries?.length || 0,
+    enabledQueries: queries.length,
+    disabledQueries: (watcher.queries?.length || 0) - queries.length,
+    queries: queries.map(q => ({ query: q.query, marketplace: q.marketplace, enabled: q.enabled })),
+  });
+
   if (queries.length === 0) {
     logger.warn({
-      message: 'No enabled queries found for watcher',
+      message: '[CRON DEBUG] No enabled queries found for watcher - exiting fetch',
       watcherId: watcher.id,
+      allQueries: watcher.queries?.map(q => ({ query: q.query, enabled: q.enabled })) || [],
     });
     return [];
   }
@@ -125,28 +149,76 @@ async function fetchAdsForWatcher(watcher: Watcher): Promise<BaseAd[]> {
       // Search using marketplace adapter
       const result = await adapter.search(searchQuery, searchConfig);
 
+      logger.info({
+        message: '[CRON DEBUG] Processing search results',
+        watcherId: watcher.id,
+        query: queryObj.query,
+        marketplace,
+        resultType: typeof result,
+        hasAds: !!result.ads,
+        adsIsArray: Array.isArray(result.ads),
+        adsLength: result.ads?.length || 0,
+      });
+
       if (result.ads && Array.isArray(result.ads)) {
+        logger.info({
+          message: '[CRON DEBUG] Processing ads array',
+          watcherId: watcher.id,
+          query: queryObj.query,
+          marketplace,
+          adsCount: result.ads.length,
+          adSample: result.ads.slice(0, 3).map(ad => ({
+            id: ad.id,
+            title: ad.title?.substring(0, 50) + '...',
+            price: ad.price?.value,
+            marketplace: ad.marketplace,
+          })),
+        });
+
+        let newAdsForQuery = 0;
+        let duplicateAdsForQuery = 0;
+
         // Add to map to avoid duplicates across marketplaces
         for (const ad of result.ads) {
           const key = `${ad.marketplace}:${ad.id}`;
           if (!adMap.has(key)) {
             adMap.set(key, ad);
+            newAdsForQuery++;
+          } else {
+            duplicateAdsForQuery++;
           }
         }
 
-        logger.debug({
-          message: `Successfully fetched ${result.ads.length} ads for query`,
+        logger.info({
+          message: '[CRON DEBUG] Ads deduplication completed',
+          watcherId: watcher.id,
+          query: queryObj.query,
+          marketplace,
+          totalAdsFromQuery: result.ads.length,
+          newAdsAdded: newAdsForQuery,
+          duplicatesSkipped: duplicateAdsForQuery,
+          totalUniqueAdsNow: adMap.size,
+        });
+
+        logger.info({
+          message: '[CRON DEBUG] Successfully fetched ads for query',
           watcherId: watcher.id,
           query: queryObj.query,
           marketplace,
           adsCount: result.ads.length,
+          newUniqueAds: newAdsForQuery,
         });
       } else {
-        logger.debug({
-          message: `No results for query`,
+        logger.info({
+          message: '[CRON DEBUG] No results for query',
           watcherId: watcher.id,
           query: queryObj.query,
           marketplace,
+          resultDetails: {
+            ads: result.ads,
+            hasMore: result.hasMore,
+            totalCount: result.totalCount,
+          },
         });
       }
     } catch (error) {
@@ -178,67 +250,218 @@ async function fetchAdsForWatcher(watcher: Watcher): Promise<BaseAd[]> {
  */
 function createWatcherJobFunction(watcher: Watcher): () => Promise<void> {
   return async (): Promise<void> => {
+    logger.info({
+      message: '[CRON DEBUG] ===== CRON JOB EXECUTION STARTED =====',
+      watcherId: watcher.id,
+      timestamp: new Date().toISOString(),
+      cronExecutionId: `${watcher.id}-${Date.now()}`,
+      watcherSnapshot: {
+        id: watcher.id,
+        schedule: watcher.schedule,
+        marketplace: watcher.marketplace,
+        queriesCount: watcher.queries?.length || 0,
+        notificationsCount: watcher.notifications?.length || 0,
+        priceRange: {
+          min: watcher.min_price,
+          max: watcher.max_price,
+        },
+      },
+    });
+
     try {
       logger.info({
-        message: `Running watcher job: ${watcher.id}`,
+        message: '[CRON DEBUG] Initializing watcher job execution',
         watcherId: watcher.id,
         schedule: watcher.schedule,
         queriesCount: watcher.queries?.length || 0,
       });
 
+      logger.info({
+        message: '[CRON DEBUG] Emitting JOB_STARTED event',
+        watcherId: watcher.id,
+      });
+
       // Emit watcher start event
       eventEmitter.emit(WatcherEvents.JOB_STARTED, watcher);
+
+      logger.info({
+        message: '[CRON DEBUG] Starting ad fetch process',
+        watcherId: watcher.id,
+      });
 
       // Fetch new ads
       const ads = await fetchAdsForWatcher(watcher);
 
+      logger.info({
+        message: '[CRON DEBUG] Ad fetch completed',
+        watcherId: watcher.id,
+        totalAdsFound: ads.length,
+        adsByMarketplace: ads.reduce((acc, ad) => {
+          acc[ad.marketplace] = (acc[ad.marketplace] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>),
+      });
+
       if (ads.length === 0) {
         logger.info({
-          message: 'No ads found for watcher',
+          message: '[CRON DEBUG] No ads found for watcher - completing job',
           watcherId: watcher.id,
+          timestamp: new Date().toISOString(),
         });
         eventEmitter.emit(WatcherEvents.JOB_COMPLETED, watcher, []);
         return;
       }
 
+      logger.info({
+        message: '[CRON DEBUG] Starting cache filtering process',
+        watcherId: watcher.id,
+        totalAdsToCheck: ads.length,
+        cacheInfo: {
+          cacheSize: marketplaceCache.size,
+          cacheStats: marketplaceCache.getStats(),
+        },
+      });
+
       // Filter out ads that are already in cache (new ads only)
       const newAds = ads.filter((ad) => {
-        return !marketplaceCache.has(ad.marketplace, ad.id);
+        const isInCache = marketplaceCache.has(ad.marketplace, ad.id);
+        if (isInCache) {
+          logger.debug({
+            message: '[CRON DEBUG] Ad found in cache, skipping',
+            watcherId: watcher.id,
+            adId: ad.id,
+            adTitle: ad.title?.substring(0, 50),
+            marketplace: ad.marketplace,
+          });
+        }
+        return !isInCache;
+      });
+
+      logger.info({
+        message: '[CRON DEBUG] Cache filtering completed',
+        watcherId: watcher.id,
+        totalAds: ads.length,
+        newAds: newAds.length,
+        cachedAds: ads.length - newAds.length,
+        newAdSample: newAds.slice(0, 3).map(ad => ({
+          id: ad.id,
+          title: ad.title?.substring(0, 50),
+          price: ad.price?.value,
+          marketplace: ad.marketplace,
+        })),
       });
 
       if (newAds.length === 0) {
         logger.info({
-          message: 'No new ads found for watcher',
+          message: '[CRON DEBUG] No new ads found for watcher - completing job',
           watcherId: watcher.id,
           totalAds: ads.length,
+          timestamp: new Date().toISOString(),
         });
         eventEmitter.emit(WatcherEvents.JOB_COMPLETED, watcher, []);
         return;
       }
 
+      logger.info({
+        message: '[CRON DEBUG] Adding new ads to cache',
+        watcherId: watcher.id,
+        newAdsCount: newAds.length,
+      });
+
       // Add new ads to cache
-      newAds.forEach((ad) => marketplaceCache.set(ad));
+      newAds.forEach((ad) => {
+        logger.debug({
+          message: '[CRON DEBUG] Adding ad to cache',
+          watcherId: watcher.id,
+          adId: ad.id,
+          marketplace: ad.marketplace,
+        });
+        marketplaceCache.set(ad);
+      });
 
       logger.info({
-        message: `Found ${newAds.length} new ads for watcher`,
+        message: '[CRON DEBUG] Found new ads for watcher',
         watcherId: watcher.id,
         newAds: newAds.length,
         totalAds: ads.length,
         marketplaces: [...new Set(newAds.map((ad) => ad.marketplace))],
+        newCacheSize: marketplaceCache.size,
       });
 
-      // Send notifications about new ads
-      await notifyAboutAds(newAds, watcher.notifications, {
-        queries: watcher.queries?.map((q) => q.query) || [],
-        id: watcher.id,
+      logger.info({
+        message: '[CRON DEBUG] Starting notification process',
+        watcherId: watcher.id,
+        newAdsCount: newAds.length,
+        notificationsCount: watcher.notifications?.length || 0,
+        notifications: watcher.notifications?.map(n => ({ kind: n.kind })) || [],
+      });
+
+      try {
+        // Send notifications about new ads
+        await notifyAboutAds(newAds, watcher.notifications, {
+          queries: watcher.queries?.map((q) => q.query) || [],
+          id: watcher.id,
+        });
+
+        logger.info({
+          message: '[CRON DEBUG] Notifications sent successfully',
+          watcherId: watcher.id,
+          newAdsCount: newAds.length,
+        });
+      } catch (notificationError) {
+        logger.error({
+          message: '[CRON DEBUG] Failed to send notifications',
+          watcherId: watcher.id,
+          newAdsCount: newAds.length,
+          error: {
+            message: notificationError instanceof Error ? notificationError.message : String(notificationError),
+            stack: notificationError instanceof Error ? notificationError.stack : undefined,
+          },
+        });
+        // Don't throw here - we still want to complete the job even if notifications fail
+      }
+
+      logger.info({
+        message: '[CRON DEBUG] Emitting JOB_COMPLETED event',
+        watcherId: watcher.id,
+        newAdsCount: newAds.length,
       });
 
       // Emit completion event
       eventEmitter.emit(WatcherEvents.JOB_COMPLETED, watcher, newAds);
+
+      logger.info({
+        message: '[CRON DEBUG] ===== CRON JOB EXECUTION COMPLETED SUCCESSFULLY =====',
+        watcherId: watcher.id,
+        timestamp: new Date().toISOString(),
+        summary: {
+          totalAdsFound: ads.length,
+          newAdsFound: newAds.length,
+          notificationsSent: watcher.notifications?.length || 0,
+        },
+      });
     } catch (error) {
       logger.error({
-        error: error as Error,
-        message: 'Error running watcher job',
+        message: '[CRON DEBUG] ===== CRON JOB EXECUTION FAILED =====',
+        watcherId: watcher.id,
+        timestamp: new Date().toISOString(),
+        error: {
+          message: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined,
+          name: error instanceof Error ? error.name : undefined,
+          code: (error as any)?.code,
+          cause: (error as any)?.cause,
+        },
+        watcherSnapshot: {
+          id: watcher.id,
+          schedule: watcher.schedule,
+          marketplace: watcher.marketplace,
+          queriesCount: watcher.queries?.length || 0,
+        },
+      });
+
+      logger.info({
+        message: '[CRON DEBUG] Emitting JOB_ERROR event',
         watcherId: watcher.id,
       });
 

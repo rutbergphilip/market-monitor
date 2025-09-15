@@ -31,36 +31,113 @@ export class BlocketAdapter extends BaseMarketplaceAdapter {
     query: SearchQuery,
     config?: SearchConfig,
   ): Promise<SearchResult> {
+    logger.info({
+      message: '[BLOCKET ADAPTER DEBUG] ===== BLOCKET SEARCH STARTED =====',
+      query: query.query,
+      timestamp: new Date().toISOString(),
+      searchParams: {
+        query: query.query,
+        minPrice: query.minPrice,
+        maxPrice: query.maxPrice,
+        filters: query.filters,
+      },
+      searchConfig: {
+        limit: config?.limit,
+        sort: config?.sort,
+        timeout: config?.timeout,
+      },
+    });
+
     const blocketConfig = this.buildBlocketConfig(query, config);
 
-    logger.debug({
-      message: 'Searching Blocket',
+    logger.info({
+      message: '[BLOCKET ADAPTER DEBUG] Blocket config built',
       query: query.query,
-      config: blocketConfig,
+      blocketConfig,
     });
 
-    const ads = await this.withRetry(async () => {
-      // Create timeout promise
-      const timeoutMs = config?.timeout || 15000;
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => {
-          reject(
-            new Error(
-              `Blocket API request timed out after ${timeoutMs}ms for query: ${query.query}`,
-            ),
-          );
-        }, timeoutMs);
+    logger.info({
+      message: '[BLOCKET ADAPTER DEBUG] Starting withRetry wrapper',
+      query: query.query,
+      retryStartTime: new Date().toISOString(),
+    });
+
+    let ads;
+    try {
+      ads = await this.withRetry(async () => {
+        logger.info({
+          message: '[BLOCKET ADAPTER DEBUG] Inside retry wrapper - creating timeout promise',
+          query: query.query,
+          attempt: new Date().toISOString(),
+        });
+
+        // Create timeout promise
+        const timeoutMs = config?.timeout || 15000;
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => {
+            logger.error({
+              message: '[BLOCKET ADAPTER DEBUG] Timeout reached - rejecting',
+              query: query.query,
+              timeoutMs,
+            });
+            reject(
+              new Error(
+                `Blocket API request timed out after ${timeoutMs}ms for query: ${query.query}`,
+              ),
+            );
+          }, timeoutMs);
+        });
+
+        logger.info({
+          message: '[BLOCKET ADAPTER DEBUG] Calling blocket client.find()',
+          query: query.query,
+          blocketConfig,
+          clientCallTime: new Date().toISOString(),
+        });
+
+        // Race between API call and timeout
+        const apiCallPromise = client.find(blocketConfig);
+        
+        logger.info({
+          message: '[BLOCKET ADAPTER DEBUG] Racing API call vs timeout',
+          query: query.query,
+          timeoutMs,
+        });
+
+        return await Promise.race([apiCallPromise, timeoutPromise]);
       });
 
-      // Race between API call and timeout
-      const apiCallPromise = client.find(blocketConfig);
-      return await Promise.race([apiCallPromise, timeoutPromise]);
-    });
+      logger.info({
+        message: '[BLOCKET ADAPTER DEBUG] withRetry completed successfully',
+        query: query.query,
+        retryEndTime: new Date().toISOString(),
+        adsReceived: !!ads,
+        adsType: typeof ads,
+        adsIsArray: Array.isArray(ads),
+        adsLength: Array.isArray(ads) ? ads.length : 'N/A',
+      });
+    } catch (retryError) {
+      logger.error({
+        message: '[BLOCKET ADAPTER DEBUG] withRetry failed with error',
+        query: query.query,
+        retryEndTime: new Date().toISOString(),
+        error: {
+          message: retryError instanceof Error ? retryError.message : String(retryError),
+          stack: retryError instanceof Error ? retryError.stack : undefined,
+          name: retryError instanceof Error ? retryError.name : undefined,
+          code: (retryError as any)?.code,
+        },
+      });
+      throw retryError;
+    }
 
     if (!ads || !Array.isArray(ads)) {
-      logger.debug({
-        message: 'No results from Blocket',
+      logger.info({
+        message: '[BLOCKET ADAPTER DEBUG] No results from Blocket - returning empty result',
         query: query.query,
+        adsReceived: ads,
+        adsType: typeof ads,
+        isArray: Array.isArray(ads),
       });
       return {
         ads: [],
@@ -69,14 +146,65 @@ export class BlocketAdapter extends BaseMarketplaceAdapter {
       };
     }
 
-    // Transform Blocket ads to BaseAd format
-    const transformedAds = ads.map((ad) => this.transformAd(ad));
+    logger.info({
+      message: '[BLOCKET ADAPTER DEBUG] Starting ad transformation',
+      query: query.query,
+      adsCount: ads.length,
+      adSample: ads.slice(0, 3).map(ad => ({
+        ad_id: ad.ad_id,
+        subject: ad.subject?.substring(0, 50),
+        price: ad.price?.value,
+      })),
+    });
 
-    return {
+    let transformedAds;
+    try {
+      // Transform Blocket ads to BaseAd format
+      transformedAds = ads.map((ad) => this.transformAd(ad));
+      
+      logger.info({
+        message: '[BLOCKET ADAPTER DEBUG] Ad transformation completed',
+        query: query.query,
+        originalCount: ads.length,
+        transformedCount: transformedAds.length,
+        transformedSample: transformedAds.slice(0, 3).map(ad => ({
+          id: ad.id,
+          title: ad.title?.substring(0, 50),
+          price: ad.price?.value,
+          marketplace: ad.marketplace,
+        })),
+      });
+    } catch (transformError) {
+      logger.error({
+        message: '[BLOCKET ADAPTER DEBUG] Ad transformation failed',
+        query: query.query,
+        adsCount: ads.length,
+        error: {
+          message: transformError instanceof Error ? transformError.message : String(transformError),
+          stack: transformError instanceof Error ? transformError.stack : undefined,
+        },
+      });
+      throw transformError;
+    }
+
+    const result = {
       ads: transformedAds,
       hasMore: ads.length >= (config?.limit || 60),
       totalCount: ads.length,
     };
+
+    logger.info({
+      message: '[BLOCKET ADAPTER DEBUG] ===== BLOCKET SEARCH COMPLETED =====',
+      query: query.query,
+      timestamp: new Date().toISOString(),
+      result: {
+        adsCount: result.ads.length,
+        hasMore: result.hasMore,
+        totalCount: result.totalCount,
+      },
+    });
+
+    return result;
   }
 
   /**
