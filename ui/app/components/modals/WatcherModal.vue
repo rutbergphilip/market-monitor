@@ -67,6 +67,23 @@ const discordWebhookItems = computed(() => {
   }));
 });
 
+// Marketplace selection
+const marketplaceItems = [
+  { id: 'BLOCKET', label: 'Blocket' },
+  { id: 'TRADERA', label: 'Tradera' },
+];
+
+const selectedMarketplace = computed({
+  get: () =>
+    marketplaceItems.find((item) => item.id === state.marketplace) ||
+    marketplaceItems[0],
+  set: (value) => {
+    if (value) {
+      state.marketplace = value.id as MarketplaceType;
+    }
+  },
+});
+
 const schema = z.object({
   schedule: z.string().min(1, 'Required'),
 });
@@ -555,11 +572,8 @@ watch(selectedNotificationType, () => {
           </div>
           <UFormField label="Default Marketplace" name="marketplace">
             <USelectMenu
-              v-model="state.marketplace"
-              :options="[
-                { value: 'BLOCKET', label: 'Blocket' },
-                { value: 'TRADERA', label: 'Tradera' }
-              ]"
+              v-model="selectedMarketplace"
+              :items="marketplaceItems"
               placeholder="Select marketplace"
               size="xl"
             />

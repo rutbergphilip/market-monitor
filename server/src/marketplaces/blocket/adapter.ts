@@ -73,12 +73,14 @@ export class BlocketAdapter extends BaseMarketplaceAdapter {
 
         // Create timeout promise
         const timeoutMs = config?.timeout || 15000;
+        let timeoutHandle: NodeJS.Timeout | undefined;
         const timeoutPromise = new Promise<never>((_, reject) => {
-          setTimeout(() => {
+          timeoutHandle = setTimeout(() => {
             logger.error({
               message: '[BLOCKET ADAPTER DEBUG] Timeout reached - rejecting',
               query: query.query,
               timeoutMs,
+              timestamp: new Date().toISOString(),
             });
             reject(
               new Error(
@@ -95,16 +97,54 @@ export class BlocketAdapter extends BaseMarketplaceAdapter {
           clientCallTime: new Date().toISOString(),
         });
 
-        // Race between API call and timeout
-        const apiCallPromise = client.find(blocketConfig);
-        
-        logger.info({
-          message: '[BLOCKET ADAPTER DEBUG] Racing API call vs timeout',
-          query: query.query,
-          timeoutMs,
-        });
+        try {
+          // Race between API call and timeout
+          const apiCallPromise = client.find(blocketConfig).catch((clientError: any) => {
+            logger.error({
+              message: '[BLOCKET ADAPTER DEBUG] Blocket client.find() threw error',
+              query: query.query,
+              blocketConfig,
+              clientError: {
+                message: clientError?.message || String(clientError),
+                name: clientError?.name,
+                code: clientError?.code,
+                stack: clientError?.stack,
+                type: typeof clientError,
+              },
+            });
+            throw clientError;
+          });
 
-        return await Promise.race([apiCallPromise, timeoutPromise]);
+          logger.info({
+            message: '[BLOCKET ADAPTER DEBUG] Racing API call vs timeout',
+            query: query.query,
+            timeoutMs,
+          });
+
+          const result = await Promise.race([apiCallPromise, timeoutPromise]);
+
+          // Clear timeout if API call completes first
+          if (timeoutHandle) clearTimeout(timeoutHandle);
+
+          return result;
+        } catch (raceError) {
+          // Clear timeout on any error
+          if (timeoutHandle) clearTimeout(timeoutHandle);
+
+          logger.error({
+            message: '[BLOCKET ADAPTER DEBUG] Promise race failed',
+            query: query.query,
+            timeoutMs,
+            raceError: {
+              message: raceError instanceof Error ? raceError.message : String(raceError),
+              name: raceError instanceof Error ? raceError.name : undefined,
+              stack: raceError instanceof Error ? raceError.stack : undefined,
+              code: (raceError as any)?.code,
+            },
+          });
+
+          throw raceError;
+        }
       });
 
       logger.info({

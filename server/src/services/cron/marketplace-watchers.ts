@@ -222,12 +222,35 @@ async function fetchAdsForWatcher(watcher: Watcher): Promise<BaseAd[]> {
         });
       }
     } catch (error) {
+      const errorDetails = error instanceof Error ? {
+        message: error.message,
+        name: error.name,
+        stack: error.stack,
+        code: (error as any)?.code,
+        cause: (error as any)?.cause,
+      } : {
+        raw: String(error),
+        type: typeof error,
+      };
+
       logger.error({
-        error: error as Error,
-        message: `Failed to fetch ads for query after retries`,
+        message: `[CRON DEBUG] Failed to fetch ads for query after retries`,
         watcherId: watcher.id,
         query: queryObj.query,
         marketplace: queryObj.marketplace || watcher.marketplace || 'BLOCKET',
+        timestamp: new Date().toISOString(),
+        errorDetails,
+        searchQuery: {
+          query: queryObj.query,
+          minPrice: watcher.min_price,
+          maxPrice: watcher.max_price,
+          filters: queryObj.filters,
+        },
+        searchConfig: {
+          limit: 20,
+          sort: 'date_desc',
+          timeout: 30000,
+        },
       });
       // Continue with other queries even if one fails
     }

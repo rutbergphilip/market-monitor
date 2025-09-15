@@ -57,24 +57,62 @@ export abstract class BaseMarketplaceAdapter {
   isRetryableError(error: Error): boolean {
     const errorMessage = error.message.toLowerCase();
     const errorCause = (error as any)?.cause?.message?.toLowerCase() || '';
+    const errorCode = (error as any)?.code?.toLowerCase() || '';
 
-    return (
-      errorMessage.includes('fetch failed') ||
-      errorMessage.includes('timeout') ||
-      errorMessage.includes('connection timeout') ||
-      errorMessage.includes('connect timeout') ||
-      errorMessage.includes('econnreset') ||
-      errorMessage.includes('enotfound') ||
-      errorMessage.includes('econnrefused') ||
-      errorMessage.includes('network error') ||
-      errorMessage.includes('und_err_connect_timeout') ||
-      errorMessage.includes('connecttimeouterror') ||
-      errorCause.includes('timeout') ||
-      errorCause.includes('connection') ||
-      error.name === 'FetchError' ||
-      error.name === 'ConnectTimeoutError' ||
-      (error as any)?.code === 'UND_ERR_CONNECT_TIMEOUT'
-    );
+    const retryablePatterns = [
+      'fetch failed',
+      'timeout',
+      'connection timeout',
+      'connect timeout',
+      'econnreset',
+      'enotfound',
+      'econnrefused',
+      'network error',
+      'und_err_connect_timeout',
+      'connecttimeouterror',
+      'socket hang up',
+      'request timeout',
+      'response timeout',
+    ];
+
+    const retryableNames = [
+      'FetchError',
+      'ConnectTimeoutError',
+      'AbortError',
+      'TimeoutError',
+    ];
+
+    const retryableCodes = [
+      'UND_ERR_CONNECT_TIMEOUT',
+      'ECONNRESET',
+      'ENOTFOUND',
+      'ECONNREFUSED',
+      'ETIMEDOUT',
+      'ENETUNREACH',
+      'EHOSTUNREACH',
+    ];
+
+    const isRetryable =
+      retryablePatterns.some(pattern =>
+        errorMessage.includes(pattern) || errorCause.includes(pattern)
+      ) ||
+      retryableNames.includes(error.name) ||
+      retryableCodes.includes((error as any)?.code);
+
+    logger.debug({
+      message: '[BASE ADAPTER DEBUG] Checking if error is retryable',
+      marketplace: this.type,
+      isRetryable,
+      errorAnalysis: {
+        message: error.message,
+        name: error.name,
+        code: (error as any)?.code,
+        cause: (error as any)?.cause,
+        stack: error.stack?.split('\n').slice(0, 3), // First 3 lines of stack
+      },
+    });
+
+    return isRetryable;
   }
 
   /**
