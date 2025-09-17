@@ -15,6 +15,7 @@ import type {
 import eventEmitter, { WatcherEvents } from '@/events';
 
 const watcherJobs = new Map<string, CronJob>();
+const watcherFirstRun = new Map<string, boolean>();
 
 /**
  * Get marketplace settings with fallback to legacy settings
@@ -200,29 +201,66 @@ async function fetchAdsForWatcher(watcher: Watcher): Promise<BaseAd[]> {
  */
 function createWatcherJobFunction(watcher: Watcher): () => Promise<void> {
   return async (): Promise<void> => {
+    if (!watcher.id) {
+      throw new Error('Watcher must have an ID to execute job');
+    }
 
     try {
-
+      // Check if this is the first run for this watcher
+      const isFirstRun = watcherFirstRun.get(watcher.id) !== false;
 
       // Emit watcher start event
       eventEmitter.emit(WatcherEvents.JOB_STARTED, watcher);
+
+      logger.debug({
+        message: `Watcher job starting`,
+        watcherId: watcher.id,
+        isFirstRun,
+        queriesCount: watcher.queries?.length || 0,
+      });
 
 
       // Fetch new ads
       const ads = await fetchAdsForWatcher(watcher);
 
-
       if (ads.length === 0) {
+        if (isFirstRun) {
+          watcherFirstRun.set(watcher.id, false);
+          logger.info({
+            message: `First run completed for watcher: no ads found`,
+            watcherId: watcher.id,
+            queries: watcher.queries?.map((q) => q.query) || [],
+          });
+        }
         eventEmitter.emit(WatcherEvents.JOB_COMPLETED, watcher, []);
         return;
       }
 
+      if (isFirstRun) {
+        // First run: cache all existing ads without sending notifications
+        ads.forEach((ad) => {
+          marketplaceCache.set(ad);
+        });
 
-      // Filter out ads that are already in cache (new ads only)
+        watcherFirstRun.set(watcher.id, false);
+
+        logger.info({
+          message: `First run completed for watcher: cached ${ads.length} existing ads without notifications`,
+          watcherId: watcher.id,
+          queries: watcher.queries?.map((q) => q.query) || [],
+          cachedAdsCount: ads.length,
+        });
+
+        eventEmitter.emit(WatcherEvents.JOB_COMPLETED, watcher, []);
+        return;
+      }
+
+      // Subsequent runs: filter out ads that are already in cache (new ads only)
       const newAds = ads.filter((ad) => {
         const isInCache = marketplaceCache.has(ad.marketplace, ad.id);
         if (isInCache) {
           logger.debug({
+            message: `Ad already in cache, skipping`,
             watcherId: watcher.id,
             adId: ad.id,
             adTitle: ad.title?.substring(0, 50),
@@ -232,21 +270,35 @@ function createWatcherJobFunction(watcher: Watcher): () => Promise<void> {
         return !isInCache;
       });
 
-
       if (newAds.length === 0) {
+        logger.debug({
+          message: `No new ads found for watcher`,
+          watcherId: watcher.id,
+          totalAdsFound: ads.length,
+          queries: watcher.queries?.map((q) => q.query) || [],
+        });
         eventEmitter.emit(WatcherEvents.JOB_COMPLETED, watcher, []);
         return;
       }
 
-
       // Add new ads to cache
       newAds.forEach((ad) => {
         logger.debug({
+          message: `Adding new ad to cache`,
           watcherId: watcher.id,
           adId: ad.id,
+          adTitle: ad.title?.substring(0, 50),
           marketplace: ad.marketplace,
         });
         marketplaceCache.set(ad);
+      });
+
+      logger.info({
+        message: `Found ${newAds.length} new ads for watcher`,
+        watcherId: watcher.id,
+        newAdsCount: newAds.length,
+        totalAdsFound: ads.length,
+        queries: watcher.queries?.map((q) => q.query) || [],
       });
 
 
@@ -260,6 +312,7 @@ function createWatcherJobFunction(watcher: Watcher): () => Promise<void> {
 
       } catch (notificationError) {
         logger.error({
+          message: `Failed to send notifications for new ads`,
           watcherId: watcher.id,
           newAdsCount: newAds.length,
           error: {
@@ -311,6 +364,9 @@ export function startWatcherJob(watcher: Watcher): void {
   // Stop existing job if any
   stopWatcherJob(watcher.id);
 
+  // Initialize first-run tracking for this watcher
+  watcherFirstRun.set(watcher.id, true);
+
   try {
     const job = new CronJob(
       watcher.schedule,
@@ -323,6 +379,11 @@ export function startWatcherJob(watcher: Watcher): void {
     watcherJobs.set(watcher.id, job);
     job.start();
 
+    logger.debug({
+      message: `Started watcher job with first-run tracking`,
+      watcherId: watcher.id,
+      schedule: watcher.schedule,
+    });
 
     // Emit job started event
     eventEmitter.emit(WatcherEvents.JOB_STARTED, watcher);
@@ -346,6 +407,13 @@ export function stopWatcherJob(watcherId: string): void {
     job.stop();
     watcherJobs.delete(watcherId);
 
+    // Clear first-run tracking for this watcher
+    watcherFirstRun.delete(watcherId);
+
+    logger.debug({
+      message: `Stopped watcher job and cleaned up tracking`,
+      watcherId,
+    });
 
     // Clear marketplace cache for this watcher (optional)
     // Note: We're not clearing cache here as other watchers might be using the same ads
@@ -387,6 +455,15 @@ export async function triggerWatcherJob(watcher: Watcher): Promise<BaseAd[]> {
  * @returns Promise that resolves when the watcher run is complete
  */
 export async function runWatcherManually(watcher: Watcher): Promise<void> {
+  if (!watcher.id) {
+    throw new Error('Watcher must have an ID to run manually');
+  }
+
+  logger.info({
+    message: `Manually running watcher`,
+    watcherId: watcher.id,
+    queries: watcher.queries?.map((q) => q.query) || [],
+  });
 
   const jobFunction = createWatcherJobFunction(watcher);
   await jobFunction();
