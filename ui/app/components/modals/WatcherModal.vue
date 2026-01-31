@@ -669,7 +669,7 @@ watch(selectedNotificationType, () => {
             <UFormField label="Notifications" name="notifications">
               <div class="flex flex-col gap-3 w-full">
                 <!-- Notification Type Selector -->
-                <UButtonGroup>
+                <UFieldGroup>
                   <UButton
                     v-for="type in NOTIFICATION_TARGETS"
                     :key="type"
@@ -686,7 +686,7 @@ watch(selectedNotificationType, () => {
                   >
                     {{ type }}
                   </UButton>
-                </UButtonGroup>
+                </UFieldGroup>
 
                 <!-- Discord Webhook Input Menu -->
                 <div
