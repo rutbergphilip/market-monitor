@@ -61,8 +61,10 @@ COPY --from=ui-build /app/ui/package*.json ./ui/
 # Copy supervisord configuration
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Create data directory for database persistence
-RUN mkdir -p /app/data && chown -R node:node /app/data
+# Create data and logs directories with proper permissions
+RUN mkdir -p /app/data /app/logs /var/run && \
+    chown -R node:node /app/data /app/logs /app && \
+    chown node:node /var/run
 
 # Expose ports
 EXPOSE 3000 8080
@@ -74,8 +76,11 @@ ENV UI_PORT=3000
 ENV HOST=0.0.0.0
 ENV NODE_ENV=production
 
-# Define volume for database persistence
-VOLUME ["/app/data"]
+# Define volumes for persistence
+VOLUME ["/app/data", "/app/logs"]
+
+# Switch to non-root user
+USER node
 
 # Start supervisor
 CMD ["/usr/bin/supervisord", "-n"]

@@ -118,12 +118,14 @@ export function refreshToken(req: Request, res: Response) {
     res.cookie('auth_token', newToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
     });
 
     res.cookie('refresh_token', newRefreshTokenValue, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     });
 

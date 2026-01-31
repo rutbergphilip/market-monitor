@@ -6,6 +6,10 @@ import cookieParser from 'cookie-parser';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
+// Validate environment variables before anything else
+import { validateAndLogEnvironment } from '@/config/env-validation';
+validateAndLogEnvironment();
+
 // Extend the Express Request interface to include the user property
 declare global {
   namespace Express {

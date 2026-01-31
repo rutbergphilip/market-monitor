@@ -1,43 +1,42 @@
 services:
-  market-monitor-test:
+  market-monitor:
+    image: ghcr.io/your-username/market-monitor:latest  # or build: .
     build: .
-    platform: linux/amd64
+    container_name: market-monitor
     ports:
       - '3000:3000'
       - '8080:8080'
     volumes:
-      # Named volume for database persistence
-      - market-monitor-data:/app/data
+      # Bind mount for data persistence (database, etc.)
+      # Change ./data to your preferred host path, e.g., /opt/market-monitor/data
+      - ./data:/app/data
+      # Bind mount for logs (optional)
+      - ./logs:/app/logs
     environment:
-      # Database configuration
-      - DB_PATH=/app/data
+      # ============================================================
+      # REQUIRED: Security Configuration
+      # ============================================================
+      # Generate secrets with: openssl rand -base64 48
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET is required}
+      - REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET:?REFRESH_TOKEN_SECRET is required}
+      - NUXT_SESSION_PASSWORD=${NUXT_SESSION_PASSWORD:?NUXT_SESSION_PASSWORD is required}
 
-      # Security configuration
-      - JWT_SECRET=${JWT_SECRET:-change_this_in_production}
-      - REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET:-change_this_in_production}
-
-      # Application configuration
+      # ============================================================
+      # Optional: Application Configuration
+      # ============================================================
       - LOG_LEVEL=${LOG_LEVEL:-info}
       - NODE_ENV=production
+      - UI_ORIGIN=${UI_ORIGIN:-http://localhost:3000}
+
+      # Internal - typically don't change these
+      - DB_PATH=/app/data
       - SERVER_PORT=8080
       - UI_PORT=3000
       - HOST=0.0.0.0
     restart: unless-stopped
     healthcheck:
-      test:
-        [
-          'CMD',
-          'wget',
-          '--no-verbose',
-          '--tries=1',
-          '--spider',
-          'http://localhost:8080/api/health',
-        ]
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:8080/api/health']
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
-
-volumes:
-  market-monitor-data:
-    driver: local

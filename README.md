@@ -39,30 +39,33 @@ Market Monitor is a self-hosted application that automatically tracks listings a
 
 | Component | Technology |
 |-----------|------------|
-| **Backend** | Node.js, Express, TypeScript, SQLite |
-| **Frontend** | Nuxt 4, Vue 3, Pinia, Tailwind CSS |
+| **Backend** | Node.js 20, Express, TypeScript, SQLite |
+| **Frontend** | Nuxt 4, Vue 3, Nuxt UI 4, Pinia, Tailwind CSS |
 | **Authentication** | JWT, bcrypt, refresh tokens |
 | **Real-time** | Server-Sent Events (SSE) |
 | **Deployment** | Docker, Supervisor |
 
 ## Quick Start
 
-### Docker (Recommended)
+### Docker Compose (Recommended)
+
+1. **Create directories and environment file:**
 
 ```bash
-docker run -d \
-  --name market-monitor \
-  -p 3000:3000 \
-  -p 8080:8080 \
-  -v market-monitor-data:/app/data \
-  -e JWT_SECRET=your-secure-secret-here \
-  -e REFRESH_TOKEN_SECRET=your-refresh-secret-here \
-  rutbergphilip/market-monitor:latest
+mkdir -p data logs
+
+# Generate secrets
+cat > .env << 'EOF'
+JWT_SECRET=your-jwt-secret-minimum-32-characters-here
+REFRESH_TOKEN_SECRET=your-refresh-secret-minimum-32-characters
+NUXT_SESSION_PASSWORD=your-session-password-minimum-32-chars
+EOF
+
+# Or generate random secrets:
+# openssl rand -base64 48
 ```
 
-Access the dashboard at `http://localhost:3000`
-
-### Docker Compose
+2. **Create `docker-compose.yaml`:**
 
 ```yaml
 services:
@@ -72,15 +75,39 @@ services:
       - '3000:3000'
       - '8080:8080'
     volumes:
-      - market-monitor-data:/app/data
+      - ./data:/app/data
+      - ./logs:/app/logs
+    env_file:
+      - .env
     environment:
-      - JWT_SECRET=your-secure-secret-here
-      - REFRESH_TOKEN_SECRET=your-refresh-secret-here
+      - NODE_ENV=production
     restart: unless-stopped
-
-volumes:
-  market-monitor-data:
 ```
+
+3. **Start the application:**
+
+```bash
+docker compose up -d
+```
+
+Access the dashboard at `http://localhost:3000` (default login: `admin` / `admin`)
+
+### Docker CLI
+
+```bash
+docker run -d \
+  --name market-monitor \
+  -p 3000:3000 \
+  -p 8080:8080 \
+  -v ./data:/app/data \
+  -v ./logs:/app/logs \
+  -e JWT_SECRET=your-jwt-secret-minimum-32-characters-here \
+  -e REFRESH_TOKEN_SECRET=your-refresh-secret-minimum-32-characters \
+  -e NUXT_SESSION_PASSWORD=your-session-password-minimum-32-chars \
+  rutbergphilip/market-monitor:latest
+```
+
+> **Note:** For detailed installation, migration, and production setup (reverse proxy, etc.), see [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md).
 
 ### Manual Installation
 
@@ -106,16 +133,27 @@ cd ui && npm run dev
 
 ### Environment Variables
 
+#### Required
+
+| Variable | Description |
+|----------|-------------|
+| `JWT_SECRET` | Secret key for JWT signing (min 32 characters) |
+| `REFRESH_TOKEN_SECRET` | Secret key for refresh tokens (min 32 characters) |
+| `NUXT_SESSION_PASSWORD` | Secret for UI sessions (min 32 characters) |
+
+> Generate secrets with: `openssl rand -base64 48`
+
+#### Optional
+
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `JWT_SECRET` | — | **Required in production.** Secret key for JWT signing |
-| `REFRESH_TOKEN_SECRET` | — | **Required in production.** Secret key for refresh tokens |
 | `DB_PATH` | `/app/data` | Database directory or file path |
 | `SERVER_PORT` | `8080` | Backend API port |
 | `UI_PORT` | `3000` | Frontend port |
 | `HOST` | `0.0.0.0` | Host binding address |
 | `LOG_LEVEL` | `info` | Logging verbosity (`debug`, `info`, `warn`, `error`) |
 | `NODE_ENV` | `production` | Environment mode |
+| `UI_ORIGIN` | `http://localhost:3000` | CORS origin (set to your domain in production) |
 
 ### Database Path
 
@@ -269,19 +307,25 @@ spec:
 
 ### Health Check
 
-The API exposes a health endpoint for container orchestration:
+The API exposes a health endpoint with database connectivity status:
 
 ```bash
-GET /api/health
+curl http://localhost:8080/api/health
+# {"status":"healthy","timestamp":"...","database":{"connected":true},"uptime":123}
 ```
 
 ## Security
 
+- **Mandatory secrets** — App will not start without properly configured secrets
+- **Non-root container** — Runs as unprivileged user (UID 1000)
 - JWT tokens expire after 24 hours
 - Refresh tokens are valid for 30 days with automatic rotation
 - Passwords are hashed using bcrypt
+- Secure cookie settings (httpOnly, sameSite)
 - All API routes (except auth) require authentication
-- **Always use strong, unique secrets in production**
+- Health endpoint with database connectivity check
+
+> **Important:** Change the default `admin`/`admin` credentials after first login!
 
 ## Roadmap
 

@@ -52,8 +52,16 @@ export function logout(req: Request, res: Response) {
     }
 
     // Clear the auth cookies
-    res.clearCookie('auth_token');
-    res.clearCookie('refresh_token');
+    res.clearCookie('auth_token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+    });
+    res.clearCookie('refresh_token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+    });
 
     logger.info({
       message: 'Logout successful',

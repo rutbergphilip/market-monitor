@@ -4,9 +4,10 @@ import logger from '@/integrations/logger';
 import { SettingRepository } from '@/db/repositories';
 import { SettingKey } from '@/types/settings';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'market-monitor-secret-key';
-const REFRESH_TOKEN_SECRET =
-  process.env.REFRESH_TOKEN_SECRET || 'market-monitor-refresh-secret-key';
+// Environment variables are validated at startup in src/config/env-validation.ts
+// If we reach here, these are guaranteed to be set
+const JWT_SECRET = process.env.JWT_SECRET!;
+const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET!;
 const REFRESH_TOKEN_EXPIRY = '30d';
 
 export function generateToken(userId: string): string {
