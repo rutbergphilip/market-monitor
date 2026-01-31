@@ -105,6 +105,33 @@ export function revokeToken(token: string): boolean {
   }
 }
 
+export function deleteToken(token: string): boolean {
+  try {
+    const stmt = db.prepare(`
+      DELETE FROM refresh_tokens
+      WHERE token = ?
+    `);
+
+    const result = stmt.run(token);
+
+    if (result.changes > 0) {
+      logger.info({
+        message: 'Refresh token deleted',
+        token: token.substring(0, 10) + '...',
+      });
+      return true;
+    }
+
+    return false;
+  } catch (error) {
+    logger.error({
+      error: error as Error,
+      message: 'Error deleting refresh token',
+    });
+    throw error;
+  }
+}
+
 export function revokeAllUserTokens(userId: string | number): boolean {
   try {
     const stmt = db.prepare(`
@@ -126,6 +153,32 @@ export function revokeAllUserTokens(userId: string | number): boolean {
     logger.error({
       error: error as Error,
       message: 'Error revoking all user refresh tokens',
+      userId,
+    });
+    throw error;
+  }
+}
+
+export function deleteAllUserTokens(userId: string | number): number {
+  try {
+    const stmt = db.prepare(`
+      DELETE FROM refresh_tokens
+      WHERE user_id = ?
+    `);
+
+    const result = stmt.run(userId);
+
+    logger.info({
+      message: 'Deleted all refresh tokens for user',
+      userId,
+      tokensDeleted: result.changes,
+    });
+
+    return result.changes;
+  } catch (error) {
+    logger.error({
+      error: error as Error,
+      message: 'Error deleting all user refresh tokens',
       userId,
     });
     throw error;

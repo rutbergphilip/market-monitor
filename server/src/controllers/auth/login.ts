@@ -48,6 +48,9 @@ export async function login(req: Request, res: Response) {
     // Generate refresh token
     const refreshTokenValue = generateRefreshToken(user.id);
 
+    // Delete any existing refresh tokens for this user (handles secret rotation gracefully)
+    RefreshTokenRepository.deleteAllUserTokens(user.id);
+
     // Store refresh token in database
     const storedToken = RefreshTokenRepository.createRefreshToken(
       user.id,

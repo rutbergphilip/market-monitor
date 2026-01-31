@@ -76,8 +76,8 @@ export function refreshToken(req: Request, res: Response) {
       return;
     }
 
-    // Revoke the current refresh token for security
-    RefreshTokenRepository.revokeToken(tokenToVerify);
+    // Delete the current refresh token for security (prevents UNIQUE constraint issues)
+    RefreshTokenRepository.deleteToken(tokenToVerify);
 
     // Generate new access token
     const newToken = generateToken(decoded.userId);
