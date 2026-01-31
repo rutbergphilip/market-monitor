@@ -135,6 +135,7 @@ dist
 *.db
 
 # Claude Code
+.claude
 
 # Playwright MCP
 .playwright-mcp
