@@ -3,7 +3,7 @@ import { WatcherRepository } from '@/db/repositories';
 import type { Request, Response } from 'express';
 
 export async function getById(req: Request, res: Response) {
-  const watcher = WatcherRepository.getById(req.params.id);
+  const watcher = WatcherRepository.getById(req.params.id as string);
 
   if (!watcher) {
     res.status(404).json({ message: 'Watcher not found' });

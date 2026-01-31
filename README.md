@@ -1,234 +1,315 @@
-# 🚀 Market Monitor
+<div align="center">
 
-Monitor marketplace listings effortlessly across multiple platforms with a beautiful UI and get instant notifications for new ads, right in your Discord!
+# Market Monitor
 
-## 🌟 Features
+**Automated marketplace listing tracker with real-time Discord notifications**
 
-- **Modern Web Dashboard**: Manage your watchers with an intuitive web interface.
-- **User Authentication**: Secure login system with JWT tokens and refresh token functionality.
-- **Customizable Watchers**: Create multiple independent watchers with different queries.
-- **Real-time Notifications**:
-  - Discord webhook notifications with rich embeds ✅
-  - Detailed listing information with prices and images ✅
-  - Notification batching with configurable batch sizes ✅
-  - Automatic retry with exponential backoff for failed notifications ✅
-- **Flexible Scheduling**: Set custom cron schedules for each watcher.
-- **Price Range Filtering**: Filter listings by minimum and maximum price, ensuring you only get relevant notifications.
-- **Settings Management**: Global notification preferences and appearance options.
-- **Robust Error Handling**: Automatic retry mechanisms for network failures.
-- **Docker Ready**: Easy deployment with containerization support.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)](https://hub.docker.com/r/rutbergphilip/market-monitor)
+[![Node.js](https://img.shields.io/badge/Node.js-20+-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
-## 📸 Screenshots
+[Features](#features) • [Quick Start](#quick-start) • [Configuration](#configuration) • [API](#api) • [Contributing](#contributing)
 
-_Coming soon_
+</div>
 
-## ⚙️ Getting Started
+---
 
-### 🚧 Installation
+## Overview
 
-#### Option 1: Using Docker (Recommended)
+Market Monitor is a self-hosted application that automatically tracks listings across online marketplaces and sends instant notifications when new items matching your criteria appear. Built with a modern tech stack, it features a responsive web dashboard for managing watchers and a robust backend for reliable monitoring.
 
-Pull and run the Docker image:
+**Currently supported marketplaces:**
+- Blocket (Swedish marketplace)
+- Tradera (coming soon)
 
-```sh
+## Features
+
+- **Multi-Watcher System** — Create independent watchers with custom search queries, price filters, and schedules
+- **Real-time Notifications** — Discord webhook integration with rich embeds, images, and listing details
+- **Flexible Scheduling** — Cron-based scheduling for precise control over check intervals
+- **Price Filtering** — Set min/max price ranges to filter out irrelevant listings
+- **Modern Dashboard** — Intuitive web UI for managing watchers, viewing status, and configuring settings
+- **Smart Deduplication** — In-memory caching prevents duplicate notifications
+- **First-run Protection** — Avoids notification spam when creating new watchers
+- **Secure Authentication** — JWT-based auth with refresh tokens and secure session management
+- **Docker Ready** — Single container deployment with persistent storage
+
+## Tech Stack
+
+| Component | Technology |
+|-----------|------------|
+| **Backend** | Node.js, Express, TypeScript, SQLite |
+| **Frontend** | Nuxt 4, Vue 3, Pinia, Tailwind CSS |
+| **Authentication** | JWT, bcrypt, refresh tokens |
+| **Real-time** | Server-Sent Events (SSE) |
+| **Deployment** | Docker, Supervisor |
+
+## Quick Start
+
+### Docker (Recommended)
+
+```bash
 docker run -d \
-  -p 3000:3000 -p 8080:8080 \
+  --name market-monitor \
+  -p 3000:3000 \
+  -p 8080:8080 \
   -v market-monitor-data:/app/data \
-  -e JWT_SECRET=your_secure_jwt_secret \
-  -e REFRESH_TOKEN_SECRET=your_secure_refresh_secret \
-  --name market-monitor \
-  rutbergphilip/market-monitor:2.0.0
+  -e JWT_SECRET=your-secure-secret-here \
+  -e REFRESH_TOKEN_SECRET=your-refresh-secret-here \
+  rutbergphilip/market-monitor:latest
 ```
 
-For custom database path:
+Access the dashboard at `http://localhost:3000`
 
-```sh
-docker run -d \
-  -p 3000:3000 -p 8080:8080 \
-  -v /host/path/to/data:/app/data \
-  -e DB_PATH=/app/data \
-  -e JWT_SECRET=your_secure_jwt_secret \
-  -e REFRESH_TOKEN_SECRET=your_secure_refresh_secret \
-  --name market-monitor \
-  rutbergphilip/market-monitor:2.0.0
+### Docker Compose
+
+```yaml
+services:
+  market-monitor:
+    image: rutbergphilip/market-monitor:latest
+    ports:
+      - '3000:3000'
+      - '8080:8080'
+    volumes:
+      - market-monitor-data:/app/data
+    environment:
+      - JWT_SECRET=your-secure-secret-here
+      - REFRESH_TOKEN_SECRET=your-refresh-secret-here
+    restart: unless-stopped
+
+volumes:
+  market-monitor-data:
 ```
 
-Then access the web UI at `http://localhost:3000`
+### Manual Installation
 
-#### Option 2: Manual Installation
-
-Clone the repository and install dependencies:
-
-```sh
-git clone https://github.com/rutbergphilip/market-monitor
+```bash
+# Clone the repository
+git clone https://github.com/rutbergphilip/market-monitor.git
 cd market-monitor
 
 # Install backend dependencies
-cd server
-npm install
+cd server && npm install
 
 # Install frontend dependencies
-cd ../ui
-npm install
+cd ../ui && npm install
+
+# Start backend (Terminal 1)
+cd server && npm run dev
+
+# Start frontend (Terminal 2)
+cd ui && npm run dev
 ```
 
-### 🚀 Running the Application
-
-#### Using Docker:
-
-The Docker container starts both the backend (port 8080) and frontend (port 3000) automatically.
-
-#### Manual Start:
-
-1. Start the backend (from the server directory):
-
-```sh
-npm run start
-```
-
-2. Start the frontend (from the ui directory):
-
-```sh
-npm run dev
-```
-
-3. Access the web UI at `http://localhost:3000`
-
-## 🧩 Core Features
-
-### Authentication
-
-- Secure user accounts with JWT authentication
-- Persistent sessions with refresh tokens
-- Token rotation for enhanced security
-
-### Watchers
-
-- Create multiple watchers with different search queries
-- Set custom cron schedules for each watcher
-- Filter by price range (min & max)
-- Configure multiple notification targets per watcher
-- Pause, start, or manually trigger watchers as needed
-
-### Notifications
-
-- **Discord Integration**:
-  - Customizable bot username and avatar through settings UI
-  - Configurable retry settings with exponential backoff
-  - Smart batching system for multiple notifications
-  - Detailed listing information with thumbnail images
-  - Includes information about which query matched
-  - Resilient delivery with automatic retries on failures
-
-### Settings Management
-
-- Configure global notification settings through intuitive UI
-- Manage notification batching preferences and limits
-- Set appearance options for notifications (username, avatar)
-- User profile and security settings with password management
-- Account-specific preferences
-- Persistent settings stored in database
-- Default settings with ability to reset to factory defaults
-
-## 🔜 Upcoming Features
-
-- **Telegram Integration**: Get notified via Telegram.
-- **Email Notifications**: Receive notifications via email.
-- **Multi-User Support**: Create accounts for multiple users with their own watchers and settings.
-- **Enhanced Filters**: More advanced search filtering options (location, category, regex, etc.).
-- **Mobile Responsive Design**: Improved UI for mobile devices.
-
-## 📝 Configuration Details
-
-The application now uses a SQLite database to store all settings, watchers, and user accounts, which can be configured through the intuitive web UI. Here's a breakdown of available configuration options:
+## Configuration
 
 ### Environment Variables
 
-Key environment variables that can be configured:
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `JWT_SECRET` | — | **Required in production.** Secret key for JWT signing |
+| `REFRESH_TOKEN_SECRET` | — | **Required in production.** Secret key for refresh tokens |
+| `DB_PATH` | `/app/data` | Database directory or file path |
+| `SERVER_PORT` | `8080` | Backend API port |
+| `UI_PORT` | `3000` | Frontend port |
+| `HOST` | `0.0.0.0` | Host binding address |
+| `LOG_LEVEL` | `info` | Logging verbosity (`debug`, `info`, `warn`, `error`) |
+| `NODE_ENV` | `production` | Environment mode |
 
-- `SERVER_PORT` (default: 8080): Backend API server port
-- `UI_PORT` (default: 3000): Frontend web UI port
-- `DB_PATH`: Path to SQLite database file or directory
-  - If directory: database file will be created as `{DB_PATH}/db.sqlite`
-  - If file path: used directly (must end with `.sqlite` or `.db`)
-  - Production default: `/app/data/db.sqlite`
-  - Development default: `./server/src/db.sqlite`
-- `JWT_SECRET`: Secret key for JWT token generation (required in production)
-- `REFRESH_TOKEN_SECRET`: Secret key for refresh tokens (required in production)
-- `LOG_LEVEL` (default: info): Logging verbosity (debug, info, warn, error)
-- `NODE_ENV`: Set to 'production' for optimized builds
-- `HOST` (default: 0.0.0.0): Host to bind the server to
+### Database Path
+
+The `DB_PATH` variable supports both directory and file paths:
+
+```bash
+# Directory (database created as db.sqlite inside)
+DB_PATH=/app/data
+
+# Direct file path
+DB_PATH=/app/data/my-database.sqlite
+```
+
+## Usage
+
+### Creating a Watcher
+
+1. Log in to the dashboard at `http://localhost:3000`
+2. Click **"New Watcher"** to open the creation modal
+3. Configure your watcher:
+   - **Name**: A descriptive name for the watcher
+   - **Schedule**: Cron expression (e.g., `*/15 * * * *` for every 15 minutes)
+   - **Queries**: Add one or more search queries with marketplace selection
+   - **Price Range**: Optional min/max price filters
+   - **Notifications**: Add Discord webhook URLs
+
+### Discord Webhook Setup
+
+1. In Discord, go to **Server Settings > Integrations > Webhooks**
+2. Click **"New Webhook"** and copy the URL
+3. Add the webhook URL to your watcher's notification targets
 
 ### Notification Settings
 
-#### Discord Notification Settings
+Global notification settings can be configured in **Settings > Notifications**:
 
-Discord notification settings are fully customizable through the UI:
+- **Bot Username**: Custom name for Discord messages
+- **Avatar URL**: Custom avatar for the Discord bot
+- **Batch Size**: Number of listings per message
+- **Retry Settings**: Max retries and delay for failed deliveries
 
-- **Bot Username**: Change how the bot appears in Discord
-- **Avatar URL**: Customize the bot's profile picture
-- **Retry Settings**: Configure max retries and delay between attempts
-- **Webhook Management**: Add multiple webhooks to different watchers
-- **Batch Settings**: Control how many notifications are sent in a single batch
+## API
 
-## 🔒 Security Considerations
+The backend exposes a REST API on port 8080.
 
-- JWT tokens expire after 24 hours for enhanced security
-- Refresh tokens provide convenient persistent login for up to 30 days
-- All sensitive routes are protected by authentication middleware
-- Production deployments should use custom JWT secrets via environment variables
+### Authentication
 
-## 🐳 Docker Deployment
+```bash
+# Login
+POST /api/auth/login
+Content-Type: application/json
+{"username": "user", "password": "pass"}
 
-### Basic deployment with persistent storage:
-
-```sh
-docker run -d \
-  -p 3000:3000 -p 8080:8080 \
-  -v market-monitor-data:/app/data \
-  -e JWT_SECRET=your_secure_jwt_secret \
-  -e REFRESH_TOKEN_SECRET=your_secure_refresh_secret \
-  -e LOG_LEVEL=info \
-  --name market-monitor \
-  rutbergphilip/market-monitor:2.0.0
+# Response includes JWT token and refresh token
 ```
 
-### Using Docker Compose:
+### Watchers
 
-```sh
-# Production
-docker-compose up -d
+```bash
+# List all watchers
+GET /api/watchers
+Authorization: Bearer <token>
 
-# Development with local bind mount
-docker-compose --profile dev up -d market-monitor-dev
+# Create watcher
+POST /api/watchers
+Authorization: Bearer <token>
+
+# Start/stop watcher
+POST /api/watchers/:id/start
+POST /api/watchers/:id/stop
+
+# Manually trigger watcher
+POST /api/watchers/:id/trigger
 ```
 
-### Kubernetes Deployment
+### Settings
 
-For Kubernetes deployment, ensure you have:
+```bash
+# Get all settings
+GET /api/settings
+Authorization: Bearer <token>
 
-1. **Persistent Volume** for database storage mounted at `/app/data`
-2. **Environment variables** configured via ConfigMap/Secret:
-   - `DB_PATH=/app/data` (or custom path)
-   - `JWT_SECRET` and `REFRESH_TOKEN_SECRET` (via Secret)
-   - `LOG_LEVEL`, `NODE_ENV`, etc. (via ConfigMap)
+# Update setting
+PATCH /api/settings/:key
+Authorization: Bearer <token>
+```
 
-Example volume configuration:
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    Web Dashboard                         │
+│                   (Nuxt 4 / Vue 3)                       │
+└─────────────────────────┬───────────────────────────────┘
+                          │ REST API + SSE
+┌─────────────────────────▼───────────────────────────────┐
+│                   Express API Server                     │
+├─────────────────────────────────────────────────────────┤
+│  Cron Scheduler  │  SSE Stream  │  Auth Middleware      │
+└────────┬─────────┴──────────────┴───────────────────────┘
+         │
+┌────────▼─────────┐     ┌──────────────────┐
+│ Marketplace      │────▶│ Notification     │
+│ Adapters         │     │ Service          │
+│ (Blocket, etc.)  │     │ (Discord, Email) │
+└────────┬─────────┘     └──────────────────┘
+         │
+┌────────▼─────────┐
+│ SQLite Database  │
+└──────────────────┘
+```
+
+## Deployment
+
+### Kubernetes
 
 ```yaml
-volumeMounts:
-  - name: data-storage
-    mountPath: /app/data
-volumes:
-  - name: data-storage
-    persistentVolumeClaim:
-      claimName: market-monitor-pvc
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: market-monitor
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+        - name: market-monitor
+          image: rutbergphilip/market-monitor:latest
+          ports:
+            - containerPort: 3000
+            - containerPort: 8080
+          env:
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: market-monitor-secrets
+                  key: jwt-secret
+            - name: REFRESH_TOKEN_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: market-monitor-secrets
+                  key: refresh-token-secret
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: market-monitor-pvc
 ```
 
-## 📜 License
+### Health Check
 
-This project is licensed under the MIT License.
+The API exposes a health endpoint for container orchestration:
 
-## ⭐ Star me
+```bash
+GET /api/health
+```
 
-If you like Market Monitor, give it a ⭐!
+## Security
+
+- JWT tokens expire after 24 hours
+- Refresh tokens are valid for 30 days with automatic rotation
+- Passwords are hashed using bcrypt
+- All API routes (except auth) require authentication
+- **Always use strong, unique secrets in production**
+
+## Roadmap
+
+- [ ] Tradera marketplace integration
+- [ ] Telegram notifications
+- [ ] Email notifications
+- [ ] Advanced filters (location, category, regex)
+- [ ] Multi-user support with separate watchers
+- [ ] Mobile-responsive dashboard improvements
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+---
+
+<div align="center">
+
+**If you find Market Monitor useful, consider giving it a star!**
+
+</div>

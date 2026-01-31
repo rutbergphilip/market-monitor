@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events';
+import { EventEmitter } from 'node:events';
 import { initSettingsEvents } from './settings-events';
 import { initWatcherEvents } from './watcher-events';
 

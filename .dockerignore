@@ -1,1 +1,16 @@
 **/node_modules/
+**/.nuxt/
+**/.output/
+**/dist/
+**/.git/
+# Exclude UI package-lock - has platform-specific native modules
+ui/package-lock.json
+**/.env
+**/.env.*
+!**/.env.example
+**/.DS_Store
+**/coverage/
+**/*.log
+**/README.md
+**/.vscode/
+**/.idea/
