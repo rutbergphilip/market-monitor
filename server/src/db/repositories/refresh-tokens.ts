@@ -185,6 +185,43 @@ export function deleteAllUserTokens(userId: string | number): number {
   }
 }
 
+export function getAllUserTokens(userId: string | number): RefreshToken[] {
+  try {
+    const stmt = db.prepare(`
+      SELECT * FROM refresh_tokens
+      WHERE user_id = ?
+    `);
+
+    return stmt.all(userId) as RefreshToken[];
+  } catch (error) {
+    logger.error({
+      error: error as Error,
+      message: 'Error fetching user refresh tokens',
+      userId,
+    });
+    return [];
+  }
+}
+
+export function deleteTokenById(tokenId: number): boolean {
+  try {
+    const stmt = db.prepare(`
+      DELETE FROM refresh_tokens
+      WHERE id = ?
+    `);
+
+    const result = stmt.run(tokenId);
+    return result.changes > 0;
+  } catch (error) {
+    logger.error({
+      error: error as Error,
+      message: 'Error deleting refresh token by id',
+      tokenId,
+    });
+    return false;
+  }
+}
+
 export function cleanupTokens(): number {
   try {
     const now = new Date().toISOString();

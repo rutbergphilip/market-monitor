@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import logger from '@/integrations/logger';
 import { SettingRepository } from '@/db/repositories';
 import { SettingKey } from '@/types/settings';
@@ -34,13 +35,16 @@ export function generateToken(userId: string): string {
 }
 
 export function generateRefreshToken(userId: string): string {
+  // Add unique jti (JWT ID) to ensure tokens are unique even when generated in the same second
+  const jti = crypto.randomBytes(16).toString('hex');
+
   logger.info({
     message: 'Generated refresh token',
     userId,
     expiresIn: REFRESH_TOKEN_EXPIRY,
   });
 
-  return jwt.sign({ userId }, REFRESH_TOKEN_SECRET, {
+  return jwt.sign({ userId, jti }, REFRESH_TOKEN_SECRET, {
     expiresIn: REFRESH_TOKEN_EXPIRY,
   });
 }

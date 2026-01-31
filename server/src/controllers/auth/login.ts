@@ -1,8 +1,50 @@
 import { Request, Response } from 'express';
 import * as UserRepository from '@/db/repositories/users';
 import { RefreshTokenRepository } from '@/db/repositories';
-import { generateToken, generateRefreshToken } from '@/middlewares/security';
+import {
+  generateToken,
+  generateRefreshToken,
+  verifyRefreshToken,
+} from '@/middlewares/security';
 import logger from '@/integrations/logger';
+
+/**
+ * Cleanup invalid refresh tokens for a user.
+ * Only deletes tokens that fail signature verification (e.g., after secret rotation).
+ * Valid tokens are preserved to maintain existing sessions on other devices.
+ */
+function cleanupInvalidTokens(userId: string | number): {
+  deleted: number;
+  preserved: number;
+} {
+  const tokens = RefreshTokenRepository.getAllUserTokens(userId);
+  let deleted = 0;
+  let preserved = 0;
+
+  for (const token of tokens) {
+    // Check if token signature is still valid with current secret
+    const isValid = verifyRefreshToken(token.token) !== null;
+
+    if (!isValid) {
+      // Token has invalid signature (secret changed) - delete it
+      RefreshTokenRepository.deleteTokenById(token.id);
+      deleted++;
+    } else {
+      preserved++;
+    }
+  }
+
+  if (deleted > 0) {
+    logger.info({
+      message: 'Cleaned up invalid refresh tokens',
+      userId,
+      deleted,
+      preserved,
+    });
+  }
+
+  return { deleted, preserved };
+}
 
 export async function login(req: Request, res: Response) {
   const userAgent = req.headers['user-agent'] || 'Unknown';
@@ -48,8 +90,8 @@ export async function login(req: Request, res: Response) {
     // Generate refresh token
     const refreshTokenValue = generateRefreshToken(user.id);
 
-    // Delete any existing refresh tokens for this user (handles secret rotation gracefully)
-    RefreshTokenRepository.deleteAllUserTokens(user.id);
+    // Clean up only invalid tokens (handles secret rotation while preserving valid sessions)
+    cleanupInvalidTokens(user.id);
 
     // Store refresh token in database
     const storedToken = RefreshTokenRepository.createRefreshToken(
