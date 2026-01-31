@@ -75,6 +75,8 @@ ENV SERVER_PORT=5847
 ENV UI_PORT=3847
 ENV HOST=0.0.0.0
 ENV NODE_ENV=production
+ENV LOG_LEVEL=info
+ENV UI_ORIGIN=http://localhost:3847
 
 # Define volumes for persistence
 VOLUME ["/app/data", "/app/logs"]
