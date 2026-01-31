@@ -107,8 +107,6 @@ docker run -d \
   rutbergphilip/market-monitor:latest
 ```
 
-> **Note:** For detailed installation, migration, and production setup (reverse proxy, etc.), see [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md).
-
 ### Manual Installation
 
 ```bash
