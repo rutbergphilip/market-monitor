@@ -4,8 +4,8 @@ services:
     build: .
     container_name: market-monitor
     ports:
-      - '3000:3000'
-      - '8080:8080'
+      - '${UI_PORT:-3847}:${UI_PORT:-3847}'
+      - '${SERVER_PORT:-5847}:${SERVER_PORT:-5847}'
     volumes:
       # Bind mount for data persistence (database, etc.)
       # Change ./data to your preferred host path, e.g., /opt/market-monitor/data
@@ -26,16 +26,16 @@ services:
       # ============================================================
       - LOG_LEVEL=${LOG_LEVEL:-info}
       - NODE_ENV=production
-      - UI_ORIGIN=${UI_ORIGIN:-http://localhost:3000}
+      - UI_ORIGIN=${UI_ORIGIN:-http://localhost:3847}
 
       # Internal - typically don't change these
       - DB_PATH=/app/data
-      - SERVER_PORT=8080
-      - UI_PORT=3000
+      - SERVER_PORT=${SERVER_PORT:-5847}
+      - UI_PORT=${UI_PORT:-3847}
       - HOST=0.0.0.0
     restart: unless-stopped
     healthcheck:
-      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:8080/api/health']
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:${SERVER_PORT:-5847}/api/health']
       interval: 30s
       timeout: 10s
       retries: 3

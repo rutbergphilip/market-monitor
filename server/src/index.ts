@@ -36,7 +36,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: process.env.UI_ORIGIN || 'http://localhost:3000',
+    origin: process.env.UI_ORIGIN || 'http://localhost:3847',
     credentials: true,
   }),
 );
@@ -45,7 +45,7 @@ app.use((_, res) => {
   res.status(404).end();
 });
 
-const PORT = process.env.SERVER_PORT ? parseInt(process.env.SERVER_PORT) : 8080;
+const PORT = process.env.SERVER_PORT ? parseInt(process.env.SERVER_PORT) : 5847;
 const server = app.listen(PORT, () => {
   logger.info(`Express server running on port ${PORT}`);
 

@@ -72,8 +72,8 @@ services:
   market-monitor:
     image: rutbergphilip/market-monitor:latest
     ports:
-      - '3000:3000'
-      - '8080:8080'
+      - '${UI_PORT:-3847}:${UI_PORT:-3847}'
+      - '${SERVER_PORT:-5847}:${SERVER_PORT:-5847}'
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
@@ -81,6 +81,8 @@ services:
       - .env
     environment:
       - NODE_ENV=production
+      - SERVER_PORT=${SERVER_PORT:-5847}
+      - UI_PORT=${UI_PORT:-3847}
     restart: unless-stopped
 ```
 
@@ -90,15 +92,15 @@ services:
 docker compose up -d
 ```
 
-Access the dashboard at `http://localhost:3000` (default login: `admin` / `admin`)
+Access the dashboard at `http://localhost:3847` (default login: `admin` / `admin`)
 
 ### Docker CLI
 
 ```bash
 docker run -d \
   --name market-monitor \
-  -p 3000:3000 \
-  -p 8080:8080 \
+  -p 3847:3847 \
+  -p 5847:5847 \
   -v ./data:/app/data \
   -v ./logs:/app/logs \
   -e JWT_SECRET=your-jwt-secret-minimum-32-characters-here \
@@ -146,12 +148,12 @@ cd ui && npm run dev
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `DB_PATH` | `/app/data` | Database directory or file path |
-| `SERVER_PORT` | `8080` | Backend API port |
-| `UI_PORT` | `3000` | Frontend port |
+| `SERVER_PORT` | `5847` | Backend API port |
+| `UI_PORT` | `3847` | Frontend port |
 | `HOST` | `0.0.0.0` | Host binding address |
 | `LOG_LEVEL` | `info` | Logging verbosity (`debug`, `info`, `warn`, `error`) |
 | `NODE_ENV` | `production` | Environment mode |
-| `UI_ORIGIN` | `http://localhost:3000` | CORS origin (set to your domain in production) |
+| `UI_ORIGIN` | `http://localhost:3847` | CORS origin (set to your domain in production) |
 
 ### Database Path
 
@@ -169,7 +171,7 @@ DB_PATH=/app/data/my-database.sqlite
 
 ### Creating a Watcher
 
-1. Log in to the dashboard at `http://localhost:3000`
+1. Log in to the dashboard at `http://localhost:3847`
 2. Click **"New Watcher"** to open the creation modal
 3. Configure your watcher:
    - **Name**: A descriptive name for the watcher
@@ -195,7 +197,7 @@ Global notification settings can be configured in **Settings > Notifications**:
 
 ## API
 
-The backend exposes a REST API on port 8080.
+The backend exposes a REST API on port 5847 (configurable via `SERVER_PORT`).
 
 ### Authentication
 
@@ -281,8 +283,8 @@ spec:
         - name: market-monitor
           image: rutbergphilip/market-monitor:latest
           ports:
-            - containerPort: 3000
-            - containerPort: 8080
+            - containerPort: 3847
+            - containerPort: 5847
           env:
             - name: JWT_SECRET
               valueFrom:
@@ -308,7 +310,7 @@ spec:
 The API exposes a health endpoint with database connectivity status:
 
 ```bash
-curl http://localhost:8080/api/health
+curl http://localhost:5847/api/health
 # {"status":"healthy","timestamp":"...","database":{"connected":true},"uptime":123}
 ```
 

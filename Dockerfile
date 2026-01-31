@@ -66,13 +66,13 @@ RUN mkdir -p /app/data /app/logs /var/run && \
     chown -R node:node /app/data /app/logs /app && \
     chown node:node /var/run
 
-# Expose ports
-EXPOSE 3000 8080
+# Expose ports (configurable via SERVER_PORT and UI_PORT env vars)
+EXPOSE 3847 5847
 
 # Set environment variables
 ENV DB_PATH=/app/data
-ENV SERVER_PORT=8080
-ENV UI_PORT=3000
+ENV SERVER_PORT=5847
+ENV UI_PORT=3847
 ENV HOST=0.0.0.0
 ENV NODE_ENV=production
 

@@ -7,14 +7,14 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
 
   runtimeConfig: {
-    apiBaseUrl: 'http://localhost:8080',
+    apiBaseUrl: 'http://localhost:5847',
   },
 
   srcDir: 'app',
   serverDir: 'server',
 
   devServer: {
-    port: process.env.UI_PORT ? parseInt(process.env.UI_PORT) : 3000,
+    port: process.env.UI_PORT ? parseInt(process.env.UI_PORT) : 3847,
   },
 
   modules: [
