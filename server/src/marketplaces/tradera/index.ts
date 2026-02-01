@@ -1,1 +1,0 @@
-export { TraderaAdapter } from './adapter';

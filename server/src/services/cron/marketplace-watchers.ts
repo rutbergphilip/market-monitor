@@ -53,13 +53,6 @@ function getMarketplaceSettings(marketplace: MarketplaceType) {
         SettingKey.BLOCKET_QUERY_SORT,
       ],
     },
-    TRADERA: {
-      maxRetries: [],
-      retryDelay: [],
-      timeout: [],
-      limit: [],
-      sort: [],
-    },
   };
 
   const keys = settingsMap[normalizedMarketplace];

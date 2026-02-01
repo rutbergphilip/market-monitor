@@ -69,6 +69,4 @@ export enum SettingKey {
   // Marketplace specific settings
   MARKETPLACE_BLOCKET_RATE_LIMIT = 'marketplace.blocket.rate_limit',
   MARKETPLACE_BLOCKET_TIMEOUT = 'marketplace.blocket.timeout',
-  MARKETPLACE_TRADERA_RATE_LIMIT = 'marketplace.tradera.rate_limit',
-  MARKETPLACE_TRADERA_TIMEOUT = 'marketplace.tradera.timeout',
 }

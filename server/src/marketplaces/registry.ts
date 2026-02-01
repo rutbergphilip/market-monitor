@@ -1,6 +1,5 @@
 import type { BaseMarketplaceAdapter, MarketplaceType } from './base';
 import { BlocketAdapter } from './blocket';
-// import { TraderaAdapter } from './tradera'; // TODO: Implement TraderaAdapter
 import logger from '@/integrations/logger';
 
 /**
@@ -13,9 +12,9 @@ class MarketplaceRegistry {
     try {
       // Register all available adapters
       this.register(new BlocketAdapter());
-      // this.register(new TraderaAdapter()); // TODO: Implement TraderaAdapter
 
       // TODO: Add more marketplaces here as they're implemented
+      // this.register(new TraderaAdapter());
       // this.register(new FacebookAdapter());
       // this.register(new EbayAdapter());
 

@@ -1,4 +1,4 @@
-export type MarketplaceType = 'BLOCKET' | 'TRADERA';
+export type MarketplaceType = 'BLOCKET';
 
 export type WatcherQuery = {
   id?: string;

@@ -166,7 +166,6 @@ function removeFilter(filter: {
           :model-value="tableFiltersStore.selectedMarketplaces"
           :items="[
             { value: 'BLOCKET', label: 'Blocket' },
-            { value: 'TRADERA', label: 'Tradera' },
           ]"
           multiple
           placeholder="Select marketplaces..."

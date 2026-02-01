@@ -70,7 +70,6 @@ const discordWebhookItems = computed(() => {
 // Marketplace selection
 const marketplaceItems = [
   { id: 'BLOCKET', label: 'Blocket' },
-  { id: 'TRADERA', label: 'Tradera' },
 ];
 
 const selectedMarketplace = computed({

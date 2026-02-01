@@ -326,9 +326,6 @@ function getDefaultAvatar(marketplace: string): string {
   const avatars = {
     BLOCKET:
       'https://public-assets.blocketcdn.se/static/images/blocketLogotype.png',
-    TRADERA: 'https://tradera.se/favicon.ico',
-    FACEBOOK: 'https://www.facebook.com/favicon.ico',
-    EBAY: 'https://www.ebay.com/favicon.ico',
   };
 
   return avatars[marketplace as keyof typeof avatars] || avatars.BLOCKET;
@@ -340,9 +337,6 @@ function getDefaultAvatar(marketplace: string): string {
 function getMarketplaceColor(marketplace: string): number {
   const colors = {
     BLOCKET: 0x00a651, // Blocket green
-    TRADERA: 0xff6900, // Tradera orange
-    FACEBOOK: 0x1877f2, // Facebook blue
-    EBAY: 0x0064d2, // eBay blue
   };
 
   return colors[marketplace as keyof typeof colors] || colors.BLOCKET;

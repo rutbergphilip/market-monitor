@@ -2,7 +2,7 @@
  * Base types for marketplace abstraction
  */
 
-export type MarketplaceType = 'BLOCKET' | 'TRADERA';
+export type MarketplaceType = 'BLOCKET';
 
 export interface BaseAd {
   id: string;
