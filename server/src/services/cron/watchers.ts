@@ -174,8 +174,9 @@ async function fetchAdsForWatcher(watcher: Watcher): Promise<BlocketAd[]> {
       if (ads && Array.isArray(ads)) {
         // Add to map to avoid duplicates
         for (const ad of ads) {
-          if (!adMap.has(ad.ad_id)) {
-            adMap.set(ad.ad_id, ad);
+          const adKey = String(ad.ad_id);
+          if (!adMap.has(adKey)) {
+            adMap.set(adKey, ad);
           }
         }
 
@@ -248,16 +249,16 @@ function createWatcherJobFunction(watcher: Watcher): () => Promise<void> {
 
       // Filter ads based on price range if configured
       const filteredAds = ads.filter((ad) => {
-        if (!ad.price || !ad.price.value) return true;
+        if (!ad.price || !ad.price.amount) return true;
 
         // Apply minimum price filter if set
         if (watcher.min_price !== undefined && watcher.min_price !== null) {
-          if (ad.price.value < watcher.min_price) return false;
+          if (ad.price.amount < watcher.min_price) return false;
         }
 
         // Apply maximum price filter if set
         if (watcher.max_price !== undefined && watcher.max_price !== null) {
-          if (ad.price.value > watcher.max_price) return false;
+          if (ad.price.amount > watcher.max_price) return false;
         }
 
         return true;
@@ -265,7 +266,7 @@ function createWatcherJobFunction(watcher: Watcher): () => Promise<void> {
 
       if (isFirstRun) {
         for (const ad of filteredAds) {
-          cache.set(ad.ad_id, ad);
+          cache.set(String(ad.ad_id), ad);
         }
         isFirstRun = false;
         const queries =
@@ -286,7 +287,7 @@ function createWatcherJobFunction(watcher: Watcher): () => Promise<void> {
         return;
       }
 
-      const newAds = filteredAds.filter((ad) => !cache.has(ad.ad_id));
+      const newAds = filteredAds.filter((ad) => !cache.has(String(ad.ad_id)));
 
       if (newAds.length > 0) {
         // Pass watcher info when sending notifications
@@ -302,7 +303,7 @@ function createWatcherJobFunction(watcher: Watcher): () => Promise<void> {
         await notifyAboutAds(newAds, watcher.notifications, watcherInfo);
 
         for (const ad of newAds) {
-          cache.set(ad.ad_id, ad);
+          cache.set(String(ad.ad_id), ad);
         }
       }
 

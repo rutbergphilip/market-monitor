@@ -156,18 +156,18 @@ export class BlocketAdapter extends BaseMarketplaceAdapter {
    */
   transformAd(blocketAd: BlocketAd): BaseAd {
     return {
-      id: blocketAd.ad_id,
-      title: blocketAd.subject,
+      id: String(blocketAd.ad_id),
+      title: blocketAd.heading,
       price: {
-        value: blocketAd.price?.value || 0,
-        currency: 'SEK',
-        suffix: blocketAd.price?.suffix || 'kr',
+        value: blocketAd.price?.amount || 0,
+        currency: blocketAd.price?.currency_code || 'SEK',
+        suffix: blocketAd.price?.price_unit || 'kr',
       },
-      description: blocketAd.body,
-      url: blocketAd.share_url,
-      images: blocketAd.images?.map((img) => img.url) || [],
-      location: (blocketAd as any).location?.name || undefined,
-      publishedAt: new Date((blocketAd as any).published_at || Date.now()),
+      description: undefined, // Not available in list view
+      url: blocketAd.canonical_url,
+      images: blocketAd.image_urls || (blocketAd.image ? [blocketAd.image.url] : []),
+      location: blocketAd.location || undefined,
+      publishedAt: new Date(blocketAd.timestamp || Date.now()),
       marketplace: 'BLOCKET',
       rawData: blocketAd,
     };

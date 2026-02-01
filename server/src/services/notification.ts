@@ -11,13 +11,19 @@ import type { Notification } from '@/types/watchers';
  * @param ad The Blocket ad to format
  * @returns Formatted ad information
  */
-function formatAdInfo(ad: BlocketAd) {
+function formatAdInfo(ad: BlocketAd): {
+  title: string;
+  price: string;
+  url: string;
+  image: string | null;
+  description: string | null;
+} {
   return {
-    title: ad.subject,
-    price: `${ad.price?.value}${ad.price?.suffix || ''}`,
-    url: ad.share_url,
-    image: ad.images && ad.images.length > 0 ? ad.images[0].url : null,
-    description: ad.body,
+    title: ad.heading,
+    price: `${ad.price?.amount || 0} ${ad.price?.price_unit || 'kr'}`,
+    url: ad.canonical_url,
+    image: ad.image_urls && ad.image_urls.length > 0 ? ad.image_urls[0] : (ad.image?.url || null),
+    description: null, // Not available in list view
   };
 }
 
@@ -195,9 +201,9 @@ async function sendDiscordBatch(
     return {
       title: adInfo.title,
       url: adInfo.url,
-      description:
-        adInfo.description?.substring(0, 200) +
-        (adInfo.description?.length > 200 ? '...' : ''),
+      description: adInfo.description
+        ? adInfo.description.substring(0, 200) + (adInfo.description.length > 200 ? '...' : '')
+        : undefined,
       fields: fields,
       thumbnail: adInfo.image ? { url: adInfo.image } : undefined,
       timestamp: new Date().toISOString(),
@@ -280,9 +286,9 @@ async function sendDiscordSingle(
             {
               title: adInfo.title,
               url: adInfo.url,
-              description:
-                adInfo.description?.substring(0, 200) +
-                (adInfo.description?.length > 200 ? '...' : ''),
+              description: adInfo.description
+                ? adInfo.description.substring(0, 200) + (adInfo.description.length > 200 ? '...' : '')
+                : undefined,
               fields: fields,
               thumbnail: adInfo.image ? { url: adInfo.image } : undefined,
               timestamp: new Date().toISOString(),
@@ -340,13 +346,13 @@ export async function notifyAboutAds(
   // when multiple similar queries return the same ad
   const seenAdIds = new Set<string>();
   const uniqueAds = ads.filter((ad) => {
-    const adKey = ad.ad_id; // BlocketAd uses ad_id field
+    const adKey = String(ad.ad_id); // BlocketAd uses ad_id field (number)
     if (seenAdIds.has(adKey)) {
       logger.debug({
         message: 'Filtering out duplicate ad before notification',
         adId: ad.ad_id,
         adKey,
-        adTitle: ad.subject,
+        adTitle: ad.heading,
         watcherId: watcherInfo?.id,
       });
       return false;
