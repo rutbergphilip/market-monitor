@@ -30,4 +30,6 @@ jobs:
         with:
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: rutbergphilip/market-monitor:${{ inputs.release-tag }}
+          tags: |
+            rutbergphilip/market-monitor:${{ inputs.release-tag }}
+            rutbergphilip/market-monitor:latest
